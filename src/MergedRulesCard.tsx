@@ -66,8 +66,9 @@ const RULES_DATA = [
         head: "集计对象",
         items: [
           "收录投稿在bilibili平台、使用虚拟歌手引擎调教创作的外语歌曲",
-          "收录投稿在音乐区的VOCALOID·UTAU分区的所有歌曲、其他分区的原创歌曲和虚拟歌手翻唱歌曲",
-          "以及在同人·手书分区的本家原创歌曲",
+          "投稿在音乐区的VOCALOID·UTAU分区的所有歌曲",
+          "投稿在音乐区其他分区的原创歌曲和虚拟歌手翻唱歌曲",
+          "投稿在同人·手书分区的本家原创歌曲",
         ],
       },
       {
@@ -88,39 +89,45 @@ const RULES_DATA = [
       {
         head: "电子合成引擎认定",
         items: [
-          "收录允许用户自定义调教音高等参数的歌声合成引擎（VOCALOID, UTAU, Synthesizer V等）",
-          "不收录依赖变声器的工具或缺乏精细控制的合成引擎",
-          "不收录完全依赖预训练模型自动生成的AI技术",
+          "收录允许逐音素调节音高等参数的歌声合成引擎和语音合成引擎，包括VOCALOID、Synthesizer V、UTAU、CeVIO、NEUTRINO等。",
+          "不收录变声器或缺乏精细控制的合成引擎。",
+          "不收录完全依赖模型推理输出的声音生成或转换工具",
+          "收录同时由符合收录标准的引擎主导创作，并辅以其他引擎参与的歌曲。",
         ],
       },
       {
         head: "虚拟歌手声库认定",
         items: [
-          "收录商业声库和公开配布的自制声库",
-          "新商业声库需公开首个试听曲，新自制声库需正式公开配布",
+          "收录商业合成引擎制作的声库和和用户自制并公开配布的声库",
+          "新发布的商业声库，在公开发布首个试听曲后方可纳入收录范围",
+          "新自制声库在声库正式公开配布后才可纳入收录，且配布前的相关歌曲不予重新收录。",
           "不收录混合音源演唱的歌曲",
-          "人声合唱歌曲中，虚拟歌手占比需至少1/3且成段出现",
+          "对于人声歌手与虚拟歌手合唱歌曲，虚拟歌手演唱部分占比需至少三分之一且在歌曲中成段出现。",
         ],
       },
     ],
   },
   {
-    title: "认定标准",
+    title: "认定细则",
     sections: [
       {
         head: "本家认定标准",
         items: [
-          "参与制作视频的任一人员投稿即认定为本家",
-          "不收录仅对原曲进行重编曲或混音而不重新调教的作品",
+          "由参与制作视频的任一人员投稿的视频，即认定为本家。",
+          "原创作品作者仅标注作曲者，翻唱作品作者仅标注调教者。",
+          "对于重编曲翻唱作品，作者同时标注编曲者和调教者。",
+          "不收录仅对原曲进行重编曲或混音而不重新调教的作品。",
         ],
       },
       {
         head: "稿件收录标准",
         items: [
-          "同一曲目优先收录本家投稿，若有本家则不收录搬运",
-          "无本家时收录得分最高的搬运",
-          "不收录无歌词、无伴奏、MMD、手书、MASHUP、对比视频等",
-          "收录本家发布的不同音频版本（完整版、重填词、翻唱等）",
+          "收录本家投稿和搬运稿件，同一曲目的同一音频版本认定为同一首歌曲，每期榜单仅收录一个。",
+          "优先使用本家投稿；若存在本家则不收录任何搬运稿件。歌姬企划官方代投的歌曲视同本家投稿。",
+          "同时收录不同版本，包括完整版、重填词版、音频重置版、其他引擎或歌手翻唱等。仅PV重置不予收录。",
+          "不收录无歌词、无伴奏、仅和声、以语音朗读或对话为主的TALKLOID的歌曲。",
+          "不收录歌曲合集、一稿多曲、多P不同曲目的投稿。",
+          "不收录MMD、手书、MASHUP、对比视频、二创PV、演唱会、试听版、预告等内容。",
         ],
       },
     ],
@@ -483,23 +490,12 @@ const FormulaPage1 = () => {
                     fontFamily: "Consolas",
                   }}
                 >
-                  20
+                  40
                 </span>
                 <span style={{ margin: "0 8px", color: "#888" }}>×</span>
                 <span style={{ fontWeight: 900 }}>收藏</span>
                 <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  40
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>硬币</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
+
                 <span
                   style={{
                     color: STYLES.colors.accentBlue,
@@ -520,10 +516,22 @@ const FormulaPage1 = () => {
                     fontFamily: "Consolas",
                   }}
                 >
-                  200
+                  150
                 </span>
                 <span style={{ margin: "0 8px", color: "#888" }}>×</span>
                 <span style={{ fontWeight: 900 }}>硬币</span>
+                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
+                <span
+                  style={{
+                    color: STYLES.colors.accentBlue,
+                    fontWeight: 900,
+                    fontFamily: "Consolas",
+                  }}
+                >
+                  50
+                </span>
+                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
+                <span style={{ fontWeight: 900 }}>弹幕</span>
               </div>
             </div>
           </div>
