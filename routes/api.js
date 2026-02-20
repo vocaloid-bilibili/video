@@ -3,15 +3,8 @@ const express = require("express");
 const multer = require("multer");
 const fs = require("fs-extra");
 const path = require("path");
-const axios = require("axios");
 
-const {
-  DIR_DATA,
-  DIR_VIDEO_ROOT,
-  API_KEY,
-  PYTHON_API,
-  PORT,
-} = require("../config");
+const { DIR_DATA, DIR_VIDEO_ROOT, PORT } = require("../config");
 const {
   getTask,
   resetTask,
@@ -35,15 +28,6 @@ const {
 const { downloadFullVideo, getFullVideoInfo } = require("../utils/fullVideo");
 
 const router = express.Router();
-
-// 鉴权
-router.use((req, res, next) => {
-  const clientKey = req.headers["x-api-key"] || req.query.key;
-  if (!clientKey || clientKey !== API_KEY) {
-    return res.status(401).send({ error: "Unauthorized" });
-  }
-  next();
-});
 
 // Multer 配置
 const segmentStorage = multer.diskStorage({
@@ -374,18 +358,6 @@ router.post("/full-video/:bvid", async (req, res) => {
     }
   } catch (e) {
     res.status(500).send({ error: e.message });
-  }
-});
-// 自动分析高潮点（调用Python）
-router.post("/analyze/:bvid", async (req, res) => {
-  const { bvid } = req.params;
-  const { duration = 20 } = req.body;
-
-  try {
-    const result = await axios.post(PYTHON_API, { bvid, duration });
-    res.send(result.data);
-  } catch (e) {
-    res.status(500).send({ error: "分析失败", message: e.message });
   }
 });
 

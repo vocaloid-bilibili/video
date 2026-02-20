@@ -21,64 +21,6 @@
         overflow: hidden;
       }
 
-      /* Auth */
-      #auth-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 100;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      #auth-overlay.hidden {
-        display: none;
-      }
-      .auth-box {
-        width: 320px;
-        padding: 32px;
-        border: 1px solid #ddd;
-        background: #fff;
-      }
-      .auth-box h2 {
-        font-size: 16px;
-        font-weight: normal;
-        margin-bottom: 20px;
-        color: #666;
-      }
-      .auth-box input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        margin-bottom: 12px;
-        font-size: 14px;
-      }
-      .auth-box input:focus {
-        outline: none;
-        border-color: #666;
-      }
-      .auth-box button {
-        width: 100%;
-        padding: 10px;
-        background: #333;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-      }
-      .auth-box button:hover {
-        background: #000;
-      }
-      .auth-error {
-        color: #c00;
-        font-size: 12px;
-        margin-top: 8px;
-        display: none;
-      }
-      .auth-error.show {
-        display: block;
-      }
-
       /* Header */
       header {
         background: #fff;
@@ -612,16 +554,6 @@
     </style>
   </head>
   <body>
-    <!-- Auth -->
-    <div id="auth-overlay">
-      <div class="auth-box">
-        <h2>输入访问密钥</h2>
-        <input type="password" id="apiKeyInput" placeholder="Access Key" />
-        <button onclick="attemptLogin()">进入</button>
-        <p class="auth-error" id="authError">密钥错误</p>
-      </div>
-    </div>
-
     <!-- Header -->
     <header>
       <h1>排行榜合成控制台</h1>
@@ -723,7 +655,6 @@
 
     <script>
       const API = "/api";
-      let API_KEY = localStorage.getItem("omo_api_key") || "";
       let selectedDate = "";
       let repairTargetFile = null;
       let pollingInterval = null;
@@ -736,44 +667,15 @@
         setTimeout(() => toast.classList.remove("show"), 3000);
       }
 
-      // Auth
-      function attemptLogin() {
-        const key = document.getElementById("apiKeyInput").value.trim();
-        if (!key) return;
-        API_KEY = key;
-        localStorage.setItem("omo_api_key", key);
-        checkAuth();
-      }
-
-      async function checkAuth() {
-        try {
-          const res = await fetchWithAuth(`${API}/files`);
-          if (res.status === 401) throw new Error("401");
-          document.getElementById("auth-overlay").classList.add("hidden");
-          initApp();
-        } catch (e) {
-          document.getElementById("authError").classList.add("show");
-          localStorage.removeItem("omo_api_key");
-        }
-      }
-
-      async function fetchWithAuth(url, opts = {}) {
-        opts.headers = opts.headers || {};
-        opts.headers["x-api-key"] = API_KEY;
+      async function fetchAPI(url, opts = {}) {
         return fetch(url, opts);
       }
 
       // Init
       document.addEventListener("DOMContentLoaded", () => {
-        if (API_KEY) checkAuth();
+        initApp();
 
-        document
-          .getElementById("apiKeyInput")
-          .addEventListener("keypress", (e) => {
-            if (e.key === "Enter") attemptLogin();
-          });
-
-        // 改进：文件选择后自动上传
+        // 文件选择后自动上传
         document
           .getElementById("fileInput")
           .addEventListener("change", async (e) => {
@@ -825,7 +727,7 @@
         for (const f of input.files) fd.append("files", f);
 
         try {
-          const res = await fetchWithAuth(`${API}/upload`, {
+          const res = await fetchAPI(`${API}/upload`, {
             method: "POST",
             body: fd,
           });
@@ -844,7 +746,7 @@
       // Load Files
       async function loadFiles() {
         try {
-          const res = await fetchWithAuth(`${API}/files`);
+          const res = await fetchAPI(`${API}/files`);
           if (res.status === 401) return location.reload();
           const { files } = await res.json();
 
@@ -902,7 +804,7 @@
         container.innerHTML = '<div class="empty">加载中...</div>';
 
         try {
-          const res = await fetchWithAuth(`${API}/segments?date=${date}`);
+          const res = await fetchAPI(`${API}/segments?date=${date}`);
           const { segments } = await res.json();
 
           if (!segments || segments.length === 0) {
@@ -950,7 +852,7 @@
         }
 
         try {
-          const res = await fetchWithAuth(`${API}/synthesis/segment`, {
+          const res = await fetchAPI(`${API}/synthesis/segment`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -972,7 +874,7 @@
         if (!confirm("确认合并?")) return;
 
         try {
-          const res = await fetchWithAuth(`${API}/synthesis/merge`, {
+          const res = await fetchAPI(`${API}/synthesis/merge`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ date }),
@@ -990,7 +892,7 @@
         if (pollingInterval) clearInterval(pollingInterval);
         pollingInterval = setInterval(async () => {
           try {
-            const res = await fetchWithAuth(`${API}/status`);
+            const res = await fetchAPI(`${API}/status`);
             if (res.status === 401) return;
             updateStatus(await res.json());
           } catch (e) {}

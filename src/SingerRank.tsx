@@ -162,7 +162,7 @@ const SingerItem = ({ singer, index }: { singer: any; index: number }) => {
 
   const avatarSrc =
     singer.avatar ||
-    `http://localhost:3002/downloads/avatar/${encodeURIComponent(
+    `http://localhost:3002/config/avatar/${encodeURIComponent(
       singer.name,
     )}.png`;
 

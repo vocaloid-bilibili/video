@@ -1,15 +1,8 @@
 // synthesis/task.js
-const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
 
-const {
-  DIR_DATA,
-  DIR_DOWNLOADS,
-  PYTHON_API,
-  PORT,
-  STAFF_LIST,
-} = require("../config");
+const { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST } = require("../config");
 const { log, updateProgress, setTaskStatus, TASK_STATUS } = require("../state");
 const { getPaths, chunkArray } = require("../utils/helpers");
 const { getIssueConfig } = require("../config/issueTypes");
@@ -55,23 +48,8 @@ function formatDate(dateStr) {
   return dateStr.replace(/-/g, ".");
 }
 
-async function autoAnalyzeClip(bvid, defaultDuration = 20) {
-  try {
-    const res = await axios.post(PYTHON_API, {
-      bvid,
-      duration: defaultDuration,
-    });
-    return { startTime: res.data.start_time || 0, duration: defaultDuration };
-  } catch (e) {
-    log(`分析失败 ${bvid}, 从头开始`);
-    return { startTime: 0, duration: defaultDuration };
-  }
-}
-
 async function prepareAllAssets(songs, progressCallback) {
   log("========== 准备视频素材 ==========");
-
-  const needAnalyze = [];
 
   for (const song of songs) {
     const saved = getClipSetting(song.bvid);
@@ -83,22 +61,11 @@ async function prepareAllAssets(songs, progressCallback) {
         `手动设置: ${song.bvid} (${saved.startTime.toFixed(1)}s - ${saved.endTime.toFixed(1)}s)`,
       );
     } else {
-      needAnalyze.push(song);
-    }
-  }
-
-  if (needAnalyze.length > 0) {
-    log(`========== 自动分析 ${needAnalyze.length} 首未设置的歌曲 ==========`);
-    for (const song of needAnalyze) {
       const defaultDuration = song._defaultDuration || 20;
-      const { startTime, duration } = await autoAnalyzeClip(
-        song.bvid,
-        defaultDuration,
-      );
-      song._startTime = startTime;
-      song._duration = duration;
+      song._startTime = 0;
+      song._duration = defaultDuration;
       song._isAuto = true;
-      log(`自动分析: ${song.bvid} -> ${startTime.toFixed(1)}s`);
+      log(`默认设置: ${song.bvid} -> 0s (时长 ${defaultDuration}s)`);
     }
   }
 
@@ -159,7 +126,7 @@ async function prepareAllAssets(songs, progressCallback) {
 
   log(`========== 素材准备完成 ==========`);
   log(
-    `手动设置: ${manualCount} | 自动分析: ${autoCount} | 跳过: ${skippedCount} | 下载: ${downloadedCount} | 成功: ${successCount}/${songs.length}`,
+    `手动设置: ${manualCount} | 默认设置: ${autoCount} | 跳过: ${skippedCount} | 下载: ${downloadedCount} | 成功: ${successCount}/${songs.length}`,
   );
 }
 
@@ -566,7 +533,7 @@ async function runSynthesisTask(date) {
   if (config.sections.singerRank?.enabled) {
     const singerList = (data.vocal_stats || []).map((s) => ({
       ...s,
-      avatar: `http://localhost:${PORT}/downloads/avatar/${encodeURIComponent(s.name)}.png`,
+      avatar: `http://localhost:${PORT}/config/avatar/${encodeURIComponent(s.name)}.png`,
     }));
     listP3_pre.push(
       await renderFn(
@@ -668,7 +635,7 @@ async function runSynthesisTask(date) {
         {
           staffList: STAFF_LIST.map((s) => ({
             ...s,
-            avatar: `http://localhost:${PORT}/downloads/STAFF/${encodeURIComponent(s.name)}.jpg`,
+            avatar: `http://localhost:${PORT}/config/STAFF/${encodeURIComponent(s.name)}.jpg`,
           })),
         },
         "11_StaffCard.mp4",

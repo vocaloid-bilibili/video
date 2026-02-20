@@ -883,9 +883,6 @@
 
             <div class="spacer"></div>
 
-            <button class="btn btn-secondary" id="autoAnalyzeBtn">
-              自动分析
-            </button>
             <button class="btn btn-primary" id="saveClipBtn">保存</button>
 
             <div class="control-row">
@@ -948,7 +945,6 @@
 
     <script>
       const API = "/api";
-      const API_KEY = localStorage.getItem("omo_api_key") || "";
 
       let currentDate = "";
       let songs = { newRank: [], mainRank: [] };
@@ -967,13 +963,7 @@
       };
 
       async function fetchAPI(url, opts = {}) {
-        opts.headers = opts.headers || {};
-        opts.headers["x-api-key"] = API_KEY;
         const res = await fetch(url, opts);
-        if (res.status === 401) {
-          location.href = "/";
-          throw new Error("Unauthorized");
-        }
         return res.json();
       }
 
@@ -1041,9 +1031,6 @@
         document
           .getElementById("startSynthesisBtn")
           .addEventListener("click", startSynthesis);
-        document
-          .getElementById("autoAnalyzeBtn")
-          .addEventListener("click", autoAnalyze);
         document
           .getElementById("previewBtn")
           .addEventListener("click", previewClip);
@@ -1731,33 +1718,6 @@
       }
 
       // ========== Actions ==========
-
-      async function autoAnalyze() {
-        if (!currentSong) return;
-        showToast("分析中...");
-        try {
-          const result = await fetchAPI(`${API}/analyze/${currentSong.bvid}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ duration: clipDuration }),
-          });
-
-          let start = result.start_time || 0;
-          if (start + clipDuration > videoDuration) {
-            start = Math.max(0, videoDuration - clipDuration);
-          }
-
-          document.getElementById("startTimeInput").value = start.toFixed(2);
-          document.getElementById("endTimeInput").value = (
-            start + clipDuration
-          ).toFixed(2);
-          updateDisplay();
-          document.getElementById("videoPlayer").currentTime = start;
-          showToast("分析完成", "success");
-        } catch (e) {
-          showToast("分析失败: " + e.message, "error");
-        }
-      }
 
       function previewClip() {
         const video = document.getElementById("videoPlayer");
