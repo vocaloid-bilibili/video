@@ -1,5 +1,8 @@
 node_modules/
 .config/
+downloads/
+video/
+data/
 
 pnpm-lock.yaml
 pnpm-workspace.yaml

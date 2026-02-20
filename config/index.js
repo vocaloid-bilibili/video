@@ -1,8 +1,10 @@
 // config/index.js
 const path = require("path");
+require("dotenv").config()
 
-const PORT = 3002;
-const CHROME_EXECUTABLE = `"C:\\chrome-headless-shell\\chrome-headless-shell.exe"`;
+const PORT = process.env.PORT;
+const CHROME_EXECUTABLE = process.env.CHROME_EXECUTABLE;
+const USE_NVIDIA = process.env.USE_NVIDIA === "true"
 
 const DIR_ROOT = path.resolve(__dirname, "..");
 const DIR_DATA = path.resolve(DIR_ROOT, "data");
