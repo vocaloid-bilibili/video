@@ -3,6 +3,13 @@ node_modules/
 downloads/
 video/
 data/
-
+tsconfig.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
+*.zip
+*.mp4
+*.mp3
+package-lock.json
+*.exe
+repomix-output.xml
+.env
