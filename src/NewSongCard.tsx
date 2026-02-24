@@ -205,7 +205,7 @@ export const NewSongCard = (props: any) => {
           {/* 第二行：综合得分 */}
           <OverallPoint
             isNewSong={true}
-            score={props.score}
+            point={props.point}
             point_before={props.point_before}
             fixB={props.fixB}
             fixC={props.fixC}

@@ -11,7 +11,7 @@ import {
 import { StatRow } from "./StatRow";
 import { STYLES } from "../styles";
 
-export const StatRows = (props: any) => {
+export const StatRows = ({props}: {props:any}) => {
 
 
   // 计算各项数据的最佳排名

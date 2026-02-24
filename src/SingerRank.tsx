@@ -267,7 +267,7 @@ const SingerItem = ({ singer, index }: { singer: any; index: number }) => {
               color: "#333",
             }}
           >
-            {new Intl.NumberFormat().format(singer.score)}
+            {new Intl.NumberFormat().format(singer.point)}
           </span>
         </div>
 

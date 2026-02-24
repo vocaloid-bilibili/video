@@ -85,9 +85,9 @@ async function renderRankSegment(
     rank: data.rank,
     rank_before: data.rank_before,
     title: data.title,
-    score: data.point,
+    point: data.point,
     point_before: data.point_before || 0,
-    score_rate: data.rate,
+    point_rate: data.rate,
     fixA: data.fixA,
     fixB: data.fixB,
     fixC: data.fixC,
@@ -130,7 +130,7 @@ async function renderRankSegment(
     showCount: config.showCount !== false,
     trendKey: config.trendKey || "daily_trends",
     trendCount: config.trendCount || 7,
-    [config.trendKey || "daily_trends"]:
+    seperate_ranks:
       data[config.trendKey || "daily_trends"] || data.daily_trends,
   };
 

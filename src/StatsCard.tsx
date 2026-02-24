@@ -380,14 +380,14 @@ export const StatsCard = (props: {
   stat: any;
   comment?: string;
   topN?: number;
-  scoreThresholds?: Array<{ key: string; label: string }>;
+  pointThresholds?: Array<{ key: string; label: string }>;
   newSongPeriod?: string;
 }) => {
   const {
     stat,
     comment = "请输入文本",
     topN = 100,
-    scoreThresholds = [
+    pointThresholds = [
       { key: "count_over_500k", label: "50万分以上" },
       { key: "count_over_100k", label: "10万分以上" },
       { key: "count_over_50k", label: "5万分以上" },
@@ -501,7 +501,7 @@ export const StatsCard = (props: {
           }}
         >
           <div style={{ display: "flex", gap: 50, flexWrap: "wrap" }}>
-            {scoreThresholds.map((threshold, idx) => (
+            {pointThresholds.map((threshold, idx) => (
               <StatItem
                 key={threshold.key}
                 label={threshold.label}

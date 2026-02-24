@@ -617,7 +617,7 @@ async function runSynthesisTask(date) {
           stat: data.stat,
           comment: editorConfig.script?.ending || data.comment || "",
           topN: config.topN || config.subRankMax || 100,
-          scoreThresholds: config.scoreThresholds,
+          pointThresholds: config.pointThresholds,
           newSongPeriod: config.newSongPeriod,
         },
         "10_StatsCard.mp4",

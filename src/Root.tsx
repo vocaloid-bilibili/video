@@ -1,7 +1,7 @@
 // src/Root.tsx
 import { Composition } from "remotion";
 import { MainRankCard } from "./MainRankCard";
-import { SpecialCard } from "./SpecialCard"
+import { SpecialCard } from "./Special/SpecialCard"
 import { Intro } from "./Intro";
 import { InfoCard } from "./InfoCard";
 import { SectionTitle } from "./SectionTitle";
@@ -14,6 +14,11 @@ import { NewSongCard } from "./NewSongCard";
 import { SubRank } from "./SubRank";
 import { StatsCard } from "./StatsCard";
 import { StaffCard } from "./StaffCard";
+import MainRankProps from "./example/MainRank.json"
+import { WeeklyMain } from "./types";
+
+import {z} from "zod";
+const DummySchema = z.object({});
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -86,26 +91,19 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           rank: 1,
           title: "测试",
-          score: 100000,
+          point: 100000,
           trendCount: 7,
           trendKey: "daily_trends",
         }}
       />
       <Composition
         id="MainRankCard"
-        component={MainRankCard}
+        component={MainRankCard as unknown as React.ComponentType<Record<string, unknown>>}
         durationInFrames={60 * 35}
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{
-          rank: 1,
-          title: "测试",
-          score: 100000,
-          showCount: true,
-          trendCount: 7,
-          trendKey: "daily_trends",
-        }}
+        defaultProps={MainRankProps}
       />
       <Composition
         id="SpecialCard"
@@ -117,7 +115,7 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           rank: 1,
           title: "测试",
-          score: 100000,
+          point: 100000,
           showCount: true,
           trendCount: 7,
           trendKey: "daily_trends",

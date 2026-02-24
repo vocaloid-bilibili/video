@@ -10,38 +10,23 @@ import {
 } from "remotion";
 
 import { STYLES } from "./styles";
-import { StatRow } from "./components/StatRow" 
-import { FitContent } from "./components/FitContent"
-import { FitTitle } from "./components/FitTitle";
-import { TrendBar } from "./components/TrendBar";
-import { HonorBadge } from "./components/HonorBadge";
-import { InfoTag } from "./components/InfoTag";
 import { StatRows } from "./components/StatRows";
 import { OverallPoint } from "./components/OverallPoint";
 import { RankTrend } from "./components/RankTrend";
 import { RankCore } from "./components/RankCore";
 import { SongInfo } from "./SongInfo";
 import { VideoContainer } from "./VideoContainer";
+import type { WeeklyMain } from "./types";
 
 // ------------------------------------------------------------------
 // 主组件
 // ------------------------------------------------------------------
-export const MainRankCard = (props: any) => {
+export const MainRankCard = (props: WeeklyMain) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
 
-  const safeParse = (val: any) => {
-    const num = parseFloat(val);
-    return isNaN(num) ? 0 : num;
-  };
-
-
   // 配置参数
   const showCount = props.showCount !== false;
-  const trendKey = props.trendKey || "daily_trends";
-  const trendCount = props.trendCount || 7;
-  const trendData =
-    props[trendKey] || props.daily_trends || props.weekly_trends;
 
   // 业务逻辑判断
   const isNewSong = props.rank_before === "-" || props.rate === "NEW";
@@ -56,7 +41,6 @@ export const MainRankCard = (props: any) => {
     props.reply_rank,
     props.share_rank,
   ]
-    .map((r) => parseInt(r))
     .filter((n) => !isNaN(n) && n > 0);
 
   const minRank = allRanks.length > 0 ? Math.min(...allRanks) : 0;
@@ -212,8 +196,8 @@ export const MainRankCard = (props: any) => {
             {/* 右块：趋势与上周对比 */}
             <RankTrend 
               isNewSong={isNewSong}
-              trendCount={trendCount}
-              trendData={trendData}
+              trendCount={props.trendCount}
+              trendData={props.seperate_ranks}
               rank_before={props.rank_before}
               rankDiffValue={rankDiffValue}
             />
@@ -222,7 +206,7 @@ export const MainRankCard = (props: any) => {
           {/* 第二行：综合得分 */}
           <OverallPoint
             isNewSong={isNewSong}
-            score={props.score}
+            point={props.point}
             point_before={props.point_before}
             fixB={props.fixB}
             fixC={props.fixC}
@@ -231,7 +215,7 @@ export const MainRankCard = (props: any) => {
 
         {/* --- 下半部分：详细数据 --- */}
         <StatRows 
-          allRanks={allRanks}
+          props={props}
         />
 
       </div>

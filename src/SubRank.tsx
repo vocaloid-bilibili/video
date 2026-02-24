@@ -597,7 +597,7 @@ const SubRankItem = ({
             );
           })}
 
-          {/* Total Score */}
+          {/* Total point */}
           <div
             style={{
               display: "flex",

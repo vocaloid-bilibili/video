@@ -8,13 +8,13 @@ import {
   interpolate,
   Easing,
 } from "remotion";
-import { VideoContainer } from "./VideoContainer";
-import { SongInfo } from "./SongInfo";
-import { StatRows } from "./components/StatRows";
-import { RankTrend } from "./components/RankTrend";
-import { STYLES } from "./styles";
-import { OverallPoint } from "./components/OverallPoint";
-import { RankCore } from "./components/RankCore";
+import { VideoContainer } from "../VideoContainer";
+import { SongInfo } from "../SongInfo";
+import { StatRows } from "../components/StatRows";
+import { RankTrend } from "../components/RankTrend";
+import { STYLES } from "../styles";
+import { OverallPoint } from "../components/OverallPoint";
+import { RankCore } from "../components/RankCore";
 
 // ------------------------------------------------------------------
 // 主组件：新曲榜卡片
@@ -205,7 +205,7 @@ export const SpecialCard = (props: any) => {
           {/* 第二行：综合得分 */}
           <OverallPoint
             isNewSong={true}
-            score={props.score}
+            point={props.point}
             point_before={props.point_before}
             fixB={props.fixB}
             fixC={props.fixC}

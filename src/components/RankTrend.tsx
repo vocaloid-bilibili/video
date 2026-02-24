@@ -1,20 +1,29 @@
 import { TrendBar } from "./TrendBar"
 import { STYLES } from "../styles"
+import { NumberOrNone } from "../types"
 
 export const RankTrend = ({
   isNewSong = false,
   trendCount = 7,
-  trendData = [1, 1, 1, 1, 1, 1, 1, 1],
+  trendData = {
+    "1": 2,
+    "2": 2,
+    "3": 2,
+    "4": 2,
+    "5": 1,
+    "6": 1,
+    "7": 1
+  },
   rankDiffValue = 0,
   rank_before = 1,
   main_rank
 }: {
   isNewSong: boolean,
   trendCount: number,
-  trendData: number[],
+  trendData: { [key: string]: NumberOrNone },
   rankDiffValue: number,
-  rank_before: number,
-  main_rank?: number | "-"
+  rank_before: NumberOrNone,
+  main_rank?: NumberOrNone
 }) => {
 
   let isNewPart = false

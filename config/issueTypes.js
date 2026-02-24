@@ -14,7 +14,7 @@ const ISSUE_TYPES = {
     trendCount: 7, // 走势数据点数量（7天）
     trendKey: "daily_trends", // 走势数据字段名
 
-    scoreThresholds: [
+    pointThresholds: [
       { key: "count_over_500k", label: "50万分以上" }, // 50万分以上曲数
       { key: "count_over_100k", label: "10万分以上" }, // 10万分以上曲数
       { key: "count_over_50k", label: "5万分以上" }, // 5万分以上曲数
@@ -83,7 +83,7 @@ const ISSUE_TYPES = {
     trendCount: 5,
     trendKey: "weekly_trends",
 
-    scoreThresholds: [
+    pointThresholds: [
       { key: "count_over_1m", label: "100万分以上" },
       { key: "count_over_500k", label: "50万分以上" },
       { key: "count_over_100k", label: "10万分以上" },
@@ -150,7 +150,7 @@ const ISSUE_TYPES = {
     trendCount: 0, // 默认无走势
     trendKey: null,
 
-    scoreThresholds: null, // 默认无统计
+    pointThresholds: null, // 默认无统计
     playRateCoef: 15,
     showCount: false,
     showAchievements: false,

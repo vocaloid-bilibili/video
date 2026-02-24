@@ -6,18 +6,18 @@ import { safeParse } from "../utils/safeParse";
 export const OverallPoint = ({
   isNewSong = false,
   point_before = 100000,
-  score = 100000,
+  point = 100000,
   fixB = 1.0,
   fixC = 1.0
 
 }: {
   isNewSong: boolean,
   point_before: number | "-",
-  score: number,
+  point: number,
   fixB: number,
   fixC: number
 }) => {
-  const scoreStr = new Intl.NumberFormat().format(safeParse(score));
+  const pointStr = new Intl.NumberFormat().format(safeParse(point));
 
   return (
               <div
@@ -84,7 +84,7 @@ export const OverallPoint = ({
                 </div>
               ) : point_before && point_before !== "-" ? (
                 (() => {
-                  const current = safeParse(score);
+                  const current = safeParse(point);
                   const before = safeParse(point_before);
                   const diff = current - before;
                   const rate =
@@ -197,7 +197,7 @@ export const OverallPoint = ({
                   whiteSpace: "nowrap",
                 }}
               >
-                {scoreStr}
+                {pointStr}
               </span>
             </div>
           </div>
