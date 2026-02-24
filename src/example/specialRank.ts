@@ -56,5 +56,6 @@ export default {
   },
   "trendCount": 7,
   "showCount": true,
-  "videoSource": ``
+  "videoSource": ``,
+  "extraInfo": "歌姬计划、未来计划、世界计划、舞萌DX、中二节奏、音击、BanG Dream!、太鼓之达人、D4DJ Groovy Mix、Jubeat、节奏过山车、GITADORA、e舞成名、Pop'n Music、MUSECA、Sound Voltex、QQ音速、REFLEC BEAT、乐动时代、ARGONAVIS、QQ炫舞、Melody's、劲舞团、Synchronica、Dance Rail",
 }

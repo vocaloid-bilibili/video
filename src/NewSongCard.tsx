@@ -9,7 +9,7 @@ import {
   Easing,
 } from "remotion";
 import { VideoContainer } from "./VideoContainer";
-import { SongInfo } from "./SongInfo";
+import { SongInfo } from "./components/SongInfo";
 import { StatRows } from "./components/StatRows";
 import { RankTrend } from "./components/RankTrend";
 import { STYLES } from "./styles";

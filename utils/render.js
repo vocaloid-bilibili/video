@@ -81,57 +81,32 @@ async function renderRankSegment(
 
   const videoUrl = `http://localhost:${PORT}/downloads/${path.basename(videoPath)}`;
 
-  const props = {
-    rank: data.rank,
-    rank_before: data.rank_before,
-    title: data.title,
-    point: data.point,
+  const extraFields = {
     point_before: data.point_before || 0,
     point_rate: data.rate,
-    fixA: data.fixA,
-    fixB: data.fixB,
-    fixC: data.fixC,
-    fixD: data.fixD,
-    count: data.count,
-    uploader: data.uploader,
     copyrightLabel: getCopyrightLabel(data.copyright),
     vocalists: data.vocal,
     producers: data.author,
     synthesizers: data.synthesizer,
-    bvid: data.bvid,
-    pubdate: data.pubdate,
-    duration: data.duration,
     songType: data.type,
-    honor: data.honor,
     thumb,
     videoSource: videoUrl,
-    view: data.view,
-    view_rank: data.view_rank,
     view_rate: data.viewR,
-    favorite: data.favorite,
-    favorite_rank: data.favorite_rank,
     favorite_rate: data.favoriteR,
-    coin: data.coin,
-    coin_rank: data.coin_rank,
-    coin_rate: data.coinR,
-    like: data.like,
-    like_rank: data.like_rank,
-    like_rate: data.likeR,
-    danmaku: data.danmaku,
-    danmaku_rank: data.danmaku_rank,
     danmaku_rate: data.danmakuR,
-    reply: data.reply,
-    reply_rank: data.reply_rank,
+    coin_rate: data.coinR,
+    like_rate: data.likeR,
     reply_rate: data.replyR,
-    share: data.share,
-    share_rank: data.share_rank,
     share_rate: data.shareR,
-    main_rank: data.main_rank,
     showCount: config.showCount !== false,
     trendCount: config.trendCount || 7,
     seperate_ranks:
       data[config.trendKey || "daily_trends"] || data.daily_trends,
-  };
+  }
+
+  const props = {
+    ...data, ...extraFields
+  }
 
   const temp = path.join(dir, `temp_props_rank_${type}_${data.rank}.json`);
   fs.writeJsonSync(temp, props);

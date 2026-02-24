@@ -9,15 +9,16 @@ import {
   Easing,
 } from "remotion";
 import { VideoContainer } from "../VideoContainer";
-import { SongInfo } from "../SongInfo";
+import { SongInfo } from "../components/SongInfo";
 import { StatRows } from "../components/StatRows";
 import { RankTrend } from "../components/RankTrend";
 import { STYLES } from "../styles";
 import { OverallPoint } from "../components/OverallPoint";
 import { RankCore } from "../components/RankCore";
+import { CustomSongInfo } from "../components/special/CustomSongInfo";
 
 // ------------------------------------------------------------------
-// 主组件：新曲榜卡片
+// 主组件：某种修改版的排行榜UI
 // ------------------------------------------------------------------
 export const SpecialCard = (props: any) => {
   const { fps, durationInFrames } = useVideoConfig();
@@ -143,7 +144,7 @@ export const SpecialCard = (props: any) => {
         />
 
         {/* 2. 底部信息栏 */}
-        <SongInfo
+        <CustomSongInfo
           props={props}
           infoTranslateY={infoTranslateY}
         />

@@ -14,7 +14,7 @@ import { StatRows } from "./components/StatRows";
 import { OverallPoint } from "./components/OverallPoint";
 import { RankTrend } from "./components/RankTrend";
 import { RankCore } from "./components/RankCore";
-import { SongInfo } from "./SongInfo";
+import { SongInfo } from "./components/SongInfo";
 import { VideoContainer } from "./VideoContainer";
 import type { WeeklyMain } from "./types";
 

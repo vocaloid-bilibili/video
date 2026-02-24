@@ -1,9 +1,8 @@
-import { spring, interpolate, useVideoConfig, useCurrentFrame, Easing } from "remotion"
-import { STYLES } from "./styles"
-import { FitTitle } from "./components/FitTitle"
-import { HonorBadge } from "./components/HonorBadge"
-import { FitContent } from "./components/FitContent"
-import { InfoTag } from "./components/InfoTag"
+import { STYLES } from "../styles"
+import { FitTitle } from "./FitTitle"
+import { HonorBadge } from "./HonorBadge"
+import { FitContent } from "./FitContent"
+import { InfoTag } from "./InfoTag"
 
 export const SongInfo = ({
   props,
@@ -12,8 +11,6 @@ export const SongInfo = ({
   props: any,
   infoTranslateY: number
 }) => {
-
-
   return (
     <div
       style={{
