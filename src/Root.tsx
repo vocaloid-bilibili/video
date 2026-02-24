@@ -14,11 +14,10 @@ import { NewSongCard } from "./NewSongCard";
 import { SubRank } from "./SubRank";
 import { StatsCard } from "./StatsCard";
 import { StaffCard } from "./StaffCard";
-import MainRankProps from "./example/MainRank.json"
-import { WeeklyMain } from "./types";
+import mainRankProps from "./example/mainRank"
+import specialProps from "./example/specialRank";
 
-import {z} from "zod";
-const DummySchema = z.object({});
+import { weeklyMainSchema } from "./types/zod";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -103,7 +102,8 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={MainRankProps}
+        schema={weeklyMainSchema}
+        defaultProps={mainRankProps}
       />
       <Composition
         id="SpecialCard"
@@ -112,14 +112,7 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{
-          rank: 1,
-          title: "测试",
-          point: 100000,
-          showCount: true,
-          trendCount: 7,
-          trendKey: "daily_trends",
-        }}
+        defaultProps={specialProps}
       />
       <Composition
         id="SingerRank"

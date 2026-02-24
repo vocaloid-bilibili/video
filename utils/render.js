@@ -128,7 +128,6 @@ async function renderRankSegment(
     share_rate: data.shareR,
     main_rank: data.main_rank,
     showCount: config.showCount !== false,
-    trendKey: config.trendKey || "daily_trends",
     trendCount: config.trendCount || 7,
     seperate_ranks:
       data[config.trendKey || "daily_trends"] || data.daily_trends,

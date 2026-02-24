@@ -45,10 +45,16 @@ function formatDateDisplay(date, type) {
   return date;
 }
 
+export const safeParse = (val) => {
+  const num = parseFloat(val);
+  return isNaN(num) ? 0 : num;
+};
+
 module.exports = {
   getPaths,
   chunkArray,
   getCopyrightLabel,
   getIssueType,
   formatDateDisplay,
+  safeParse
 };

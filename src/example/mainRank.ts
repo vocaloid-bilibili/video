@@ -1,4 +1,4 @@
-{
+export default {
   "title": "I Can't Wait feat. GUMI",
   "bvid": "BV15GmhBaEZF",
   "aid": 115695731869659,
@@ -54,5 +54,7 @@
     "6": 2,
     "7": 2
   },
-  "trendCount": 7
+  "trendCount": 7,
+  "showCount": true,
+  "videoSource": ``
 }

@@ -214,7 +214,7 @@ export const NewSongCard = (props: any) => {
 
         {/* 下半部分：详细数据 */}
         <StatRows
-          allRanks={allRanks}
+          props={props}
         />
       </div>
     </AbsoluteFill>

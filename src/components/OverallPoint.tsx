@@ -1,6 +1,6 @@
 import { STYLES } from "../styles";
 import { FitContent } from "./FitContent";
-import { safeParse } from "../utils/safeParse";
+import { safeParse } from "../utils/safeParse.ts";
 
 
 export const OverallPoint = ({
