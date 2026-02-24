@@ -19,7 +19,7 @@ import { RankCore } from "./components/RankCore";
 // ------------------------------------------------------------------
 // 主组件：新曲榜卡片
 // ------------------------------------------------------------------
-export const NewSongCard = (props: any) => {
+export const SpecialCard = (props: any) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
 

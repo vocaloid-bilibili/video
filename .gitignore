@@ -13,3 +13,4 @@ package-lock.json
 *.exe
 repomix-output.xml
 .env
+.hintrc

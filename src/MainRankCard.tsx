@@ -1,4 +1,4 @@
-// src/NewSongCard.tsx
+// src/RankCard.tsx
 import {
   AbsoluteFill,
   OffthreadVideo,
@@ -8,18 +8,25 @@ import {
   interpolate,
   Easing,
 } from "remotion";
-import { VideoContainer } from "./VideoContainer";
-import { SongInfo } from "./SongInfo";
-import { StatRows } from "./components/StatRows";
-import { RankTrend } from "./components/RankTrend";
+
 import { STYLES } from "./styles";
+import { StatRow } from "./components/StatRow" 
+import { FitContent } from "./components/FitContent"
+import { FitTitle } from "./components/FitTitle";
+import { TrendBar } from "./components/TrendBar";
+import { HonorBadge } from "./components/HonorBadge";
+import { InfoTag } from "./components/InfoTag";
+import { StatRows } from "./components/StatRows";
 import { OverallPoint } from "./components/OverallPoint";
+import { RankTrend } from "./components/RankTrend";
 import { RankCore } from "./components/RankCore";
+import { SongInfo } from "./SongInfo";
+import { VideoContainer } from "./VideoContainer";
 
 // ------------------------------------------------------------------
-// 主组件：新曲榜卡片
+// 主组件
 // ------------------------------------------------------------------
-export const NewSongCard = (props: any) => {
+export const MainRankCard = (props: any) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
 
@@ -30,10 +37,14 @@ export const NewSongCard = (props: any) => {
 
 
   // 配置参数
+  const showCount = props.showCount !== false;
   const trendKey = props.trendKey || "daily_trends";
   const trendCount = props.trendCount || 7;
   const trendData =
     props[trendKey] || props.daily_trends || props.weekly_trends;
+
+  // 业务逻辑判断
+  const isNewSong = props.rank_before === "-" || props.rate === "NEW";
 
   // 计算各项数据的最佳排名
   const allRanks = [
@@ -108,6 +119,12 @@ export const NewSongCard = (props: any) => {
   const sidebarTranslateX =
     frame < exitStartFrame ? sidebarEntranceX : sidebarExitX;
 
+  // 排名UI逻辑
+  let rankDiffValue = 0;
+  if (!isNewSong && props.rank_before) {
+    rankDiffValue = Number(props.rank_before) - props.rank;
+  }
+
   return (
     <AbsoluteFill
       style={{
@@ -153,6 +170,7 @@ export const NewSongCard = (props: any) => {
       <div
         style={{
           flex: 34,
+          maxWidth: "24%",
           backgroundColor: "#ffffff",
           border: STYLES.border,
           borderRadius: 24,
@@ -165,7 +183,7 @@ export const NewSongCard = (props: any) => {
           boxSizing: "border-box",
         }}
       >
-        {/* 上半部分：排名与分数 */}
+        {/* --- 上半部分：排名与分数 --- */}
         <div
           style={{
             flex: "0 0 auto",
@@ -185,26 +203,25 @@ export const NewSongCard = (props: any) => {
             }}
           >
             {/* 左块：核心排名展示 */}
-            <RankCore
+            <RankCore 
               rank={props.rank}
-              showCount={false}
+              showCount={showCount}
               count={props.count}
             />
 
             {/* 右块：趋势与上周对比 */}
-            <RankTrend
-              isNewSong={true}
+            <RankTrend 
+              isNewSong={isNewSong}
               trendCount={trendCount}
               trendData={trendData}
               rank_before={props.rank_before}
-              rankDiffValue={0}
-              main_rank={props.main_rank}
+              rankDiffValue={rankDiffValue}
             />
           </div>
 
           {/* 第二行：综合得分 */}
           <OverallPoint
-            isNewSong={true}
+            isNewSong={isNewSong}
             score={props.score}
             point_before={props.point_before}
             fixB={props.fixB}
@@ -212,10 +229,11 @@ export const NewSongCard = (props: any) => {
           />
         </div>
 
-        {/* 下半部分：详细数据 */}
-        <StatRows
+        {/* --- 下半部分：详细数据 --- */}
+        <StatRows 
           allRanks={allRanks}
         />
+
       </div>
     </AbsoluteFill>
   );

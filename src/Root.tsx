@@ -1,6 +1,7 @@
 // src/Root.tsx
 import { Composition } from "remotion";
-import { RankCard } from "./RankCard";
+import { MainRankCard } from "./MainRankCard";
+import { SpecialCard } from "./SpecialCard"
 import { Intro } from "./Intro";
 import { InfoCard } from "./InfoCard";
 import { SectionTitle } from "./SectionTitle";
@@ -91,8 +92,24 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
       <Composition
-        id="RankCard"
-        component={RankCard}
+        id="MainRankCard"
+        component={MainRankCard}
+        durationInFrames={60 * 35}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          rank: 1,
+          title: "测试",
+          score: 100000,
+          showCount: true,
+          trendCount: 7,
+          trendKey: "daily_trends",
+        }}
+      />
+      <Composition
+        id="SpecialCard"
+        component={SpecialCard}
         durationInFrames={60 * 35}
         fps={60}
         width={1920}
