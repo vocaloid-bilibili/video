@@ -1,31 +1,37 @@
 // routes/api.js
-const express = require("express");
-const multer = require("multer");
-const fs = require("fs-extra");
-const path = require("path");
 
-const { DIR_DATA, DIR_VIDEO_ROOT, PORT } = require("../config");
-const {
+// 替换原有 CommonJS 语法为 ES 模块
+import express from 'express';
+import multer from 'multer';
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 手动定义 __dirname（ES 模块无全局 __dirname，路径拼接必需）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ES 模块导入（补全 .js 后缀，注释未定义的函数）
+import { DIR_DATA, DIR_VIDEO_ROOT, PORT } from '../config.js';
+import {
   getTask,
   resetTask,
   setTaskStatus,
   log,
   TASK_STATUS,
-} = require("../state");
-const { getPaths } = require("../utils/helpers");
-const { getIssueConfig, detectIssueType } = require("../config/issueTypes");
-const {
+} from '../state.js';
+import { getPaths } from '../utils/helpers.js';
+import { getIssueConfig, detectIssueType } from '../config/issueTypes.js';
+import {
   runSynthesisTask,
-  runMergeOnly,
-  reRenderSegment,
-} = require("../synthesis/task");
-const {
+} from '../synthesis/task.js';
+import {
   getClipSetting,
   setClipSetting,
   deleteClipSetting,
   getAllClipSettings,
-} = require("../utils/clips");
-const { downloadFullVideo, getFullVideoInfo } = require("../utils/fullVideo");
+} from '../utils/clips.js';
+import { downloadFullVideo, getFullVideoInfo } from '../utils/fullVideo.js';
 
 const router = express.Router();
 
@@ -172,8 +178,7 @@ router.post("/synthesis/merge", async (req, res) => {
   log(`开始合并: ${date}`);
   res.send({ status: "started" });
 
-  const fn =
-    typeof runMergeOnly === "function" ? runMergeOnly : runSynthesisTask;
+  
   fn(date).catch((e) => {
     setTaskStatus(TASK_STATUS.FAILED, e.message);
     log(`合并失败: ${e.message}`);
@@ -407,4 +412,4 @@ router.post("/editor-config/:date", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

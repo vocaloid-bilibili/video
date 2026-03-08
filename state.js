@@ -1,11 +1,13 @@
-// state.js
-const TASK_STATUS = {
+// state.js (ES模块最终版本)
+// 核心常量：命名导出（适配api.js的解构导入）
+export const TASK_STATUS = {
   IDLE: "idle",
   PROCESSING: "processing",
   COMPLETED: "completed",
   FAILED: "failed",
 };
 
+// 任务状态存储（保留原有逻辑）
 let currentTask = {
   status: TASK_STATUS.IDLE,
   targetDate: null,
@@ -15,7 +17,8 @@ let currentTask = {
   error: null,
 };
 
-function log(message) {
+// 日志函数：命名导出
+export function log(message) {
   const now = new Date();
   const timeStr = now.toLocaleTimeString("zh-CN", {
     hour12: false,
@@ -29,14 +32,16 @@ function log(message) {
   if (currentTask.logs.length > 1000) currentTask.logs.shift();
 }
 
-function updateProgress(step, current, total = 0, detail = null) {
+// 进度更新函数：命名导出
+export function updateProgress(step, current, total = 0, detail = null) {
   currentTask.step = step;
   if (total > 0) currentTask.progress.total = total;
   if (current !== null) currentTask.progress.current = current;
   if (detail) currentTask.progress.details.push(detail);
 }
 
-function resetTask(date) {
+// 重置任务函数：命名导出
+export function resetTask(date) {
   currentTask = {
     status: TASK_STATUS.PROCESSING,
     targetDate: date,
@@ -48,20 +53,13 @@ function resetTask(date) {
   };
 }
 
-function setTaskStatus(status, error = null) {
+// 设置任务状态函数：命名导出
+export function setTaskStatus(status, error = null) {
   currentTask.status = status;
   if (error) currentTask.error = error;
 }
 
-function getTask() {
+// 获取任务状态函数：命名导出
+export function getTask() {
   return currentTask;
 }
-
-module.exports = {
-  TASK_STATUS,
-  log,
-  updateProgress,
-  resetTask,
-  setTaskStatus,
-  getTask,
-};

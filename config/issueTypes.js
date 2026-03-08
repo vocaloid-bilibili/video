@@ -1,7 +1,13 @@
-// config/issueTypes.js
-// 期刊类型配置
+// config/issueTypes.js (ES模块最终版本)
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-const ISSUE_TYPES = {
+// ES模块中手动定义__dirname（如果后续用到路径解析）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ========== 期刊类型配置（保留原有逻辑） ==========
+export const ISSUE_TYPES = {
   weekly: {
     name: "周刊",
     datePattern: /^\d{4}-\d{2}-\d{2}$/,
@@ -186,13 +192,14 @@ const ISSUE_TYPES = {
   },
 };
 
-function detectIssueType(dateStr) {
+// ========== 核心函数：命名导出（适配导入） ==========
+export function detectIssueType(dateStr) {
   if (ISSUE_TYPES.weekly.datePattern.test(dateStr)) return "weekly";
   if (ISSUE_TYPES.monthly.datePattern.test(dateStr)) return "monthly";
   return "special";
 }
 
-function getDerivedValues(config) {
+export function getDerivedValues(config) {
   const subMax = config.subRankRange ? config.subRankRange[1] : 100;
 
   const isMonthly = config.name === "月刊";
@@ -220,7 +227,7 @@ function getDerivedValues(config) {
   };
 }
 
-function getIssueConfig(dateStr, infoData = {}) {
+export function getIssueConfig(dateStr, infoData = {}) {
   const type = infoData.issueType || detectIssueType(dateStr);
 
   const baseConfig = JSON.parse(
@@ -239,7 +246,7 @@ function getIssueConfig(dateStr, infoData = {}) {
   return baseConfig;
 }
 
-function deepMerge(target, source) {
+export function deepMerge(target, source) {
   for (const key in source) {
     if (
       source[key] &&
@@ -254,10 +261,3 @@ function deepMerge(target, source) {
   }
   return target;
 }
-
-module.exports = {
-  ISSUE_TYPES,
-  detectIssueType,
-  getIssueConfig,
-  getDerivedValues,
-};

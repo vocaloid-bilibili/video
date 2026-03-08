@@ -1,17 +1,19 @@
-// synthesis/task.js
-const fs = require("fs-extra");
-const path = require("path");
+// synthesis/task.js (ES模块最终版本)
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST } = require("../config");
-const { log, updateProgress, setTaskStatus, TASK_STATUS } = require("../state");
-const { getPaths, chunkArray } = require("../utils/helpers");
-const { getIssueConfig } = require("../config/issueTypes");
-const {
+// 修复1：ES模块导入所有依赖，补全.js后缀
+import { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST, USE_GPU } from '../config.js';
+import { log, updateProgress, setTaskStatus, TASK_STATUS } from '../state.js';
+import { getPaths, chunkArray } from '../utils/helpers.js';
+import { getIssueConfig } from '../config/issueTypes.js';
+import {
   downloadImage,
   downloadClip,
   downloadAudio,
-} = require("../utils/download");
-const {
+} from '../utils/download.js';
+import {
   concatVideos,
   processP1,
   processP3,
@@ -19,14 +21,14 @@ const {
   getDuration,
   addAudioFade,
   execPromise,
-} = require("../utils/ffmpeg");
-const {
+} from '../utils/ffmpeg.js';
+import {
   renderComposition,
   renderCompositionRaw,
   renderRankSegment,
   renderStill,
-} = require("../utils/render");
-const { getClipSetting } = require("../utils/clips");
+} from '../utils/render.js';
+import { getClipSetting } from '../utils/clips.js';
 
 // 基础时长配置
 const FPS = 60;
@@ -802,4 +804,10 @@ async function runSynthesisTask(date) {
   log("完成");
 }
 
-module.exports = { runSynthesisTask };
+export {
+  runSynthesisTask,
+  prepareAllAssets,
+  renderRankBatch,
+  renderSubRankBatch,
+  formatDate,
+};

@@ -1,20 +1,24 @@
-// utils/download.js
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
-const crypto = require("crypto");
-const { execPromise, getDuration } = require("./ffmpeg");
-const {
-  DIR_DOWNLOADS,
-  DIR_IMAGES,
-  DIR_FULL_VIDEO,
-  PORT,
-} = require("../config");
-const { log } = require("../state");
+// utils/download.js (ES模块最终版本)
+import axios from 'axios';
+import fs from 'fs-extra';
+import path from 'path';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 
+// 修复1：ES模块导入依赖，补全.js后缀
+import { execPromise, getDuration } from './ffmpeg.js';
+import { DIR_DOWNLOADS, DIR_IMAGES, DIR_FULL_VIDEO, PORT } from '../config.js';
+import { log } from '../state.js';
+
+// 修复2：手动定义__dirname（ES模块特有）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 保留原有业务逻辑
 const downloadLocks = new Map();
 const LOCK_TIMEOUT = 60 * 1000;
 
+// ========== 工具函数（保留原有逻辑） ==========
 function isValidBvid(bvid) {
   if (!bvid || typeof bvid !== "string") return false;
   return /^BV[a-zA-Z0-9]{10}$/.test(bvid);
@@ -53,7 +57,8 @@ function releaseLock(lockKey) {
   downloadLocks.delete(lockKey);
 }
 
-async function downloadImage(url) {
+// ========== 核心函数：命名导出（适配task.js导入） ==========
+export async function downloadImage(url) {
   if (!url) return "";
   const hash = crypto.createHash("md5").update(url).digest("hex");
   const ext = path.extname(url).split("?")[0] || ".jpg";
@@ -85,7 +90,7 @@ async function downloadImage(url) {
   }
 }
 
-// 下载完整视频（仅P1）
+// 下载完整视频（仅P1）- 内部函数无需导出
 async function downloadFullVideoInternal(bvid) {
   if (!isValidBvid(bvid)) return null;
 
@@ -138,7 +143,7 @@ async function downloadFullVideoInternal(bvid) {
   }
 }
 
-// 从完整视频裁剪片段
+// 从完整视频裁剪片段 - 内部函数无需导出
 async function clipFromFullVideo(
   fullVideoPath,
   startTime,
@@ -158,7 +163,7 @@ async function clipFromFullVideo(
   }
 }
 
-async function downloadClip(bvid, startTime, duration, retries = 3) {
+export async function downloadClip(bvid, startTime, duration, retries = 3) {
   if (!isValidBvid(bvid)) return null;
 
   const fileName = `${bvid}_${startTime.toFixed(2)}_${duration}.mp4`;
@@ -227,7 +232,8 @@ async function downloadClip(bvid, startTime, duration, retries = 3) {
   }
 }
 
-async function downloadAudio(bvid, name) {
+// 关键：命名导出downloadAudio（解决task.js导入错误）
+export async function downloadAudio(bvid, name) {
   if (!isValidBvid(bvid)) return null;
 
   const output = path.join(DIR_DOWNLOADS, name);
@@ -242,5 +248,3 @@ async function downloadAudio(bvid, name) {
     return null;
   }
 }
-
-module.exports = { downloadImage, downloadClip, downloadAudio };

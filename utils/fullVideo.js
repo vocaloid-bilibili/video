@@ -1,15 +1,25 @@
-// utils/fullVideo.js
-const fs = require("fs-extra");
-const path = require("path");
-const { execPromise, getDuration } = require("./ffmpeg");
-const { DIR_FULL_VIDEO, PORT } = require("../config");
-const { log } = require("../state");
+// utils/fullVideo.js (ES模块最终版本)
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+// 修复1：ES模块导入依赖，补全.js后缀
+import { execPromise, getDuration } from './ffmpeg.js';
+import { DIR_FULL_VIDEO, PORT } from '../config.js';
+import { log } from '../state.js';
+
+// 修复2：手动定义__dirname（ES模块特有）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 确保完整视频目录存在（保留原有逻辑）
 fs.ensureDirSync(DIR_FULL_VIDEO);
 
+// 下载锁（保留原有逻辑）
 const downloadLocks = new Map();
 
-async function downloadFullVideo(bvid) {
+// ========== 核心函数：命名导出（适配api.js导入） ==========
+export async function downloadFullVideo(bvid) {
   const outputPath = path.join(DIR_FULL_VIDEO, `${bvid}.mp4`);
   const publicUrl = `http://localhost:${PORT}/downloads/full_videos/${bvid}.mp4`;
 
@@ -62,7 +72,7 @@ async function downloadFullVideo(bvid) {
   }
 }
 
-function getFullVideoInfo(bvid) {
+export function getFullVideoInfo(bvid) {
   const outputPath = path.join(DIR_FULL_VIDEO, `${bvid}.mp4`);
   const publicUrl = `http://localhost:${PORT}/downloads/full_videos/${bvid}.mp4`;
 
@@ -71,8 +81,3 @@ function getFullVideoInfo(bvid) {
   }
   return { exists: false };
 }
-
-module.exports = {
-  downloadFullVideo,
-  getFullVideoInfo,
-};

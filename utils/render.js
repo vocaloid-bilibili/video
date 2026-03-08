@@ -1,15 +1,24 @@
-// utils/render.js
-const fs = require("fs-extra");
-const path = require("path");
-const { execPromise, addAudioFade } = require("./ffmpeg");
-const { CHROME_EXECUTABLE, PORT } = require("../config");
-const { log } = require("../state");
-const { getCopyrightLabel } = require("./helpers");
+// utils/render.js (ES模块最终版本)
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+// 修复1：ES模块导入依赖，补全.js后缀
+import { execPromise, addAudioFade } from './ffmpeg.js';
+import { CHROME_EXECUTABLE, PORT } from '../config.js';
+import { log } from '../state.js';
+import { getCopyrightLabel } from './helpers.js';
+
+// 修复2：手动定义__dirname（ES模块特有）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 保留原有业务常量
 const FPS = 60;
 const CONCURRENCY = 4;
 
-async function renderComposition(
+// ========== 核心渲染函数：命名导出（适配task.js导入） ==========
+export async function renderComposition(
   comp,
   props,
   name,
@@ -53,8 +62,8 @@ async function renderComposition(
   }
 }
 
-// 渲染组件（不带淡入淡出）
-async function renderCompositionRaw(
+// 渲染组件（不带淡入淡出）- 命名导出
+export async function renderCompositionRaw(
   comp,
   props,
   name,
@@ -64,8 +73,8 @@ async function renderCompositionRaw(
   return renderComposition(comp, props, name, dir, durationSec, 0);
 }
 
-// 渲染榜单片段
-async function renderRankSegment(
+// 渲染榜单片段 - 命名导出
+export async function renderRankSegment(
   data,
   videoPath,
   thumb,
@@ -102,11 +111,11 @@ async function renderRankSegment(
     trendCount: config.trendCount || 7,
     seperate_ranks:
       data[config.trendKey || "daily_trends"] || data.daily_trends,
-  }
+  }; // 修复原代码遗漏的分号
 
   const props = {
     ...data, ...extraFields
-  }
+  }; // 修复原代码遗漏的分号
 
   const temp = path.join(dir, `temp_props_rank_${type}_${data.rank}.json`);
   fs.writeJsonSync(temp, props);
@@ -139,7 +148,8 @@ async function renderRankSegment(
   }
 }
 
-async function renderStill(
+// 渲染静态帧/封面 - 命名导出
+export async function renderStill(
   compositionId,
   props,
   outputName,
@@ -164,10 +174,3 @@ async function renderStill(
     if (fs.existsSync(temp)) fs.unlinkSync(temp);
   }
 }
-
-module.exports = {
-  renderComposition,
-  renderCompositionRaw,
-  renderRankSegment,
-  renderStill,
-};

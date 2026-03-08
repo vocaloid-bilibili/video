@@ -1,11 +1,13 @@
-// utils/ffmpeg.js
-const { exec } = require("child_process");
-const path = require("path");
-const fs = require("fs-extra");
-const { log } = require("../state");
-const { USE_GPU } = require("../config")
+// utils/ffmpeg.js (ES模块最终版本)
+import { exec } from 'child_process';
+import path from 'path';
+import fs from 'fs-extra';
 
-// 编码配置
+// 修复1：ES模块导入依赖，补全.js后缀
+import { log } from '../state.js';
+import { USE_GPU } from '../config.js';
+
+// 编码配置（保留原有逻辑）
 let VIDEO_CODEC = "libx264";
 let ENCODE_OPTS = "-preset medium -crf 23";
 let HWACCEL = "";
@@ -14,13 +16,13 @@ if (USE_GPU === "NVIDIA") {
   VIDEO_CODEC = "h264_nvenc";
   ENCODE_OPTS = "-preset p1 -rc vbr -cq 23 -b:v 6M -maxrate 10M";
   HWACCEL = "-hwaccel cuda";
-}
-else if (USE_GPU === "INTEL") {
+} else if (USE_GPU === "INTEL") {
   VIDEO_CODEC = "h264_qsv";
   ENCODE_OPTS = "-preset fast -b:v 6M -maxrate 10M";
 }
 
-function execPromise(cmd) {
+// ========== 核心函数：命名导出（适配fullVideo.js导入） ==========
+export function execPromise(cmd) {
   return new Promise((resolve, reject) => {
     exec(cmd, { maxBuffer: 1024 * 1024 * 100 }, (err, stdout, stderr) => {
       if (err) reject(err);
@@ -29,13 +31,13 @@ function execPromise(cmd) {
   });
 }
 
-async function getDuration(filePath) {
+export async function getDuration(filePath) {
   const cmd = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`;
   const result = await execPromise(cmd);
   return parseFloat(result.trim());
 }
 
-async function addAudioFade(inputPath, outputPath, fadeDuration = 2) {
+export async function addAudioFade(inputPath, outputPath, fadeDuration = 2) {
   const duration = await getDuration(inputPath);
   if (duration <= fadeDuration * 2) {
     await fs.copy(inputPath, outputPath);
@@ -56,7 +58,7 @@ async function addAudioFade(inputPath, outputPath, fadeDuration = 2) {
 }
 
 // 合并多个片段
-async function concatVideos(list, outputName, dir) {
+export async function concatVideos(list, outputName, dir) {
   const filtered = list.filter((p) => p && fs.existsSync(p));
   if (filtered.length === 0) return null;
   if (filtered.length === 1) return filtered[0];
@@ -76,7 +78,7 @@ async function concatVideos(list, outputName, dir) {
 }
 
 // P1 混音 OP
-async function processP1(videoPath, audioPath, outputName, dir) {
+export async function processP1(videoPath, audioPath, outputName, dir) {
   const out = path.join(dir, outputName);
 
   const cmd = `ffmpeg ${HWACCEL} -i "${videoPath}" -i "${audioPath}" -filter_complex "[1:a]afade=t=in:st=0:d=2,afade=t=out:st=43:d=2,volume=0.7[opa];[0:a][opa]amix=inputs=2:duration=first[outa]" -map 0:v -map "[outa]" -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k "${out}" -y`;
@@ -86,7 +88,7 @@ async function processP1(videoPath, audioPath, outputName, dir) {
 }
 
 // P3 混音 ED
-async function processP3(p3Pre, p3Sub, edAudio, outputName, dir) {
+export async function processP3(p3Pre, p3Sub, edAudio, outputName, dir) {
   const out = path.join(dir, outputName);
 
   const preConcat = path.join(dir, "p3_concat_temp.mp4");
@@ -106,20 +108,10 @@ async function processP3(p3Pre, p3Sub, edAudio, outputName, dir) {
 }
 
 // 最终合并
-async function finalMerge(p1, p2, p3, output) {
+export async function finalMerge(p1, p2, p3, output) {
   log("最终合并");
 
   const cmd = `ffmpeg ${HWACCEL} -i "${p1}" ${HWACCEL} -i "${p2}" ${HWACCEL} -i "${p3}" -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k "${output}" -y`;
 
   await execPromise(cmd);
 }
-
-module.exports = {
-  execPromise,
-  concatVideos,
-  processP1,
-  processP3,
-  finalMerge,
-  getDuration,
-  addAudioFade,
-};
