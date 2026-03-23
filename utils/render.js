@@ -123,7 +123,7 @@ export async function renderRankSegment(
   try {
     const typeName = type === "new" ? "新曲榜" : "主榜";
     log(`渲染 ${typeName} #${data.rank} (${durationSec}s)`);
-    const compName = type === "new" ? "NewSongCard" : "RankCard";
+    const compName = type === "new" ? "NewSongCard" : "MainRankCard";
     const frames = Math.round(durationSec * FPS);
 
     await execPromise(
