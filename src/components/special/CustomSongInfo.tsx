@@ -1,6 +1,8 @@
+// 修改版的下方歌曲信息栏
+// 没有成就。
+
 import { STYLES } from "../../styles"
 import { FitTitle } from "../FitTitle"
-import { HonorBadge } from "../HonorBadge"
 import { FitContent } from "../FitContent"
 import { InfoTag } from "../InfoTag"
 import { MarqueeTitle } from "../MarqueeTitle"

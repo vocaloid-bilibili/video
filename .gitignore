@@ -3,6 +3,7 @@ node_modules/
 downloads/
 video/
 data/
+public/image/
 tsconfig.json
 pnpm-lock.yaml
 pnpm-workspace.yaml

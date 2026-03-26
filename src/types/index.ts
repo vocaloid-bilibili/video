@@ -39,8 +39,7 @@ export interface Stats {
   share_rank:    number;
 }
 
-
-export interface WeeklyMain extends Appendix, Stats {
+interface SongInfo {
   title:         string;
   bvid:          string;
   aid:           number;
@@ -55,11 +54,19 @@ export interface WeeklyMain extends Appendix, Stats {
   duration:      string;
   page:          number;
 
-  rank:          number;
+}
+
+interface BasicRank extends Appendix, Stats, SongInfo {
+  rank: number
+}
+
+export interface WeeklyMain extends BasicRank {
   count:         number;
-  rank_before:   number | "-";
-  point_before:  number | "-";
+  rank_before:   NumberOrNone;
+  point_before:  NumberOrNone;
   rate:          string;
   honor:         any[];
   seperate_ranks:  { [key: string]: NumberOrNone };
 }
+
+

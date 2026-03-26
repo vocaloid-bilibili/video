@@ -1,4 +1,4 @@
-// src/NewSongCard.tsx
+// 特刊用的视频卡片。可定制，也许代码会频繁修改。
 import {
   AbsoluteFill,
   OffthreadVideo,
@@ -8,18 +8,14 @@ import {
   interpolate,
   Easing,
 } from "remotion";
-import { VideoContainer } from "../VideoContainer";
-import { SongInfo } from "../components/SongInfo";
-import { StatRows } from "../components/StatRows";
-import { RankTrend } from "../components/RankTrend";
-import { STYLES } from "../styles";
-import { OverallPoint } from "../components/OverallPoint";
-import { RankCore } from "../components/RankCore";
-import { CustomSongInfo } from "../components/special/CustomSongInfo";
+import { VideoContainer } from "./VideoContainer";
+import { SongInfo } from "./components/SongInfo";
+import { StatRows } from "./components/StatRows";
+import { STYLES } from "./styles";
+import { OverallPoint } from "./components/OverallPoint";
+import { RankCore } from "./components/RankCore";
+import { RankPart as RightTop } from "./components/special/RankPart";
 
-// ------------------------------------------------------------------
-// 主组件：某种修改版的排行榜UI
-// ------------------------------------------------------------------
 export const SpecialCard = (props: any) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -144,7 +140,7 @@ export const SpecialCard = (props: any) => {
         />
 
         {/* 2. 底部信息栏 */}
-        <CustomSongInfo
+        <SongInfo
           props={props}
           infoTranslateY={infoTranslateY}
         />
@@ -176,7 +172,7 @@ export const SpecialCard = (props: any) => {
             marginBottom: 16,
           }}
         >
-          {/* 第一行：排名 + 趋势 */}
+          {/* 第一行：排名 + 板块 */}
           <div
             style={{
               display: "flex",
@@ -193,13 +189,8 @@ export const SpecialCard = (props: any) => {
             />
 
             {/* 右块：趋势与上周对比 */}
-            <RankTrend
-              isNewSong={true}
-              trendCount={trendCount}
-              trendData={trendData}
-              rank_before={props.rank_before}
-              rankDiffValue={0}
-              main_rank={props.main_rank}
+            <RightTop
+              partName="主榜"
             />
           </div>
 

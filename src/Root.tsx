@@ -1,7 +1,6 @@
 // src/Root.tsx
 import { Composition } from "remotion";
 import { MainRankCard } from "./MainRankCard";
-import { SpecialCard } from "./Special/SpecialCard"
 import { Intro } from "./Intro";
 import { InfoCard } from "./InfoCard";
 import { SectionTitle } from "./SectionTitle";
@@ -14,8 +13,10 @@ import { NewSongCard } from "./NewSongCard";
 import { SubRank } from "./SubRank";
 import { StatsCard } from "./StatsCard";
 import { StaffCard } from "./StaffCard";
+import { SpecialCard } from "./SpecialCard";
 import mainRankProps from "./example/mainRank"
 import specialProps from "./example/specialRank";
+import vocalStats from "./example/vocalStats"
 
 import { weeklyMainSchema } from "./types/zod";
 
@@ -108,7 +109,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="SpecialCard"
         component={SpecialCard}
-        durationInFrames={60 * 35}
+        durationInFrames={60 * 20}
         fps={60}
         width={1920}
         height={1080}
@@ -121,7 +122,7 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{ list: [] }}
+        defaultProps={{ list: vocalStats }}
       />
       <Composition
         id="MillionRank"
