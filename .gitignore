@@ -4,9 +4,11 @@ downloads/
 video/
 data/
 public/image/
+storage/
 tsconfig.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
 *.zip
 *.mp4
 *.mp3

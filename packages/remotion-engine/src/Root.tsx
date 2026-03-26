@@ -1,4 +1,5 @@
 // src/Root.tsx
+import React from "react";
 import { Composition } from "remotion";
 import { MainRankCard } from "./MainRankCard";
 import { Intro } from "./Intro";

@@ -62,8 +62,6 @@ app.use("/config/staff", express.static(DIR_STAFF));
 // 挂载路由
 app.use("/api", apiRoutes);
 
-console.log("static path:", path.join(__dirname, "public"));
-
 // 启动服务
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
