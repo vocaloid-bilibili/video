@@ -8,11 +8,10 @@ vocabili-video/
 │   ├── controller/          # 控制器（后端服务）
 │   ├── remotion-engine/     # Remotion视频渲染引擎
 │   └── shared/             # 共享配置和类型定义
-├── data/                   # 数据文件目录
-├── downloads/              # 下载文件目录
-├── video/                  # 视频输出目录
-├── config/                 # 配置文件目录
-└── public/                 # 静态文件目录
+└── storage/                # 存储文件目录
+    ├── data/               # 数据文件
+    ├── downloads/          # 下载文件
+    └── video/              # 视频文件
 ```
 
 ## 安装 pnpm
