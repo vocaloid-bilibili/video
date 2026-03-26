@@ -179,6 +179,8 @@ router.post("/synthesis/merge", async (req, res) => {
   res.send({ status: "started" });
 
   
+  const fn =
+    typeof runMergeOnly === "function" ? runMergeOnly : runSynthesisTask;
   fn(date).catch((e) => {
     setTaskStatus(TASK_STATUS.FAILED, e.message);
     log(`合并失败: ${e.message}`);
