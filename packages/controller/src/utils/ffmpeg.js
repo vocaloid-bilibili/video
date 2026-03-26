@@ -25,7 +25,12 @@ if (USE_GPU === "NVIDIA") {
 export function execPromise(cmd) {
   return new Promise((resolve, reject) => {
     exec(cmd, { maxBuffer: 1024 * 1024 * 100 }, (err, stdout, stderr) => {
-      if (err) reject(err);
+      if (err) {
+        console.error('❌ ERROR:', err);
+        console.error('📛 STDERR:', stderr);
+        console.error('📄 STDOUT:', stdout);
+        reject(err);
+      }
       else resolve(stdout);
     });
   });

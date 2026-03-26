@@ -1,21 +1,82 @@
-// utils/render.js (ES模块最终版本)
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
-// 修复1：ES模块导入依赖，补全.js后缀
-import { execPromise, addAudioFade } from './ffmpeg.js';
+import { addAudioFade } from './ffmpeg.js';
 import { CHROME_EXECUTABLE, MONOREPO_ROOT, PORT } from 'shared-config';
 import { log } from '../state.js';
 import { getCopyrightLabel } from './helpers.js';
 
-// 修复2：手动定义__dirname（ES模块特有）
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 保留原有业务常量
 const FPS = 60;
 const CONCURRENCY = 4;
+
+// ⭐ 核心执行器（完全替代 execPromise）
+function runRemotion(args) {
+  const safeArgs = args
+    .filter((v) => v !== undefined && v !== null)
+    .map((v) => String(v));
+
+  const cwd = path.join(MONOREPO_ROOT, 'packages/remotion-engine');
+
+  const remotionBin = path.resolve(
+    cwd,
+    'node_modules/.bin/remotion.cmd'
+  );
+
+  console.log('🚀 BIN:', remotionBin);
+  console.log('🚀 ARGS:', safeArgs);
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      'cmd.exe',
+      [
+        '/d',
+        '/s',
+        '/c',
+        remotionBin,        // ❗ 不要加引号
+        'render',
+        ...safeArgs         // ❗ 不要 join 成字符串
+      ],
+      {
+        cwd,
+        stdio: 'inherit',
+      }
+    );
+
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`Remotion exited with code ${code}`));
+    });
+
+    child.on('error', reject);
+  });
+}
+
+// ⭐ still 专用（不用 npm script）
+function runStill(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      'node_modules/.bin/remotion.cmd',
+      ['still', ...args],
+      {
+        cwd: path.join(MONOREPO_ROOT, 'packages/remotion-engine'),
+        stdio: 'inherit',
+      }
+    );
+
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`Still exited with code ${code}`));
+    });
+
+    child.on('error', reject);
+  });
+}
+
 
 // ========== 核心渲染函数：命名导出（适配task.js导入） ==========
 export async function renderComposition(
@@ -35,20 +96,26 @@ export async function renderComposition(
   try {
     log(`渲染 ${comp} -> ${name}${durationSec ? ` (${durationSec}s)` : ""}`);
 
-    let cmd = `cd "${MONOREPO_ROOT}/packages/remotion-engine" && npx remotion render ${comp} "${finalPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --gl=vulkan --concurrency=${CONCURRENCY} --quiet`;
+    const args = [
+      comp,
+      finalPath,
+      `--props=${temp}`,
+      '--gl=vulkan',
+      `--concurrency=${CONCURRENCY}`,
+    ];
 
     if (durationSec) {
       const frames = Math.round(durationSec * FPS);
-      cmd += ` --frames=0-${frames - 1}`;
+      args.push(`--frames=0-${frames - 1}`);
     }
 
-    await execPromise(cmd);
+    await runRemotion(args);
 
+    // 淡入淡出
     if (fadeDuration > 0 && fs.existsSync(finalPath)) {
-      const tempFaded = finalPath.replace(".mp4", "_faded.mp4");
+      const tempFaded = finalPath.replace('.mp4', '_faded.mp4');
       log(`添加淡入淡出: ${name}`);
       await addAudioFade(finalPath, tempFaded, fadeDuration);
-      // 替换原文件
       fs.removeSync(finalPath);
       fs.renameSync(tempFaded, finalPath);
     }
@@ -121,19 +188,23 @@ export async function renderRankSegment(
   fs.writeJsonSync(temp, props);
 
   try {
-    const typeName = type === "new" ? "新曲榜" : "主榜";
-    log(`渲染 ${typeName} #${data.rank} (${durationSec}s)`);
     const compName = type === "new" ? "NewSongCard" : "MainRankCard";
     const frames = Math.round(durationSec * FPS);
 
-    await execPromise(
-      `cd "${MONOREPO_ROOT}/packages/remotion-engine" && npx remotion render ${compName} "${finalPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --gl=vulkan --concurrency=${CONCURRENCY} --frames=0-${frames - 1} --quiet`,
-    );
+    log(`渲染 ${type} #${data.rank} (${durationSec}s)`);
 
-    // 添加淡入淡出
+    await runRemotion([
+      compName,
+      finalPath,
+      `--props=${temp}`,
+      '--gl=vulkan',
+      `--concurrency=${CONCURRENCY}`,
+      `--frames=0-${frames - 1}`,
+    ]);
+
     if (config.audioFade !== false && fs.existsSync(finalPath)) {
-      const tempFaded = finalPath.replace(".mp4", "_faded.mp4");
-      log(`添加淡入淡出: ${typeName} #${data.rank}`);
+      const tempFaded = finalPath.replace('.mp4', '_faded.mp4');
+      log(`添加淡入淡出: ${type} #${data.rank}`);
       await addAudioFade(finalPath, tempFaded, config.fadeDuration || 2);
       fs.removeSync(finalPath);
       fs.renameSync(tempFaded, finalPath);
@@ -163,9 +234,15 @@ export async function renderStill(
   fs.writeJsonSync(temp, props);
 
   try {
-    const cmd = `cd "${MONOREPO_ROOT}/packages/remotion-engine" && npx remotion still ${compositionId} "${outPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --frame=${frameNumber}`;
-    log(`渲染封面: ${outputName} (frame ${frameNumber})`);
-    await execPromise(cmd);
+    log(`渲染封面: ${outputName}`);
+
+    await runStill([
+      compositionId,
+      outPath,
+      `--props=${temp}`,
+      `--frame=${frameNumber}`,
+    ]);
+
     return outPath;
   } catch (e) {
     log(`封面渲染失败: ${e.message}`);

@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
+    "render": "remotion render",
     "build": "echo 'Controller does not need build step'",
     "lint": "eslint src --ext .js"
   },
