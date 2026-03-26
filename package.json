@@ -8,14 +8,23 @@
     "packages/*"
   ],
   "scripts": {
+    "install:all": "pnpm install --no-frozen-lockfile",
     "dev:controller": "pnpm --filter vocabili-controller dev",
     "dev:remotion": "pnpm --filter vocabili-remotion dev",
+    "dev": "pnpm --filter vocabili-controller dev & pnpm --filter vocabili-remotion dev",
     "build": "pnpm --filter vocabili-controller build && pnpm --filter vocabili-remotion build",
     "build:controller": "pnpm --filter vocabili-controller build",
     "build:remotion": "pnpm --filter vocabili-remotion build",
     "start": "pnpm --filter vocabili-controller start",
     "lint": "pnpm --filter vocabili-controller lint && pnpm --filter vocabili-remotion lint",
     "lint:controller": "pnpm --filter vocabili-controller lint",
-    "lint:remotion": "pnpm --filter vocabili-remotion lint"
+    "lint:remotion": "pnpm --filter vocabili-remotion lint",
+    "clean": "rm -rf node_modules packages/*/node_modules pnpm-lock.yaml",
+    "clean:install": "pnpm run clean && pnpm install --no-frozen-lockfile",
+    "workspace:info": "pnpm -r list",
+    "add": "pnpm add",
+    "add:controller": "pnpm --filter vocabili-controller add",
+    "add:remotion": "pnpm --filter vocabili-remotion add",
+    "add:shared": "pnpm --filter shared-config add"
   }
 }

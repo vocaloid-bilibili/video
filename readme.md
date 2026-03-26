@@ -151,7 +151,9 @@ USE_GPU=NVIDIA
 3.  **yt-dlp**: 必须安装并添加到 PATH，用于下载 B 站资源。
 4.  **Chrome Headless Shell**: Remotion 服务端渲染引擎。
 
-## 7. 本地运行步骤
+## 7. 本地运行步骤 (Monorepo 版本)
+
+> **注意**: 项目已重构为 Monorepo 结构。请先查看 [Monorepo 配置指南](./README-MONOREPO.md) 了解新的安装和运行方式。
 
 1.  **克隆代码**:
 
@@ -160,19 +162,30 @@ USE_GPU=NVIDIA
     cd <repo_name>
     ```
 
-2.  **安装依赖**:
+2.  **安装依赖** (Monorepo 方式):
 
     ```bash
-    npm install
+    # 方法1: 使用安装脚本 (推荐)
+    install.bat  # Windows
+    ./install.sh # Linux/macOS
+
+    # 方法2: 手动安装
+    pnpm install --no-frozen-lockfile
     ```
 
 3.  **环境检查**:
     确保 `ffmpeg -version` 无报错且包含 `nvenc`。
 
-4.  **启动服务**:
+4.  **启动服务** (Monorepo 方式):
 
     ```bash
-    node server.js
+    # 启动控制器服务
+    pnpm start
+    # 或
+    pnpm run dev:controller
+
+    # 启动 Remotion Studio (可选，用于开发调试)
+    pnpm run dev:remotion
     ```
 
     控制台输出 `Server running on http://localhost:3002` 即表示启动成功。

@@ -6,18 +6,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 原有变量定义（逻辑不变）
-export const PORT = 3002;
-export const API_KEY = "1145140721";
-export const PYTHON_API = "http://127.0.0.1:8000/analyze";
-export const CHROME_EXECUTABLE = `"C:\\chrome-headless-shell\\chrome-headless-shell.exe"`;
+// 加载环境变量
+const env = process.env;
+
+// 从环境变量读取配置，提供默认值
+export const PORT = env.PORT || 3002;
+export const API_KEY = env.API_KEY || "1145140721";
+export const PYTHON_API = env.PYTHON_API || "http://127.0.0.1:8000/analyze";
+export const CHROME_EXECUTABLE = env.CHROME_EXECUTABLE || `"C:\\chrome-headless-shell\\chrome-headless-shell.exe"`;
 
 // 共享目录路径 - 指向Monorepo根目录
-const MONOREPO_ROOT = path.resolve(__dirname, "../../../");
+const MONOREPO_ROOT = path.resolve(process.cwd(), "../../");
+const STORAGE_ROOT = path.resolve(MONOREPO_ROOT, "storage")
 
 export const DIR_ROOT = MONOREPO_ROOT;
-export const DIR_DATA = path.resolve(MONOREPO_ROOT, "data");
-export const DIR_DOWNLOADS = path.resolve(MONOREPO_ROOT, "downloads");
+export const DIR_DATA = path.resolve(STORAGE_ROOT, "data");
+export const DIR_DOWNLOADS = path.resolve(STORAGE_ROOT, "downloads");
 export const DIR_IMAGES = path.resolve(DIR_DOWNLOADS, "images");
 export const DIR_VIDEO_ROOT = path.resolve(MONOREPO_ROOT, "video");
 export const DIR_AUDIO_CACHE = path.resolve(DIR_DOWNLOADS, "audio_cache");

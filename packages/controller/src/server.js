@@ -1,4 +1,16 @@
 // server.js (ES模块版本)
+import 'dotenv/config'; // 加载环境变量
+
+// 添加全局错误处理
+process.on('uncaughtException', (error) => {
+  console.error('❌ 未捕获异常:', error.message);
+  console.error(error.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ 未处理的Promise拒绝:', reason);
+});
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -40,7 +52,7 @@ const app = express();
 // 中间件配置（逻辑不变）
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../public")));
 app.use("/downloads", express.static(DIR_DOWNLOADS));
 app.use("/downloads/full_videos", express.static(DIR_FULL_VIDEO));
 app.use("/video", express.static(DIR_VIDEO_ROOT));
@@ -49,6 +61,8 @@ app.use("/config/staff", express.static(DIR_STAFF));
 
 // 挂载路由
 app.use("/api", apiRoutes);
+
+console.log("static path:", path.join(__dirname, "public"));
 
 // 启动服务
 app.listen(PORT, () => {

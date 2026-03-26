@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 
 // 修复1：ES模块导入依赖，补全.js后缀
 import { log } from '../state.js';
-import { USE_GPU } from '../config.js';
+import { USE_GPU } from 'shared-config';
 
 // 编码配置（保留原有逻辑）
 let VIDEO_CODEC = "libx264";
