@@ -237,6 +237,11 @@ async function renderSubRankBatch(chunks, segments, duration, config) {
 }
 
 // ========== 主合成任务 ==========
+
+/**
+ * 核心中的核心！这里就是执行生成视频任务
+ * @param {string} date 
+ */
 async function runSynthesisTask(date) {
   const { base, segments, final } = getPaths(date);
   const dataFile = path.join(DIR_DATA, `${date}.json`);

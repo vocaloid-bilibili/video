@@ -1,4 +1,9 @@
-// config/issueTypes.js (ES模块最终版本)
+/**
+ * 这里就是我们熟悉的期刊段落配置！一定要好好配置。
+ * 
+ * @module config/issueTypes
+ */
+
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -144,6 +149,8 @@ export const ISSUE_TYPES = {
     },
   },
 
+  // 这是特刊配置。
+  // 但是我说实话很多特刊都不一样的，我们需要很多的特刊配置，有些特刊根本不能一次性生成
   special: {
     name: "特刊",
     datePattern: null, // 无固定格式
