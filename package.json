@@ -5,9 +5,8 @@
   "repository": {},
   "license": "UNLICENSED",
   "private": true,
-  "type": "module", 
+  "type": "module",
   "dependencies": {
-  
     "@remotion/bundler": "^4.0.417",
     "@remotion/cli": "^4.0.417",
     "@remotion/google-fonts": "^4.0.417",
@@ -32,7 +31,6 @@
     "zod": "^3.22.3"
   },
   "devDependencies": {
-  
     "@remotion/eslint-config-flat": "^4.0.417",
     "@types/react": "19.2.7",
     "@types/web": "0.0.166",
@@ -48,5 +46,6 @@
   },
   "sideEffects": [
     "*.css"
-  ]
+  ],
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }
