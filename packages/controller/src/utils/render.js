@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
 
 import { addAudioFade } from './ffmpeg.js';
-import { CHROME_EXECUTABLE, MONOREPO_ROOT, PORT } from 'shared-config';
+import { MONOREPO_ROOT, PORT } from 'shared-config';
 import { log } from '../state.js';
 import { getCopyrightLabel } from './helpers.js';
 
@@ -26,9 +26,6 @@ function runRemotion(args) {
     cwd,
     'node_modules/.bin/remotion.cmd'
   );
-
-  console.log('🚀 BIN:', remotionBin);
-  console.log('🚀 ARGS:', safeArgs);
 
   return new Promise((resolve, reject) => {
     const child = spawn(
