@@ -13,11 +13,11 @@ const env = process.env;
 export const PORT = env.PORT || 3002;
 export const API_KEY = env.API_KEY || "1145140721";
 export const PYTHON_API = env.PYTHON_API || "http://127.0.0.1:8000/analyze";
-export const CHROME_EXECUTABLE = env.CHROME_EXECUTABLE || `"C:\\chrome-headless-shell\\chrome-headless-shell.exe"`;
+export const CHROME_EXECUTABLE = env.CHROME_EXECUTABLE || `C:\\chrome-headless-shell\\chrome-headless-shell.exe`;
 
 // 共享目录路径 - 指向Monorepo根目录
-const MONOREPO_ROOT = path.resolve(process.cwd(), "../../");
-const STORAGE_ROOT = path.resolve(MONOREPO_ROOT, "storage")
+export const MONOREPO_ROOT = path.resolve(process.cwd(), "../../");
+export const STORAGE_ROOT = path.resolve(MONOREPO_ROOT, "storage")
 
 export const DIR_ROOT = MONOREPO_ROOT;
 export const DIR_DATA = path.resolve(STORAGE_ROOT, "data");

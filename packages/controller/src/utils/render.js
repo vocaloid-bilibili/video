@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 // 修复1：ES模块导入依赖，补全.js后缀
 import { execPromise, addAudioFade } from './ffmpeg.js';
-import { CHROME_EXECUTABLE, PORT } from 'shared-config';
+import { CHROME_EXECUTABLE, MONOREPO_ROOT, PORT } from 'shared-config';
 import { log } from '../state.js';
 import { getCopyrightLabel } from './helpers.js';
 
@@ -35,7 +35,7 @@ export async function renderComposition(
   try {
     log(`渲染 ${comp} -> ${name}${durationSec ? ` (${durationSec}s)` : ""}`);
 
-    let cmd = `cd "${process.cwd()}/packages/remotion-engine" && npx remotion render ${comp} "${finalPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --gl=vulkan --concurrency=${CONCURRENCY} --quiet`;
+    let cmd = `cd "${MONOREPO_ROOT}/packages/remotion-engine" && npx remotion render ${comp} "${finalPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --gl=vulkan --concurrency=${CONCURRENCY} --quiet`;
 
     if (durationSec) {
       const frames = Math.round(durationSec * FPS);
@@ -127,7 +127,7 @@ export async function renderRankSegment(
     const frames = Math.round(durationSec * FPS);
 
     await execPromise(
-      `cd "${process.cwd()}/packages/remotion-engine" && npx remotion render ${compName} "${finalPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --gl=vulkan --concurrency=${CONCURRENCY} --frames=0-${frames - 1} --quiet`,
+      `cd "${MONOREPO_ROOT}/packages/remotion-engine" && npx remotion render ${compName} "${finalPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --gl=vulkan --concurrency=${CONCURRENCY} --frames=0-${frames - 1} --quiet`,
     );
 
     // 添加淡入淡出
@@ -163,7 +163,7 @@ export async function renderStill(
   fs.writeJsonSync(temp, props);
 
   try {
-    const cmd = `cd "${process.cwd()}/packages/remotion-engine" && npx remotion still ${compositionId} "${outPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --frame=${frameNumber}`;
+    const cmd = `cd "${MONOREPO_ROOT}/packages/remotion-engine" && npx remotion still ${compositionId} "${outPath}" --props="${temp}" --browser-executable="${CHROME_EXECUTABLE}" --frame=${frameNumber}`;
     log(`渲染封面: ${outputName} (frame ${frameNumber})`);
     await execPromise(cmd);
     return outPath;
