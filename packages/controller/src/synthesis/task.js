@@ -136,7 +136,7 @@ async function prepareAllAssets(songs, progressCallback) {
 async function renderRankBatch(songs, type, segments, config) {
   const results = new Array(songs.length);
   let currentIndex = 0;
-  const typeName = type === "new" ? "新曲榜" : "主榜";
+  const typeName = type === "new" ? "新曲榜" : type === "achievement" ? "成就展示" : "主榜";
 
   async function worker(workerId) {
     while (true) {
@@ -316,9 +316,13 @@ async function runSynthesisTask(date) {
   updateProgress("封面", ++progressCounter, totalSteps);
 
   // ========== 准备素材阶段 ==========
+  const achievementField = config.dataFields?.newachievement || "achievement_data";
   const newRankField = config.dataFields?.newRank || "new_rank_top10";
   const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
 
+  const achievementList = config.sections.newachievement?.enabled
+    ? (data[achievementField] || []).slice(0, config.achievementCount)
+    : [];
   const newRankList = config.sections.newRank?.enabled
     ? (data[newRankField] || []).slice(0, config.newRankCount)
     : [];
@@ -326,10 +330,11 @@ async function runSynthesisTask(date) {
     ? (data[mainRankField] || []).slice(0, config.mainRankCount)
     : [];
 
+  achievementList.forEach((s) => (s._defaultDuration = 20));
   newRankList.forEach((s) => (s._defaultDuration = 20));
   mainRankList.forEach((s) => (s._defaultDuration = 20));
 
-  const allSongs = [...newRankList, ...mainRankList];
+  const allSongs = [...achievementList, ...newRankList, ...mainRankList];
 
   if (allSongs.length > 0) {
     await prepareAllAssets(allSongs, (current, total) => {
@@ -403,6 +408,90 @@ async function runSynthesisTask(date) {
       ),
     );
   }
+
+  // P1: 成就展示标题
+  if (config.sections.achievementTitle?.enabled && achievementList.length > 0) {
+    const titleConfig = config.sections.achievementTitle;
+    listP1.push(
+      await renderFn(
+        "SectionTitle",
+        {
+          title: config.achievementTitleFull || `本周共有 ${config.achievementCount} 首歌曲达成周刊成就`,
+          showNumber: false,
+          titleStyle:{
+            fontSize: 110,
+            fontWeight: "1000",
+            textAlign: "center"
+          },
+          themeColor: titleConfig.color || "#FFD700",
+          edName: "",
+          edAuthor: "",
+        },
+        "04_newAchievement.mp4",
+        segments,
+        titleConfig.duration || DUR_SECTION_TITLE,
+      ),
+    );
+    updateProgress("成就展示标题", ++progressCounter, totalSteps);
+  }
+
+  // 成就展示卡片
+  if (config.sections.newachievement?.enabled && achievementList.length > 0) {
+    const reversedAchievementList = [...achievementList].reverse();
+  
+  // 关键：将原始数据转换为组件所需的 props 格式
+  const formattedAchievementList = reversedAchievementList.map(item => {
+    // 1. 处理趋势数据（将 daily_trends 对象转为数组）
+    const trendData = Object.values(item.daily_trends || {}).map(Number);
+    
+    // 2. 组装信息标签
+    const infoTags = [
+      { label: "发布日期", value: item.pubdate || "未知" },
+      { label: "时长", value: item.duration || "未知" },
+      { label: "类型", value: item.type || "未知" },
+      { label: "作者", value: item.author || "未知" },
+      { label: "演唱", value: item.vocal || "未知" },
+    ];
+    
+    // 3. 处理成就胶囊（取第一个荣誉称号）
+    const honorTypeMap = {
+      "Emerging Hit!": "emerging",
+      "Mega Hit!": "mega",
+      "门番": "门番",
+      "门番候补": "门番候补"
+    };
+    const honorTitle = item.honor?.[0] || "成就";
+    const honorType = honorTypeMap[honorTitle] || "default";
+    
+    // 4. 拼接视频源（优先用bvid拼接B站视频地址，或用封面图兜底）
+    const videoSrc = item.bvid 
+      ? `https://www.bilibili.com/video/${item.bvid}` 
+      : item.image_url || "";
+
+    return {
+      ...item, // 保留原始数据
+      // 组件所需的核心props
+      videoSrc,
+      infoTags,
+      honorBadge: { title: honorTitle, type: honorType },
+      trendData,
+      trendPeriod: "day", // 固定为日趋势
+    };
+  });
+
+  // 传递格式化后的数据给渲染函数
+  const achievementResults = await renderRankBatch(
+    formattedAchievementList, // 替换为格式化后的数据
+    "achievementCard", // 确保组件名称与导出的一致
+    segments,
+    config,
+  );
+  
+  listP1.push(...achievementResults); 
+  progressCounter += reversedAchievementList.length;
+  updateProgress("成就展示完成", progressCounter, totalSteps);
+  }
+
 
   // P1: 新曲榜标题
   if (config.sections.newRankTitle?.enabled && newRankList.length > 0) {

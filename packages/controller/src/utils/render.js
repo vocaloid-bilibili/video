@@ -185,7 +185,7 @@ export async function renderRankSegment(
   fs.writeJsonSync(temp, props);
 
   try {
-    const compName = type === "new" ? "NewSongCard" : "MainRankCard";
+    const compName = type === "achievement" ? "achievementCard" : (type === "new" ? "NewSongCard" : "MainRankCard");
     const frames = Math.round(durationSec * FPS);
 
     log(`渲染 ${type} #${data.rank} (${durationSec}s)`);

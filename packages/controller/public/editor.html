@@ -178,8 +178,6 @@
         border-left: 3px solid #4a9eff;
       }
       .song-rank {
-        width: 28px;
-        height: 28px;
         background: #333;
         border-radius: 4px;
         display: flex;
@@ -190,6 +188,7 @@
         flex-shrink: 0;
       }
       .song-info {
+        text-indent: 15px;
         flex: 1;
         min-width: 0;
       }
@@ -1194,13 +1193,16 @@
       )
       .join("")}`;
         };
-
+        
+        const achievementTitle = 
+          songs.newachievement.length > 0 ? `成就达成展示` : "";
         const newTitle =
           songs.newRank.length > 0 ? `新曲榜 Top ${songs.newRank.length}` : "";
         const mainTitle =
           songs.mainRank.length > 0 ? `主榜 Top ${songs.mainRank.length}` : "";
 
         container.innerHTML =
+          renderGroup(songs.newachievement, achievementTitle) +
           renderGroup(songs.newRank, newTitle) +
           renderGroup(songs.mainRank, mainTitle);
         container.querySelectorAll(".song-item").forEach((el) => {
@@ -1261,7 +1263,7 @@
       }
 
       function updateClipProgress() {
-        const all = [...songs.newRank, ...songs.mainRank];
+        const all = [...songs.newachievement, ...songs.newRank, ...songs.mainRank];
         const clipped = all.filter((s) => s._clip).length;
         document.getElementById("clipProgress").textContent =
           `${clipped}/${all.length}`;
@@ -1272,7 +1274,7 @@
           el.classList.toggle("active", el.dataset.bvid === bvid);
         });
 
-        currentSong = [...songs.newRank, ...songs.mainRank].find(
+        currentSong = [...songs.newachievement, ...songs.newRank, ...songs.mainRank].find(
           (s) => s.bvid === bvid,
         );
         if (!currentSong) return;
@@ -1783,7 +1785,7 @@
       }
 
       async function downloadAllVideos() {
-        const all = [...songs.newRank, ...songs.mainRank];
+        const all = [...songs.newachievement, ...songs.newRank, ...songs.mainRank];
         const toDownload = all
           .filter((s) => !s._videoExists)
           .map((s) => s.bvid);
@@ -1807,7 +1809,7 @@
           const checkInterval = setInterval(async () => {
             try {
               const data = await fetchAPI(`${API}/songs/${currentDate}`);
-              [...data.songs.newRank, ...data.songs.mainRank].forEach((s) => {
+              [...data.songs.newachievement, ...data.songs.newRank, ...data.songs.mainRank].forEach((s) => {
                 const listItem = document.querySelector(
                   `.song-item[data-bvid="${s.bvid}"]`,
                 );
@@ -1815,7 +1817,7 @@
                   listItem.querySelector(".song-status").textContent = "OK";
                   listItem.querySelector(".song-status").classList.add("ready");
                 }
-                const localSong = [...songs.newRank, ...songs.mainRank].find(
+                const localSong = [...songs.newachievement, ...songs.newRank, ...songs.mainRank].find(
                   (ls) => ls.bvid === s.bvid,
                 );
                 if (localSong) {
@@ -1825,6 +1827,7 @@
               });
 
               const allDownloaded = [
+                ...data.songs.newachievement,
                 ...data.songs.newRank,
                 ...data.songs.mainRank,
               ].every((s) => s._videoExists);

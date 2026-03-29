@@ -550,11 +550,15 @@ router.get("/songs/:date", async (req, res) => {
     const infoData = fs.existsSync(infoFile) ? await fs.readJson(infoFile) : {};
     const config = getIssueConfig(date, infoData);
 
-    // 根据配置获取对应字段名
+
+    const achievementField = config.dataFields?.newachievement || "achievement_data";
     const newRankField = config.dataFields?.newRank || "new_rank_top10";
     const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
 
     // 提取歌曲列表（根据配置中的数量限制）
+    const achievementList = config.sections.newachievement?.enabled
+      ? (data[achievementField] || []).slice(0, config.achievementCount)
+      : [];
     const newRankList = config.sections.newRank?.enabled
       ? (data[newRankField] || []).slice(0, config.newRankCount)
       : [];
@@ -576,6 +580,7 @@ router.get("/songs/:date", async (req, res) => {
     };
 
     const songs = {
+      newachievement: achievementList.map((s) => enrichSong(s, "achievement")),
       newRank: newRankList.map((s) => enrichSong(s, "new")),
       mainRank: mainRankList.map((s) => enrichSong(s, "main")),
     };
@@ -587,6 +592,7 @@ router.get("/songs/:date", async (req, res) => {
       issueType: config._type,
       config: {
         name: config.name,
+        achievementCount: config.achievementCount,
         newRankCount: config.newRankCount,
         mainRankCount: config.mainRankCount,
         showCount: config.showCount,

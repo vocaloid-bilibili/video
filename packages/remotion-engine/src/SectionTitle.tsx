@@ -7,6 +7,7 @@ import {
   interpolate,
   Easing,
 } from "remotion";
+import type { CSSProperties, FC } from "react";
 
 const STYLES = {
   colors: {
@@ -15,21 +16,21 @@ const STYLES = {
     textMain: "#000000",
     textSub: "#444444",
   },
-  border: "3px solid #000",
-  shadow: "8px 8px 0px rgba(0,0,0,1)",
+  border: "3px solid #000" as const, // 字面量类型
+  shadow: "8px 8px 0px rgba(0,0,0,1)" as const,
   fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontNum: "",
+    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif' as const,
+  fontNum: "" as const,
 };
 
 const DotPattern = () => (
   <AbsoluteFill
     style={{
-      backgroundImage: "radial-gradient(#d7ccc8 3px, transparent 3px)",
-      backgroundSize: "24px 24px",
+      backgroundImage: "radial-gradient(#d7ccc8 3px, transparent 3px)" as const,
+      backgroundSize: "24px 24px" as const,
       opacity: 0.6,
       zIndex: 0,
-    }}
+    } as CSSProperties}
   />
 );
 
@@ -40,15 +41,21 @@ export interface SectionTitleProps {
   themeColor?: string;
   edName?: string;
   edAuthor?: string;
+  showNumber?: boolean;
+  titleStyle?: CSSProperties;
+  titleContainerStyle?: CSSProperties;
 }
 
-export const SectionTitle: React.FC<SectionTitleProps> = ({
+export const SectionTitle: FC<SectionTitleProps> = ({
   title = "",
   from = 10,
   to = 1,
   themeColor = "#23ade5",
   edName = "",
   edAuthor = "",
+  showNumber = true,
+  titleStyle = {},
+  titleContainerStyle = {},
 }) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -108,178 +115,187 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
   const translateY = frame < exitStart ? entranceY : exitY;
   const hasEd = edName && edAuthor;
 
+  // 基础标题容器样式（显式约束 CSSProperties，固定字面量类型）
+  const baseTitleContainerStyle: CSSProperties = {
+    opacity: titleOpacity,
+    transform: `translateX(${titleSlide}px)` as string, // 动态样式显式标注 string
+    position: showNumber ? "absolute" : "relative",
+    top: showNumber ? 60 : "auto",
+    left: showNumber ? 60 : "auto",
+    display: "flex",
+    flexDirection: "column", // 字面量类型，非 string
+    alignItems: showNumber ? "flex-start" : "center", // 字面量类型
+    width: showNumber ? "auto" : "100%",
+  };
+
+  // 基础标题文字样式
+  const baseTitleTextStyle: CSSProperties = {
+    fontSize: showNumber ? 90 : 110,
+    fontWeight: 900, // 用数字代替字符串，避免类型问题
+    fontFamily: STYLES.fontMain,
+    color: "#222",
+    lineHeight: 1,
+    marginBottom: 16,
+    textAlign: showNumber ? "left" : "center",
+  };
+
+  const titleLineStyle: CSSProperties = {
+    width: showNumber ? 120 : 440,
+    height: 12,
+    backgroundColor: themeColor,
+    borderRadius: 6,
+    marginLeft: showNumber ? 0 : 80,
+    marginRight: showNumber ? 0 : "auto",
+  };
+
+  // 主容器样式（单独提取，避免内联类型冲突）
+  const mainContainerStyle: CSSProperties = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: `translate(-50%, -50%) translateY(${translateY}px)` as string,
+    width: 1400,
+    height: 800,
+    backgroundColor: "#fff",
+    border: STYLES.border,
+    borderRadius: 32,
+    boxShadow: STYLES.shadow,
+    overflow: "hidden",
+    zIndex: 1,
+    display: "flex",
+    flexDirection: "column", // 字面量类型
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
+  // 数字区域样式
+  const numberAreaStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 60,
+    transform: `scale(${numScale})` as string,
+  };
+
+  // 数字文本样式
+  const numberTextStyle: CSSProperties = {
+    fontSize: 320,
+    fontFamily: STYLES.fontNum,
+    color: "#222",
+    lineHeight: 1,
+    fontWeight: "bold",
+  };
+
+  // 箭头容器样式
+  const arrowContainerStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 320,
+  };
+
+  // 箭头文本样式
+  const arrowTextStyle: CSSProperties = {
+    fontSize: 180,
+    fontFamily: STYLES.fontMain,
+    color: "#222",
+    lineHeight: 1,
+  };
+
+  // ED 区域样式
+  const edAreaStyle: CSSProperties = {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
+    opacity: edOpacity,
+    transform: `translateY(${edSlide}px)` as string,
+    display: "flex",
+    flexDirection: "column", // 字面量类型
+    alignItems: "center",
+    gap: 12,
+  };
+
+  // ED 文本样式（分层定义）
+  const edLabelStyle: CSSProperties = {
+    fontSize: 28,
+    fontFamily: STYLES.fontMain,
+    fontWeight: 600, // 数字代替字符串
+    color: "#999",
+    letterSpacing: 4,
+  };
+
+  const edNameStyle: CSSProperties = {
+    fontSize: 48,
+    fontFamily: STYLES.fontMain,
+    fontWeight: "bold",
+    color: "#333",
+  };
+
+  const edAuthorStyle: CSSProperties = {
+    fontSize: 36,
+    fontFamily: STYLES.fontMain,
+    fontWeight: 500, // 数字代替字符串
+    color: "#666",
+  };
+
+  // 装饰圆样式
+  const decorCircleStyle: CSSProperties = {
+    position: "absolute",
+    bottom: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    backgroundColor: themeColor,
+    opacity: 0.1,
+    borderRadius: "50%",
+  };
+
   return (
-    <AbsoluteFill style={{ backgroundColor: STYLES.colors.bg }}>
+    <AbsoluteFill style={{ backgroundColor: STYLES.colors.bg } as CSSProperties}>
       <DotPattern />
 
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: `translate(-50%, -50%) translateY(${translateY}px)`,
-          width: 1400,
-          height: 800,
-          backgroundColor: "#fff",
-          border: STYLES.border,
-          borderRadius: 32,
-          boxShadow: STYLES.shadow,
-          overflow: "hidden",
-          zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div style={mainContainerStyle}>
         {title && (
           <div
             style={{
-              position: "absolute",
-              top: 60,
-              left: 60,
-              opacity: titleOpacity,
-              transform: `translateX(${titleSlide}px)`,
+              ...baseTitleContainerStyle,
+              ...titleContainerStyle,
             }}
           >
             <div
               style={{
-                fontSize: 90,
-                fontWeight: "900",
-                fontFamily: STYLES.fontMain,
-                color: "#222",
-                lineHeight: 1,
-                marginBottom: 16,
+                ...baseTitleTextStyle,
+                ...titleStyle,
               }}
             >
               {title}
             </div>
-            <div
-              style={{
-                width: 120,
-                height: 12,
-                backgroundColor: themeColor,
-                borderRadius: 6,
-              }}
-            />
+            <div style={titleLineStyle} />
           </div>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 60,
-            transform: `scale(${numScale})`,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 320,
-              fontFamily: STYLES.fontNum,
-              color: "#222",
-              lineHeight: 1,
-              fontWeight: "bold",
-            }}
-          >
-            {from}
-          </span>
+        {showNumber && (
+          <div style={numberAreaStyle}>
+            <span style={numberTextStyle}>{from}</span>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: 320,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 180,
-                fontFamily: STYLES.fontMain,
-                color: "#222",
-                lineHeight: 1,
-              }}
-            >
-              →
-            </span>
+            <div style={arrowContainerStyle}>
+              <span style={arrowTextStyle}>→</span>
+            </div>
+
+            <span style={numberTextStyle}>{to}</span>
           </div>
-
-          <span
-            style={{
-              fontSize: 320,
-              fontFamily: STYLES.fontNum,
-              color: "#222",
-              lineHeight: 1,
-              fontWeight: "bold",
-            }}
-          >
-            {to}
-          </span>
-        </div>
+        )}
 
         {hasEd && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: 60,
-              left: 0,
-              right: 0,
-              opacity: edOpacity,
-              transform: `translateY(${edSlide}px)`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 28,
-                fontFamily: STYLES.fontMain,
-                fontWeight: "600",
-                color: "#999",
-                letterSpacing: 4,
-              }}
-            >
-              ED
-            </div>
-            <div
-              style={{
-                fontSize: 48,
-                fontFamily: STYLES.fontMain,
-                fontWeight: "bold",
-                color: "#333",
-              }}
-            >
-              {edName}
-            </div>
-            <div
-              style={{
-                fontSize: 36,
-                fontFamily: STYLES.fontMain,
-                fontWeight: "500",
-                color: "#666",
-              }}
-            >
-              {edAuthor}
-            </div>
+          <div style={edAreaStyle}>
+            <div style={edLabelStyle}>ED</div>
+            <div style={edNameStyle}>{edName}</div>
+            <div style={edAuthorStyle}>{edAuthor}</div>
           </div>
         )}
 
-        <div
-          style={{
-            position: "absolute",
-            bottom: -50,
-            right: -50,
-            width: 200,
-            height: 200,
-            backgroundColor: themeColor,
-            opacity: 0.1,
-            borderRadius: "50%",
-          }}
-        />
+        <div style={decorCircleStyle} />
       </div>
     </AbsoluteFill>
   );

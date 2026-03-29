@@ -17,6 +17,7 @@ export const ISSUE_TYPES = {
     name: "周刊",
     datePattern: /^\d{4}-\d{2}-\d{2}$/,
 
+    achievementCount: 1, //成就达成展示数量
     newRankCount: 10, // 新曲榜展示数量 (Top 10)
     mainRankCount: 20, // 主榜展示数量 (Top 20)
     subRankRange: [21, 100], // 副榜名次范围 [起始, 结束]
@@ -41,13 +42,20 @@ export const ISSUE_TYPES = {
       infoCard: { enabled: true, duration: 5 },
       rules: { enabled: true, duration: 35 },
 
+      achievementTitle: {
+        enabled: true,
+        duration: 2,
+        title: "成就达成展示",
+        color: "#FFD700",
+      },
+      newachievement: { enabled: true },
+
       newRankTitle: {
         enabled: true,
         duration: 2,
         title: "新曲榜",
         color: "#23ade5",
       },
-
       newRank: { enabled: true },
 
       mainRankTitle: {
@@ -57,12 +65,14 @@ export const ISSUE_TYPES = {
         color: "#f25d8e",
       },
       mainRank: { enabled: true },
+
       singerRank: { enabled: true },
       millionRank: { enabled: true },
       achievementRank: { enabled: true },
       historyRank: { enabled: true },
       statsCard: { enabled: true },
       staffCard: { enabled: true },
+
       subRankTitle: {
         enabled: true,
         duration: 2,
@@ -76,6 +86,7 @@ export const ISSUE_TYPES = {
     fadeDuration: 2, // 淡入淡出时长（秒）
 
     dataFields: {
+      newachievement: "achievement_data", // 成就展示数据字段
       newRank: "new_rank_top10", // 新曲榜数据字段
       mainRank: "total_rank_top20", // 主榜数据字段
       subRank: "total_rank_sub", // 副榜数据字段
@@ -101,7 +112,7 @@ export const ISSUE_TYPES = {
     ],
 
     playRateCoef: 15,
-
+    
     showCount: false, // 月刊不显示上榜次数
     showAchievements: false, // 月刊不显示成就标准
 
@@ -110,6 +121,9 @@ export const ISSUE_TYPES = {
       intro: { enabled: true, duration: 3 },
       infoCard: { enabled: true, duration: 5 },
       rules: { enabled: true, duration: 30 }, // 少一页成就，时长缩短
+      achievementTitle: { enabled: false }, // 月刊无成就达成展示
+      newachievement: { enabled: false }, 
+
       newRankTitle: {
         enabled: true,
         duration: 2,
@@ -174,6 +188,8 @@ export const ISSUE_TYPES = {
       intro: { enabled: false },
       infoCard: { enabled: false },
       rules: { enabled: false },
+      achievementTitle: { enabled: false }, // 特刊无成就达成展示
+      newachievement: { enabled: false }, 
       newRankTitle: { enabled: false },
       newRank: { enabled: false },
       mainRankTitle: { enabled: true, duration: 2 },
@@ -221,6 +237,9 @@ export function getDerivedValues(config) {
 
     lastPeriodLabel: isMonthly ? "上月" : "上期",
 
+    achievementTitleFull: config.sections?.achievementTitle?.enabled
+      ? `${config.sections.achievementTitle.title}共 ${config.achievementCount} 首达成`
+      : "",
     newRankTitleFull: config.sections?.newRankTitle?.enabled
       ? `${config.sections.newRankTitle.title} Top ${config.newRankCount}`
       : "",
