@@ -1,4 +1,4 @@
-import type { SongInfo } from "shared-config"
+import type { IssueTypeConfig, SongInfo } from "shared-config"
 
 type BoardType = "daily" | "weekly" | "monthly"
 
@@ -27,7 +27,9 @@ type EditorConfig = {
   script: {
     opening: string
     ending: string
-  }
+  },
+  issueType: string
+  config: IssueTypeConfig
 }
 
 type ValueAndDiff = {

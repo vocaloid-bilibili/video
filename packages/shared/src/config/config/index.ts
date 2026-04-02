@@ -15,7 +15,7 @@ const DIR_AUDIO_CACHE = path.resolve(DIR_DOWNLOADS, "audio_cache");
 const DIR_AVATAR = path.resolve(__dirname, "avatar");
 const DIR_STAFF = path.resolve(__dirname, "STAFF");
 const DIR_FULL_VIDEO = path.resolve(DIR_DOWNLOADS, "full_videos");
-const DIR_CLIP_DB = path.resolve(DIR_DATA, "clips_db.json");
+const DIR_CLIP_DB = path.resolve(DIR_DOWNLOADS, "clips_db.json");
 
 export interface StaffMember {
   name: string;

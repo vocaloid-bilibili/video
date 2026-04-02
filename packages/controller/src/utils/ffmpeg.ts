@@ -100,10 +100,30 @@ export async function processP3(p3Pre: string, p3Sub: string, edAudio: string, o
 }
 
 // 最终合并
-export async function finalMerge(p1: string, p2: string, p3: string, output: string) {
-  log("最终合并");
+export async function finalMerge(output: string, ...inputs: string[]) {
+  log(`最终合并 ${inputs.length} 个文件`);
 
-  const cmd = `ffmpeg ${HWACCEL} -i "${p1}" ${HWACCEL} -i "${p2}" ${HWACCEL} -i "${p3}" -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k "${output}" -y`;
+  if (inputs.length === 0) {
+    throw new Error("没有输入文件");
+  }
+
+  if (inputs.length === 1) {
+    // 只有一个文件直接复制
+    await execPromise(`ffmpeg -i "${inputs[0]}" -c copy "${output}" -y`);
+    return;
+  }
+
+  const inputArgs = inputs.map((p) => `-i "${p}"`).join(" ");
+  const filterParts: string[] = [];
+  const mappingParts: string[] = [];
+  
+  for (let i = 0; i < inputs.length; i++) {
+    filterParts.push(`[${i}:v][${i}:a]`);
+    mappingParts.push(`-map "[outv${i}]" -map "[outa${i}]"`);
+  }
+
+  const filterComplex = `${filterParts.join("")}concat=n=${inputs.length}:v=1:a=1[outv][outa]`;
+  const cmd = `ffmpeg ${HWACCEL} ${inputArgs} -filter_complex "${filterComplex}" ${mappingParts.join(" ")} -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k "${output}" -y`;
 
   await execPromise(cmd);
 }

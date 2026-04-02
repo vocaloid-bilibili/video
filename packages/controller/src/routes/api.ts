@@ -183,7 +183,7 @@ router.get("/files", async (req, res) => {
 
     // 过滤符合命名规则的期刊数据文件
     const dataFiles = files.filter((f) =>
-      /^\d{4}-\d{2}(-\d{2})?\.json$/.test(f),
+      /^\d{4}-\d{2}(-\d{2})?\.json$/.test(f) || ( /^special/.test(f) && ! /config.json$/.test(f) )
     );
 
     // 并行查询每个文件的状态信息
@@ -358,7 +358,7 @@ router.get("/status", (req, res) => res.send(getTask()));
 router.get("/songs/:date", async (req, res) => {
   const { date } = req.params;
   const dataFile = path.join(DIR_DATA, `${date}.json`);
-  const infoFile = path.join(DIR_DATA, `${date}信息.json`);
+  const infoFile = path.join(DIR_DATA, `${date}_config.json`);
 
   if (!fs.existsSync(dataFile)) {
     return res.status(404).send({ error: "数据文件不存在" });

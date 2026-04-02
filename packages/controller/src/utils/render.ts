@@ -224,6 +224,7 @@ export async function renderStill(
   if (fs.existsSync(outPath)) return outPath;
 
   const temp = path.join(outDir, `temp_props_still_${Date.now()}.json`);
+  console.log(props)
   fs.writeJsonSync(temp, props);
 
   try {

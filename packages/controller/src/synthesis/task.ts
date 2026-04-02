@@ -51,6 +51,7 @@ function formatDate(dateStr: string) {
   return dateStr.replace(/-/g, ".");
 }
 
+
 async function prepareAllAssets(songs: RenderSongInfo[], progressCallback: (current: number, total: number) => void) {
   log("========== 准备视频素材 ==========");
 
@@ -262,7 +263,7 @@ async function runSynthesisTask(date: string) {
   }
   */
   // 获取期刊配置
-  const config = getIssueConfig(date, {});
+  const config = getIssueConfig(date, editorConfig);
   log(`期刊类型: ${config.name} (${config._type})`);
 
   const totalSteps = 70;
@@ -270,54 +271,61 @@ async function runSynthesisTask(date: string) {
 
   const listP1 = [];
   const listP2 = [];
-  const listP3_pre:string[] = [];
+  const listP3_pre: string[] = [];
   const listP3_sub = [];
 
   let progressCounter = 0;
 
-  // ========== 封面选择 ==========
-  let introCover = "";
-  if (editorConfig.cover && editorConfig.cover.image_url) {
-    introCover = await downloadImage(editorConfig.cover.image_url);
-    log(`封面: 使用指定 ${editorConfig.cover.bvid}`);
-  } else {
-    const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
-    const mainRankList = data[mainRankField] || [];
-    const firstAppearSong = config.showCount
-      ? mainRankList.find((s: RenderSongInfo) => s.count === 1)
-      : mainRankList[0];
-    if (firstAppearSong) {
-      introCover = await downloadImage(firstAppearSong.image_url);
-      log(
-        `封面: ${config.showCount ? `主榜首上榜 #${firstAppearSong.rank}` : "主榜第一"}`,
-      );
+
+
+  //  ============== 生成封面 ================
+  if (config.sections.intro.enabled) {
+
+    // ========== 封面选择 ==========
+    let introCover = "";
+    if (editorConfig.cover && editorConfig.cover.image_url) {
+      introCover = await downloadImage(editorConfig.cover.image_url);
+      log(`封面: 使用指定 ${editorConfig.cover.bvid}`);
+    } else {
+      const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
+      const mainRankList = data[mainRankField] || [];
+      const firstAppearSong = config.showCount
+        ? mainRankList.find((s: RenderSongInfo) => s.count === 1)
+        : mainRankList[0];
+      if (firstAppearSong) {
+        introCover = await downloadImage(firstAppearSong.image_url);
+        log(
+          `封面: ${config.showCount ? `主榜首上榜 #${firstAppearSong.rank}` : "主榜第一"}`,
+        );
+      }
     }
+
+    // ========== 生成视频封面 ==========
+    const coverFrame = (config.sections.intro?.duration || DUR_INTRO) * FPS - 31;
+    const coverFileName = `${date}.png`;
+    const coverPath = path.join(base, coverFileName);
+
+    if (fs.existsSync(coverPath)) {
+      fs.unlinkSync(coverPath);
+      log("删除旧封面，重新生成");
+    }
+
+    await renderStill(
+      "Intro",
+      {
+        issue: `#${data.index}`,
+        date: formatDate(date),
+        coverImg: introCover,
+        issueType: config._type,
+      },
+      coverFileName,
+      base,
+      coverFrame,
+    );
+    log(`封面已生成: ${coverFileName}`);
+    updateProgress("封面", ++progressCounter, totalSteps);
   }
 
-  // ========== 生成视频封面 ==========
-  const coverFrame = (config.sections.intro?.duration || DUR_INTRO) * FPS - 31;
-  const coverFileName = `${date}.png`;
-  const coverPath = path.join(base, coverFileName);
-
-  if (fs.existsSync(coverPath)) {
-    fs.unlinkSync(coverPath);
-    log("删除旧封面，重新生成");
-  }
-
-  await renderStill(
-    "Intro",
-    {
-      issue: `#${data.index}`,
-      date: formatDate(date),
-      coverImg: introCover,
-      issueType: config._type,
-    },
-    coverFileName,
-    base,
-    coverFrame,
-  );
-  log(`封面已生成: ${coverFileName}`);
-  updateProgress("封面", ++progressCounter, totalSteps);
 
   // ========== 准备素材阶段 ==========
   const achievementField = config.dataFields?.newachievement || "achievement_data";
@@ -813,7 +821,7 @@ async function runSynthesisTask(date: string) {
   updateProgress("合并", totalSteps - 5, totalSteps);
 
   // P1 合并
-  let p1Final: string = null;
+  let p1Final: string | null = null;
   if (listP1.length > 0) {
     log("合并 P1");
     const p1Raw = await concatVideos(listP1, "p1_raw.mp4", segments);
@@ -828,7 +836,6 @@ async function runSynthesisTask(date: string) {
       }
     }
   }
-  if (!p1Final) throw Error("合并第一段视频出错")
 
   // P2 合并
   let p2Final = null;
@@ -836,8 +843,6 @@ async function runSynthesisTask(date: string) {
     log("合并 P2");
     p2Final = await concatVideos(listP2, "p2_main.mp4", segments);
   }
-
-  if (!p2Final) throw Error("合并第二段视频出错")
 
   // P3 合并
   let p3Final = null;
@@ -885,19 +890,10 @@ async function runSynthesisTask(date: string) {
   updateProgress("最终合并", totalSteps - 1, totalSteps);
   log(`输出 ${final}`);
 
-  const finals = [p1Final, p2Final, p3Final].filter(Boolean);
+  const finals = [p1Final, p2Final, p3Final].filter((x) => (typeof x === 'string'));
 
-  if (finals.length === 3) {
-    await finalMerge(finals[0], finals[1], finals[2], final);
-  } else if (finals.length > 0) {
-    const listPath = path.join(segments, "files_final_fallback.txt");
-    const content = finals
-      .map((p) => `file '${p.replace(/\\/g, "/")}'`)
-      .join("\n");
-    fs.writeFileSync(listPath, content);
-    await execPromise(
-      `ffmpeg -f concat -safe 0 -i "${listPath}" -c copy "${final}" -y`,
-    );
+  if (finals.length > 0) {
+    await finalMerge(final, ...finals);
   }
 
   setTaskStatus(TASK_STATUS.COMPLETED);

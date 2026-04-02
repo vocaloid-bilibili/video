@@ -50,6 +50,7 @@ export interface IssueTypeConfig {
   };
   audioFade: boolean;
   fadeDuration: number;
+  // 要用JSON文件的哪个字段作为这几个榜的数据
   dataFields: {
     newachievement?: string | null;
     newRank: string | null;
