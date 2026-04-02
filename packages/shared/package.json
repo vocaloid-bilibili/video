@@ -4,12 +4,16 @@
   "description": "共享配置和类型定义",
   "private": true,
   "type": "module",
-  "main": "src/index.js",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
     "build": "echo 'Shared package does not need build'"
   },
-  "dependencies": {
-  },
   "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
   }
 }
