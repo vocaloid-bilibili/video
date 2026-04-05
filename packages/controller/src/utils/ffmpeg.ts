@@ -79,6 +79,111 @@ export async function processP1(videoPath: string, audioPath: string, outputName
   return out;
 }
 
+// 替换视频中的音频轨道
+export async function replaceAudio(videoPath: string, audioPath: string, outputName: string, dir: string) {
+  const out = path.join(dir, outputName);
+  
+  // 获取视频时长用于音频淡出
+  let videoDuration = 10;
+  try {
+    videoDuration = await getDuration(videoPath);
+  } catch {
+    log(`警告: 无法获取 ${videoPath} 时长`);
+    return videoPath;
+  }
+  
+  // 获取音频时长
+  let audioDuration = 0;
+  let audioPathToUse = audioPath;
+  let tempAudioPath = "";
+  
+  try {
+    audioDuration = await getDuration(audioPath);
+    log(`音频时长: ${audioDuration.toFixed(2)}s, 视频时长: ${videoDuration.toFixed(2)}s`);
+    
+    // 如果音频比视频长很多，先截断音频
+    if (audioDuration > videoDuration + 1) {
+      log(`注意: 音频(${audioDuration.toFixed(2)}s)比视频(${videoDuration.toFixed(2)}s)长超过1秒，将截断音频`);
+      
+      // 创建临时截断的音频文件
+      tempAudioPath = path.join(dir, `temp_truncated_${Date.now()}.mp3`);
+      const truncateCmd = `ffmpeg -i "${audioPath}" -t ${videoDuration} -c:a copy "${tempAudioPath}" -y`;
+      
+      try {
+        await execPromise(truncateCmd);
+        if (fs.existsSync(tempAudioPath)) {
+          audioPathToUse = tempAudioPath;
+          log(`音频已截断为 ${videoDuration}s: ${path.basename(tempAudioPath)}`);
+        }
+      } catch (error) {
+        log(`音频截断失败: ${error}, 将使用完整音频`);
+      }
+    } else if (audioDuration > videoDuration) {
+      log(`注意: 音频(${audioDuration.toFixed(2)}s)比视频(${videoDuration.toFixed(2)}s)稍长，使用-shortest选项`);
+    }
+  } catch {
+    log(`警告: 无法获取 ${audioPath} 时长`);
+    // 如果无法获取音频时长，继续处理
+  }
+  
+  // 检查原视频是否有效
+  if (!fs.existsSync(videoPath) || videoDuration <= 0) {
+    log(`警告: ${videoPath} 无效，跳过音频替换`);
+    // 清理临时文件
+    if (tempAudioPath && fs.existsSync(tempAudioPath)) {
+      fs.unlinkSync(tempAudioPath);
+    }
+    return videoPath;
+  }
+  
+  // 根据视频时长调整淡出参数
+  const fadeDuration = Math.min(2, videoDuration / 4);
+  const fadeOutStart = Math.max(0, videoDuration - fadeDuration);
+  
+  // 直接用新音频替换原音频（不混合原音频）
+  // 使用 -shortest 确保输出时长与较短的输入一致
+  const cmd = `ffmpeg ${HWACCEL} -i "${videoPath}" -i "${audioPathToUse}" -filter_complex "[1:a]afade=t=in:st=0:d=${fadeDuration},afade=t=out:st=${fadeOutStart}:d=${fadeDuration},volume=0.8[opa]" -map 0:v -map "[opa]" -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k -shortest "${out}" -y`;
+  
+  log(`音频替换: ${outputName} (视频: ${videoDuration.toFixed(2)}s)`);
+  
+  try {
+    await execPromise(cmd);
+  } catch (error) {
+    log(`音频替换失败: ${error}`);
+    // 清理临时文件
+    if (tempAudioPath && fs.existsSync(tempAudioPath)) {
+      fs.unlinkSync(tempAudioPath);
+    }
+    return videoPath;
+  }
+  
+  // 清理临时音频文件
+  if (tempAudioPath && fs.existsSync(tempAudioPath)) {
+    fs.unlinkSync(tempAudioPath);
+    log(`清理临时音频文件: ${path.basename(tempAudioPath)}`);
+  }
+  
+  // 验证输出文件是否有效
+  if (fs.existsSync(out)) {
+    // 检查输出文件时长
+    try {
+      const outDuration = await getDuration(out);
+      log(`输出文件时长: ${outDuration.toFixed(2)}s`);
+      
+      if (Math.abs(outDuration - videoDuration) > 1) {
+        log(`警告: 输出文件时长(${outDuration.toFixed(2)}s)与视频时长(${videoDuration.toFixed(2)}s)差异较大`);
+      }
+    } catch {
+      log(`无法获取输出文件时长`);
+    }
+    
+    return out;
+  } else {
+    log(`警告: ${outputName} 生成失败，使用原文件`);
+    return videoPath;
+  }
+}
+
 // P3 混音 ED
 export async function processP3(p3Pre: string, p3Sub: string, edAudio: string, outputName: string, dir: string) {
   const out = path.join(dir, outputName);

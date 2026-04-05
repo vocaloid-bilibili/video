@@ -14,8 +14,7 @@ import {
 } from '../utils/download.js';
 import {
   concatVideos,
-  processP1,
-  processP3,
+  replaceAudio,
   finalMerge,
   getDuration,
 } from '../utils/ffmpeg.js';
@@ -157,8 +156,13 @@ async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: 
   const results = new Array(songs.length);
   const typeName = type === "new" ? "新曲榜" : type === "achievement" ? "成就展示" : "主榜";
 
-  async function worker(workerId: number) {
-    for(const [index, song] of songs.entries()) {
+  // 将歌曲列表分片给不同的worker
+  const chunkSize = Math.ceil(songs.length / RENDER_POOL_SIZE);
+  
+  async function worker(workerId: number, startIdx: number, endIdx: number) {
+    for (let index = startIdx; index < endIdx; index++) {
+      const song = songs[index];
+      if (!song) continue;
 
       const rankPadded = song.rank.toString().padStart(3, "0");
       const targetPath = path.join(segments, `rank_${type}_${rankPadded}.mp4`);
@@ -226,9 +230,18 @@ async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: 
   }
 
   log(`========== 并行渲染 ${typeName} (${RENDER_POOL_SIZE}路) ==========`);
-  await Promise.all(
-    Array.from({ length: RENDER_POOL_SIZE }, (_, i) => worker(i + 1)),
-  );
+  
+  // 创建worker任务，每个处理一部分歌曲
+  const workerTasks = [];
+  for (let i = 0; i < RENDER_POOL_SIZE; i++) {
+    const startIdx = i * chunkSize;
+    const endIdx = Math.min((i + 1) * chunkSize, songs.length);
+    if (startIdx < endIdx) {
+      workerTasks.push(worker(i + 1, startIdx, endIdx));
+    }
+  }
+  
+  await Promise.all(workerTasks);
 
   return results.filter(Boolean);
 }
@@ -433,7 +446,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       segments,
       config,
     );
-    return results.length > 0 ? results[0] : null;
+    
+    // 合并所有成就展示卡片为一个视频文件
+    if (results.length === 0) return null;
+    
+    const mergedPath = path.join(segments, `${SEGMENT_PREFIX.newachievement}_Achievement.mp4`);
+    
+    if (fs.existsSync(mergedPath)) {
+      log(`成就展示合并文件已存在: ${path.basename(mergedPath)}`);
+      return mergedPath;
+    }
+    
+    log(`合并 ${results.length} 个成就展示卡片`);
+    const merged = await concatVideos(results, `${SEGMENT_PREFIX.newachievement}_Achievement.mp4`, segments);
+    return merged;
   },
 
   // 新曲榜标题
@@ -469,7 +495,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       segments,
       config,
     );
-    return results.length > 0 ? results[0] : null;
+    
+    // 合并所有新曲榜卡片为一个视频文件
+    if (results.length === 0) return null;
+    
+    const mergedPath = path.join(segments, `${SEGMENT_PREFIX.newRank}_NewRank.mp4`);
+    
+    if (fs.existsSync(mergedPath)) {
+      log(`新曲榜合并文件已存在: ${path.basename(mergedPath)}`);
+      return mergedPath;
+    }
+    
+    log(`合并 ${results.length} 个新曲榜卡片`);
+    const merged = await concatVideos(results, `${SEGMENT_PREFIX.newRank}_NewRank.mp4`, segments);
+    return merged;
   },
 
   // 主榜标题
@@ -520,7 +559,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       mainRankConfig,
       isCoverWeekly ? "CoverMainRankCard" : undefined,
     );
-    return results.length > 0 ? results[0] : null;
+    
+    // 合并所有排名卡片为一个视频文件
+    if (results.length === 0) return null;
+    
+    const mergedPath = path.join(segments, `${SEGMENT_PREFIX.mainRank}_MainRank.mp4`);
+    
+    if (fs.existsSync(mergedPath)) {
+      log(`主榜合并文件已存在: ${path.basename(mergedPath)}`);
+      return mergedPath;
+    }
+    
+    log(`合并 ${results.length} 个主榜卡片`);
+    const merged = await concatVideos(results, `${SEGMENT_PREFIX.mainRank}_MainRank.mp4`, segments);
+    return merged;
   },
 
   // 歌手排名
@@ -563,7 +615,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       );
       if (result) results.push(result);
     }
-    return results.length > 0 ? results[0] : null;
+    
+    // 合并所有百万达成页面为一个视频文件
+    if (results.length === 0) return null;
+    
+    const mergedPath = path.join(segments, `${SEGMENT_PREFIX.millionRank}_MillionRank.mp4`);
+    
+    if (fs.existsSync(mergedPath)) {
+      log(`百万达成合并文件已存在: ${path.basename(mergedPath)}`);
+      return mergedPath;
+    }
+    
+    log(`合并 ${results.length} 个百万达成页面`);
+    const merged = await concatVideos(results, `${SEGMENT_PREFIX.millionRank}_MillionRank.mp4`, segments);
+    return merged;
   },
 
   // 成就达成
@@ -589,7 +654,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       );
       if (result) results.push(result);
     }
-    return results.length > 0 ? results[0] : null;
+    
+    // 合并所有成就达成页面为一个视频文件
+    if (results.length === 0) return null;
+    
+    const mergedPath = path.join(segments, `${SEGMENT_PREFIX.achievementRank}_AchievementRank.mp4`);
+    
+    if (fs.existsSync(mergedPath)) {
+      log(`成就达成合并文件已存在: ${path.basename(mergedPath)}`);
+      return mergedPath;
+    }
+    
+    log(`合并 ${results.length} 个成就达成页面`);
+    const merged = await concatVideos(results, `${SEGMENT_PREFIX.achievementRank}_AchievementRank.mp4`, segments);
+    return merged;
   },
 
   // 历史回顾
@@ -681,7 +759,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       subDurationPerChunk,
       config,
     );
-    return results.length > 0 ? results[0] : null;
+    
+    // 合并所有副榜页面为一个视频文件
+    if (results.length === 0) return null;
+    
+    const mergedPath = path.join(segments, `${SEGMENT_PREFIX.subRank}_SubRank.mp4`);
+    
+    if (fs.existsSync(mergedPath)) {
+      log(`副榜合并文件已存在: ${path.basename(mergedPath)}`);
+      return mergedPath;
+    }
+    
+    log(`合并 ${results.length} 个副榜页面`);
+    const merged = await concatVideos(results, `${SEGMENT_PREFIX.subRank}_SubRank.mp4`, segments);
+    return merged;
   },
 };
 
@@ -778,9 +869,10 @@ async function runSynthesisTask(date: string) {
     : [];
   const subList: RenderSongInfo[] = config.sections.subRank?.enabled && config.subRankRange
     ? (data[subRankField] || [])
-        .filter((i: SongInfo) =>
-          i.rank >= config.subRankRange[0] && i.rank <= config.subRankRange[1],
-        )
+        .filter((i: SongInfo) => {
+          if (!config.subRankRange) return false;
+          return i.rank >= config.subRankRange[0] && i.rank <= config.subRankRange[1];
+        })
         .sort((a: SongInfo, b: SongInfo) => a.rank - b.rank)
     : [];
 
@@ -821,13 +913,41 @@ async function runSynthesisTask(date: string) {
     );
     if (edAudioPath) {
       const edTotalDuration = await getDuration(edAudioPath);
-      const estimatedDuration = (milChunks.length + achChunks.length) * DUR_SHORT + DUR_SECTION_TITLE;
-      const subTotalDuration = edTotalDuration - estimatedDuration;
+      
+      // 精确计算ED段落总时长（包括所有非subRank的ED段落）
+      // ED段落包括: singerRank, millionRank, achievementRank, historyRank, statsCard, staffCard, subRankTitle
+      let edSegmentsDuration = 0;
+      
+      // singerRank, historyRank, statsCard, staffCard 各自固定 DUR_SHORT (7秒)
+      const fixedEdSegments = ['singerRank', 'historyRank', 'statsCard', 'staffCard'];
+      for (const segType of fixedEdSegments) {
+        const section = config.sections[segType as keyof typeof config.sections];
+        if (section?.enabled) {
+          edSegmentsDuration += DUR_SHORT;
+        }
+      }
+      
+      // millionRank 每个chunk固定 DUR_SHORT (7秒)
+      if (config.sections.millionRank?.enabled && milChunks.length > 0) {
+        edSegmentsDuration += milChunks.length * DUR_SHORT;
+      }
+      
+      // achievementRank 每个chunk固定 DUR_SHORT (7秒)
+      if (config.sections.achievementRank?.enabled && achChunks.length > 0) {
+        edSegmentsDuration += achChunks.length * DUR_SHORT;
+      }
+      
+      // subRankTitle 固定 DUR_SECTION_TITLE (2秒)
+      if (config.sections.subRankTitle?.enabled) {
+        edSegmentsDuration += DUR_SECTION_TITLE;
+      }
+      
+      const subTotalDuration = edTotalDuration - edSegmentsDuration;
       if (subTotalDuration > 0 && subChunks.length > 0) {
         subDurationPerChunk = Math.max(2, subTotalDuration / subChunks.length);
       }
       log(
-        `ED时长 ${edTotalDuration.toFixed(1)}s, 预估段落 ${estimatedDuration}s, 副榜每页 ${subDurationPerChunk.toFixed(2)}s`,
+        `ED时长 ${edTotalDuration.toFixed(1)}s, ED段落 ${edSegmentsDuration}s, 副榜总时长 ${subTotalDuration.toFixed(1)}s, 副榜每页 ${subDurationPerChunk.toFixed(2)}s (共${subChunks.length}页)`,
       );
     }
   }
@@ -858,7 +978,12 @@ async function runSynthesisTask(date: string) {
   // ============== 配置驱动的段落渲染 ================
   log("========== 按配置顺序渲染段落 ==========");
   
-  const segmentResults: string[] = [];
+  // 段落结果类型：包含路径和对应的 orderItem（用于音频混音）
+  interface SegmentResultItem {
+    path: string;
+    orderItem: SegmentOrderItem;
+  }
+  const segmentResults: SegmentResultItem[] = [];
   
   for (const orderItem of config.segmentOrder) {
     const segmentType = orderItem.type;
@@ -882,8 +1007,8 @@ async function runSynthesisTask(date: string) {
       const result = await renderer(ctx, orderItem);
       
       if (result) {
-        segmentResults.push(result);
-        log(`${segmentType} 完成: ${path.basename(result)}`);
+        segmentResults.push({ path: result, orderItem });
+        log(`${segmentType} 完成: ${path.basename(result)}${orderItem.audioMix ? ` [${orderItem.audioMix}]` : ''}`);
       } else {
         log(`${segmentType} 无数据，跳过`);
       }
@@ -898,23 +1023,14 @@ async function runSynthesisTask(date: string) {
   log(`========== 段落渲染完成，共 ${segmentResults.length} 个段落 ==========`);
 
   // ============== 清理旧的合并产物 ==========
-  const mergeProducts = [
-    "p1_raw.mp4",
-    "p1_final.mp4",
-    "p2_main.mp4",
-    "p3_pre.mp4",
-    "p3_sub_raw.mp4",
-    "p3_final.mp4",
-    "p3_final_fallback.mp4",
-    "files_p1.txt",
-    "files_p2.txt",
-    "files_p3_pre.txt",
-    "files_p3_sub.txt",
-    "files_final_fallback.txt",
-  ];
-
+  // 清理 segments 目录下的临时文件和旧产物
+  // 注意：op_mixed.mp4 和 ed_mixed.mp4 现在会被保留，如果已存在则跳过渲染
   log("清理旧的合并产物...");
-  for (const file of mergeProducts) {
+  const tempFiles = [
+    "op_raw.mp4", "ed_raw.mp4",
+    "concat_temp.mp4",
+  ];
+  for (const file of tempFiles) {
     const filePath = path.join(segments, file);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -926,72 +1042,122 @@ async function runSynthesisTask(date: string) {
     log(`删除: ${path.basename(final)}`);
   }
 
-  // ============== 合并阶段 ==========
-  updateProgress("合并", totalSteps - 5, totalSteps);
-
-  // 根据配置决定是否添加OP混音
-  let finalSegments = [...segmentResults];
-
+  // ============== 音频混音阶段 ==========
+  updateProgress("音频混音", totalSteps - 2, totalSteps);
+  
+  // 收集需要混音的段落信息
   const opData = data.op || {};
-  if (opData.bvid && segmentResults.length > 0) {
-    // 将前几个段落的视频合并，然后添加OP
-    const p1Segments = segmentResults.slice(0, Math.min(3, segmentResults.length));
-    if (p1Segments.length > 0) {
-      const p1Raw = await concatVideos(p1Segments, "p1_raw.mp4", segments);
+  const edData = editorConfig.ed;
+  
+  // 找出所有 OP 和 ED 段落组
+  const opIndices = segmentResults
+    .map((s, i) => s.orderItem.audioMix === 'op' ? i : -1)
+    .filter(i => i >= 0);
+  const edIndices = segmentResults
+    .map((s, i) => s.orderItem.audioMix === 'ed' ? i : -1)
+    .filter(i => i >= 0);
+  
+  // 复制结果用于最终合并
+  let finalSegments: string[] = segmentResults.map(s => s.path);
+  
+  // 处理 OP 混音（多个连续段落合并后替换音频）
+  if (opData.bvid && opIndices.length > 0) {
+    log(`开始OP混音: bvid=${opData.bvid}, OP段落数量=${opIndices.length}`);
+    
+    // 检查是否已存在混合后的OP文件
+    const opMixedPath = path.join(segments, "op_mixed.mp4");
+    if (fs.existsSync(opMixedPath)) {
+      log(`OP混音文件已存在，直接使用: op_mixed.mp4`);
+      opIndices.forEach((origIdx, i) => {
+        finalSegments[origIdx] = i === 0 ? opMixedPath : "";
+      });
+    } else {
+      log(`开始下载OP音频: ${opData.bvid}`);
       const opAudio = await downloadAudio(opData.bvid, `${opData.bvid}.mp3`);
-      if (opAudio && p1Raw) {
-        log("混音 OP");
-        const processedP1 = await processP1(p1Raw, opAudio, "p1_final.mp4", segments);
-        if (processedP1) {
-          // 将处理后的OP段落替换回最终列表
-          finalSegments = [processedP1, ...finalSegments.slice(p1Segments.length)];
+      
+      if (opAudio && typeof opAudio === 'string') {
+        log(`OP音频下载完成: ${opAudio}`);
+        
+        const opSegmentPaths = opIndices
+          .map(i => segmentResults[i]?.path)
+          .filter((p): p is string => !!p);
+        
+        log(`收集到 ${opSegmentPaths.length} 个OP段落路径: ${opSegmentPaths.map(p => path.basename(p)).join(', ')}`);
+        
+        if (opSegmentPaths.length > 0) {
+          log(`开始合并OP段落: ${opSegmentPaths.length} 个段落`);
+          const opMerged = await concatVideos(opSegmentPaths, "op_raw.mp4", segments);
+          
+          if (opMerged) {
+            log(`OP段落合并完成: ${opMerged}`);
+            log(`开始替换音频生成OP混音: ${opData.bvid}`);
+            const opMixed = await replaceAudio(opMerged, opAudio, "op_mixed.mp4", segments);
+            
+            if (opMixed) {
+              log(`OP混音完成: ${opMixed}`);
+              // 用混音后的视频替换回原来 OP 段落的位置
+              opIndices.forEach((origIdx, i) => {
+                finalSegments[origIdx] = i === 0 ? opMixed : "";
+              });
+            } else {
+              log(`警告: OP音频替换失败`);
+            }
+          } else {
+            log(`警告: OP段落合并失败`);
+          }
+        } else {
+          log(`警告: 没有找到有效的OP段落路径`);
+        }
+      } else {
+        log(`警告: OP音频下载失败或返回空`);
+      }
+    }
+  } else {
+    log(`OP混音跳过: bvid=${opData.bvid || '空'}, OP段落数量=${opIndices.length}`);
+  }
+  
+  // 处理 ED 混音（多个连续段落合并后替换音频）
+  if (edData?.bvid && edIndices.length > 0) {
+    // 检查是否已存在混合后的ED文件
+    const edMixedPath = path.join(segments, "ed_mixed.mp4");
+    if (fs.existsSync(edMixedPath)) {
+      log(`ED混音文件已存在，直接使用: ed_mixed.mp4`);
+      edIndices.forEach((origIdx, i) => {
+        finalSegments[origIdx] = i === 0 ? edMixedPath : "";
+      });
+    } else {
+      const edAudio = await downloadAudio(edData.bvid, `${edData.bvid}.mp3`);
+      if (edAudio && typeof edAudio === 'string') {
+        const edSegmentPaths = edIndices
+          .map(i => segmentResults[i]?.path)
+          .filter((p): p is string => !!p);
+        if (edSegmentPaths.length > 0) {
+          const edMerged = await concatVideos(edSegmentPaths, "ed_raw.mp4", segments);
+          if (edMerged) {
+            log(`ED 混音: ${edSegmentPaths.length} 个段落 (${edData.bvid})`);
+            const edMixed = await replaceAudio(edMerged, edAudio, "ed_mixed.mp4", segments);
+            if (edMixed) {
+              // 用混音后的视频替换回原来 ED 段落的位置
+              edIndices.forEach((origIdx, i) => {
+                finalSegments[origIdx] = i === 0 ? edMixed : "";
+              });
+            }
+          }
         }
       }
     }
   }
-
-  // 处理ED混音（如果有ED音频且有足够的段落）
-  if (editorConfig.ed && editorConfig.ed.bvid && segmentResults.length > 3) {
-    // 将后几个段落的视频合并，然后添加ED
-    const p3Segments = segmentResults.slice(-Math.min(3, segmentResults.length));
-    const p3Raw = await concatVideos(p3Segments, "p3_pre.mp4", segments);
-    const edAudio = await downloadAudio(
-      editorConfig.ed.bvid,
-      `${editorConfig.ed.bvid}.mp3`,
-    );
-    if (edAudio && p3Raw) {
-      log("混音 ED");
-      // 注意：这里需要ED背景音轨，通常需要一个副榜视频作为ED的视觉内容
-      const subResult = await processP3(
-        p3Raw,
-        p3Raw, // 临时使用p3Raw作为副榜占位
-        edAudio,
-        "p3_final.mp4",
-        segments,
-      );
-      if (subResult) {
-        // 替换最后几个段落为ED处理后的版本
-        finalSegments = [
-          ...segmentResults.slice(0, -p3Segments.length),
-          subResult
-        ];
-      }
-    }
-  }
-
+  
+  // 过滤掉空字符串（被合并的段落）
+  const uniqueSegments = finalSegments.filter(s => s && s.length > 0);
+  
   // ============== 最终合并 ==========
   updateProgress("最终合并", totalSteps - 1, totalSteps);
-  log(`输出 ${final}`);
-  
-  // 清理重复的处理文件
-  const cleanedSegments = finalSegments.filter((s, i, arr) => {
-    // 保留所有唯一的段落文件
-    return arr.indexOf(s) === i;
-  });
+  log(`输出: ${final}`);
 
-  if (cleanedSegments.length > 0) {
-    await finalMerge(final, ...cleanedSegments);
-    log(`最终视频已生成: ${cleanedSegments.length} 个段落合并`);
+  if (uniqueSegments.length > 0) {
+    await finalMerge(final, ...uniqueSegments);
+    log(`最终视频已生成: ${uniqueSegments.length} 个段落合并`);
   }
 
   setTaskStatus(TASK_STATUS.COMPLETED);

@@ -27,6 +27,7 @@ export interface SegmentOrderItem {
   type: SegmentType;
   title?: string;  // 可选的标题配置
   color?: string;  // 可选的颜色配置
+  audioMix?: "op" | "ed";  // 音频混音标记：op=OP混音，ed=ED混音
 }
 
 export interface SectionConfig {
@@ -102,54 +103,54 @@ export interface DerivedValues {
 
 // 默认段落顺序（周刊标准顺序）
 const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
-  { type: "intro" },
-  { type: "infoCard" },
-  { type: "rules" },
+  { type: "intro", audioMix: "op" },
+  { type: "infoCard", audioMix: "op" },
+  { type: "rules", audioMix: "op" },
   { type: "achievementTitle" },
   { type: "newachievement" },
   { type: "newRankTitle" },
   { type: "newRank" },
   { type: "mainRankTitle" },
   { type: "mainRank" },
-  { type: "singerRank" },
-  { type: "millionRank" },
-  { type: "achievementRank" },
-  { type: "historyRank" },
-  { type: "statsCard" },
-  { type: "staffCard" },
-  { type: "subRankTitle" },
-  { type: "subRank" },
+  { type: "singerRank", audioMix: "ed"  },
+  { type: "millionRank", audioMix: "ed"  },
+  { type: "achievementRank", audioMix: "ed"  },
+  { type: "historyRank", audioMix: "ed"  },
+  { type: "statsCard", audioMix: "ed"  },
+  { type: "staffCard", audioMix: "ed" },
+  { type: "subRankTitle", audioMix: "ed" },
+  { type: "subRank", audioMix: "ed" },
 ];
 
 // 月刊默认顺序
 const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
-  { type: "intro" },
-  { type: "infoCard" },
-  { type: "rules" },
+  { type: "intro", audioMix: "op" },
+  { type: "infoCard", audioMix: "op" },
+  { type: "rules", audioMix: "op" },
   { type: "newRankTitle" },
   { type: "newRank" },
   { type: "mainRankTitle" },
   { type: "mainRank" },
-  { type: "singerRank" },
-  { type: "millionRank" },
-  { type: "historyRank" },
-  { type: "statsCard" },
-  { type: "staffCard" },
-  { type: "subRankTitle" },
-  { type: "subRank" },
+  { type: "singerRank", audioMix: "ed"  },
+  { type: "millionRank", audioMix: "ed"  },
+  { type: "historyRank", audioMix: "ed"  },
+  { type: "statsCard", audioMix: "ed"  },
+  { type: "staffCard", audioMix: "ed" },
+  { type: "subRankTitle", audioMix: "ed" },
+  { type: "subRank", audioMix: "ed" },
 ];
 
-// 封面周刊默认顺序
+// 翻唱周刊默认顺序（只有intro和rules，没有成就和新曲榜）
 const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
-  { type: "intro" },
-  { type: "rules" },
+  { type: "intro", audioMix: "op" },
+  { type: "rules", audioMix: "op" },
   { type: "mainRankTitle" },
   { type: "mainRank" },
-  { type: "staffCard" },
-  { type: "subRankTitle" },
+  //{ type: "staffCard", audioMix: "ed" },
+  //{ type: "subRankTitle", audioMix: "ed" },
 ];
 
-// 特刊默认顺序
+// 特刊默认顺序（通常只有排行榜，不加OP/ED）
 const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
   { type: "mainRankTitle" },
   { type: "mainRank" },
