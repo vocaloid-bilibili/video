@@ -19,12 +19,7 @@ import {
   finalMerge,
   getDuration,
 } from '../utils/ffmpeg.js';
-import {
-  renderComposition,
-  renderCompositionRaw,
-  renderRankSegment,
-  renderStill,
-} from '../utils/render.js';
+import { renderVideo, renderImage } from '../utils/render.js';
 import { getClipSetting } from '../utils/clips.js';
 import type { EditorConfig, RankingData, RenderSongInfo } from '../types/index.js';
 
@@ -214,15 +209,16 @@ async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: 
       };
 
       const outputName = `rank_${type}_${song.rank.toString().padStart(3, "0")}.mp4`;
+      const compName = cardComponentName || config.cardComponent || (type === "achievement" ? "achievementCard" : (type === "new" ? "NewSongCard" : "MainRankCard"));
       const fadeDuration = config.audioFade !== false ? (config.fadeDuration || 2) : 0;
 
-      results[index] = await renderRankSegment(
+      results[index] = await renderVideo(
+        compName,
         props,
         outputName,
         segments,
         song._duration,
         fadeDuration,
-        cardComponentName,
       );
 
       log(`[W${workerId}] 完成: ${typeName} ${song.rank}`);
@@ -264,11 +260,9 @@ async function renderSubRankBatch(chunks: RenderSongInfo[][], segments: string, 
 
         log(`副榜 Page${pageNum} 渲染中...`);
 
-        const renderFn = config.audioFade
-          ? renderComposition
-          : renderCompositionRaw;
+        const fadeDuration = config.audioFade ? (config.fadeDuration || 2) : 0;
 
-        return await renderFn(
+        return await renderVideo(
           "SubRank",
           {
             list: processed,
@@ -279,6 +273,7 @@ async function renderSubRankBatch(chunks: RenderSongInfo[][], segments: string, 
           `13_SubRank_Page${pageNum}.mp4`,
           segments,
           duration,
+          fadeDuration,
         );
       }),
     );
@@ -305,7 +300,7 @@ interface SegmentContext {
   subList: RenderSongInfo[];
   subChunks: RenderSongInfo[][];
   subDurationPerChunk: number;
-  renderFn: typeof renderComposition | typeof renderCompositionRaw;
+  fadeDuration: number;
   introCover: string;
   milChunks: any[][];
   achChunks: any[][];
@@ -315,8 +310,8 @@ interface SegmentContext {
 const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentOrderItem) => Promise<string | null | undefined>> = {
   // 片头
   intro: async (ctx) => {
-    const { config, introCover, renderFn, segments, date } = ctx;
-    return await renderFn(
+    const { config, introCover, segments, date, fadeDuration } = ctx;
+    return await renderVideo(
       "Intro",
       {
         issue: `#${ctx.data.index}`,
@@ -327,15 +322,16 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.intro}_Intro.mp4`,
       segments,
       config.sections.intro.duration || DUR_INTRO,
+      fadeDuration,
     );
   },
 
   // 信息卡片
   infoCard: async (ctx) => {
-    const { config, data, editorConfig, renderFn, segments } = ctx;
+    const { config, data, editorConfig, segments, fadeDuration } = ctx;
     const opData = data.op || {};
     const opCover = await downloadImage(opData.image_url);
-    return await renderFn(
+    return await renderVideo(
       "InfoCard",
       {
         opLabel: config.lastPeriodLabel
@@ -352,26 +348,28 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.infoCard}_InfoCard.mp4`,
       segments,
       config.sections.infoCard.duration || 5,
+      fadeDuration,
     );
   },
 
   // 规则页面
   rules: async (ctx) => {
-    const { config, renderFn, segments } = ctx;
-    return await renderFn(
+    const { config, segments, fadeDuration } = ctx;
+    return await renderVideo(
       "RulesAndAchivements",
       { boardType: config._type },
       `${SEGMENT_PREFIX.rules}_Rules.mp4`,
       segments,
       config.sections.rules.duration || DUR_RULES,
+      fadeDuration,
     );
   },
 
   // 成就展示标题
   achievementTitle: async (ctx) => {
-    const { config, renderFn, segments } = ctx;
+    const { config, segments, fadeDuration } = ctx;
     const titleConfig = config.sections.achievementTitle;
-    return await renderFn(
+    return await renderVideo(
       "SectionTitle",
       {
         title: config.achievementTitleFull || `本周共有 ${config.achievementCount} 首歌曲达成周刊成就`,
@@ -388,6 +386,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.achievementTitle}_AchievementTitle.mp4`,
       segments,
       titleConfig.duration || DUR_SECTION_TITLE,
+      fadeDuration,
     );
   },
 
@@ -439,9 +438,9 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
 
   // 新曲榜标题
   newRankTitle: async (ctx) => {
-    const { config, renderFn, segments } = ctx;
+    const { config, segments, fadeDuration } = ctx;
     const titleConfig = config.sections.newRankTitle;
-    return await renderFn(
+    return await renderVideo(
       "SectionTitle",
       {
         title: config.newRankTitleFull || `新曲榜 Top ${config.newRankCount}`,
@@ -454,6 +453,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.newRankTitle}_NewRankTitle.mp4`,
       segments,
       titleConfig.duration || DUR_SECTION_TITLE,
+      fadeDuration,
     );
   },
 
@@ -474,9 +474,9 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
 
   // 主榜标题
   mainRankTitle: async (ctx) => {
-    const { config, renderFn, segments } = ctx;
+    const { config, segments, fadeDuration } = ctx;
     const titleConfig = config.sections.mainRankTitle;
-    return await renderFn(
+    return await renderVideo(
       "SectionTitle",
       {
         title: config.mainRankTitleFull || `主榜 Top ${config.mainRankCount}`,
@@ -489,6 +489,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.mainRankTitle}_MainRankTitle.mp4`,
       segments,
       titleConfig.duration || DUR_SECTION_TITLE,
+      fadeDuration,
     );
   },
 
@@ -524,23 +525,24 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
 
   // 歌手排名
   singerRank: async (ctx) => {
-    const { data, renderFn, segments } = ctx;
+    const { data, segments, fadeDuration } = ctx;
     const singerList = (data.vocal_stats || []).map((s) => ({
       ...s,
       avatar: `http://localhost:${PORT}/config/avatar/${encodeURIComponent(s.name)}.png`,
     }));
-    return await renderFn(
+    return await renderVideo(
       "SingerRank",
       { list: singerList },
       `${SEGMENT_PREFIX.singerRank}_SingerRank.mp4`,
       segments,
       DUR_SHORT,
+      fadeDuration,
     );
   },
 
   // 百万达成
   millionRank: async (ctx) => {
-    const { milChunks, renderFn, segments } = ctx;
+    const { milChunks, segments, fadeDuration } = ctx;
     if (milChunks.length === 0) return null;
 
     const results: string[] = [];
@@ -551,12 +553,13 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
           image_url: await downloadImage(item.image_url),
         })),
       );
-      const result = await renderFn(
+      const result = await renderVideo(
         "MillionRank",
         { list: processed },
         `${SEGMENT_PREFIX.millionRank}_MillionRank_Page${i + 1}.mp4`,
         segments,
         DUR_SHORT,
+        fadeDuration,
       );
       if (result) results.push(result);
     }
@@ -565,7 +568,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
 
   // 成就达成
   achievementRank: async (ctx) => {
-    const { achChunks, renderFn, segments } = ctx;
+    const { achChunks, segments, fadeDuration } = ctx;
     if (achChunks.length === 0) return null;
 
     const results: string[] = [];
@@ -576,12 +579,13 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
           image_url: await downloadImage(item.image_url),
         })),
       );
-      const result = await renderFn(
+      const result = await renderVideo(
         "AchievementRank",
         { list: processed },
         `${SEGMENT_PREFIX.achievementRank}_AchievementRank_Page${i + 1}.mp4`,
         segments,
         DUR_SHORT,
+        fadeDuration,
       );
       if (result) results.push(result);
     }
@@ -590,7 +594,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
 
   // 历史回顾
   historyRank: async (ctx) => {
-    const { data, renderFn, segments } = ctx;
+    const { data, segments, fadeDuration } = ctx;
     const historyList = data.history_record || [];
     const historyProcessed = await Promise.all(
       historyList.map(async (item) => ({
@@ -598,19 +602,20 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
         image_url: await downloadImage(item.image_url),
       })),
     );
-    return await renderFn(
+    return await renderVideo(
       "HistoryRank",
       { list: historyProcessed },
       `${SEGMENT_PREFIX.historyRank}_HistoryRank.mp4`,
       segments,
       DUR_SHORT,
+      fadeDuration,
     );
   },
 
   // 数据统计
   statsCard: async (ctx) => {
-    const { config, data, editorConfig, renderFn, segments } = ctx;
-    return await renderFn(
+    const { config, data, editorConfig, segments, fadeDuration } = ctx;
+    return await renderVideo(
       "StatsCard",
       {
         stat: data.stat,
@@ -622,13 +627,14 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.statsCard}_StatsCard.mp4`,
       segments,
       DUR_SHORT,
+      fadeDuration,
     );
   },
 
   // Staff
   staffCard: async (ctx) => {
-    const { renderFn, segments } = ctx;
-    return await renderFn(
+    const { segments, fadeDuration } = ctx;
+    return await renderVideo(
       "StaffCard",
       {
         staffList: STAFF_LIST.map((s) => ({
@@ -639,14 +645,15 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.staffCard}_StaffCard.mp4`,
       segments,
       DUR_SHORT,
+      fadeDuration,
     );
   },
 
   // 副榜标题
   subRankTitle: async (ctx) => {
-    const { config, editorConfig, renderFn, segments } = ctx;
+    const { config, editorConfig, segments, fadeDuration } = ctx;
     const titleConfig = config.sections.subRankTitle;
-    return await renderFn(
+    return await renderVideo(
       "SectionTitle",
       {
         title: config.subRankTitleFull || `副榜 Top ${config.subRankMax || 100}`,
@@ -659,6 +666,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
       `${SEGMENT_PREFIX.subRankTitle}_SubRankTitle.mp4`,
       segments,
       DUR_SECTION_TITLE,
+      fadeDuration,
     );
   },
 
@@ -737,7 +745,7 @@ async function runSynthesisTask(date: string) {
       log("删除旧封面，重新生成");
     }
 
-    await renderStill(
+    await renderImage(
       "Intro",
       {
         issue: `#${data.index}`,
@@ -824,7 +832,7 @@ async function runSynthesisTask(date: string) {
     }
   }
 
-  const renderFn = config.audioFade ? renderComposition : renderCompositionRaw;
+  const fadeDuration = config.audioFade ? (config.fadeDuration || 2) : 0;
 
   // ============== 构建段落上下文 ================
   const ctx: SegmentContext = {
@@ -841,7 +849,7 @@ async function runSynthesisTask(date: string) {
     subList,
     subChunks,
     subDurationPerChunk,
-    renderFn,
+    fadeDuration,
     introCover,
     milChunks,
     achChunks,

@@ -73,8 +73,8 @@ function runStill(args: any[]) {
 }
 
 
-// ========== 核心渲染函数：命名导出（适配task.js导入） ==========
-export async function renderComposition(
+// ========== 渲染视频 ==========
+export async function renderVideo(
   comp: string,
   props: any,
   name: string,
@@ -106,7 +106,7 @@ export async function renderComposition(
 
     await runRemotion(args);
 
-    // 淡入淡出
+    // 淡入淡出（fadeDuration = 0 时跳过）
     if (fadeDuration > 0 && fs.existsSync(finalPath)) {
       const tempFaded = finalPath.replace('.mp4', '_faded.mp4');
       log(`添加淡入淡出: ${name}`);
@@ -124,67 +124,8 @@ export async function renderComposition(
   }
 }
 
-// 渲染组件（不带淡入淡出）- 命名导出
-export async function renderCompositionRaw(
-  comp: string,
-  props: any,
-  name: string,
-  dir: string,
-  durationSec: number | null = null,
-) {
-  return renderComposition(comp, props, name, dir, durationSec, 0);
-}
-
-// 渲染榜单片段 - 纯渲染函数，数据处理移到调用处
-export async function renderRankSegment(
-  props: any,
-  outputName: string,
-  dir: string,
-  durationSec = 20,
-  fadeDuration = 2,
-  cardComponentName?: string,
-) {
-  const finalPath = path.join(dir, outputName);
-
-  if (fs.existsSync(finalPath)) return finalPath;
-
-  const temp = path.join(dir, `temp_props_rank_${Date.now()}.json`);
-  fs.writeJsonSync(temp, props);
-
-  try {
-    const compName = cardComponentName || props._compName;
-    const frames = Math.round(durationSec * FPS);
-
-    log(`渲染 ${compName} -> ${outputName} (${durationSec}s)`);
-
-    await runRemotion([
-      compName,
-      finalPath,
-      `--props=${temp}`,
-      '--gl=vulkan',
-      `--concurrency=${CONCURRENCY}`,
-      `--frames=0-${frames - 1}`,
-    ]);
-
-    if (fadeDuration > 0 && fs.existsSync(finalPath)) {
-      const tempFaded = finalPath.replace('.mp4', '_faded.mp4');
-      log(`添加淡入淡出: ${outputName}`);
-      await addAudioFade(finalPath, tempFaded, fadeDuration);
-      fs.removeSync(finalPath);
-      fs.renameSync(tempFaded, finalPath);
-    }
-
-    return finalPath;
-  } catch (e: any) {
-    log(`渲染失败 ${outputName}: ${e.message}`);
-    return null;
-  } finally {
-    if (fs.existsSync(temp)) fs.unlinkSync(temp);
-  }
-}
-
-// 渲染静态帧/封面 - 命名导出
-export async function renderStill(
+// ========== 渲染静态图片 ==========
+export async function renderImage(
   compositionId: string,
   props: any,
   outputName: string,
@@ -195,7 +136,6 @@ export async function renderStill(
   if (fs.existsSync(outPath)) return outPath;
 
   const temp = path.join(outDir, `temp_props_still_${Date.now()}.json`);
-  console.log(props)
   fs.writeJsonSync(temp, props);
 
   try {
