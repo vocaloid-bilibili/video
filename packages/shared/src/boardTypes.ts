@@ -2,6 +2,33 @@
  * 期刊段落配置
  */
 
+// 段落类型枚举
+export type SegmentType = 
+  | "intro" 
+  | "infoCard" 
+  | "rules"
+  | "achievementTitle"
+  | "newachievement"
+  | "newRankTitle"
+  | "newRank"
+  | "mainRankTitle"
+  | "mainRank"
+  | "singerRank"
+  | "millionRank"
+  | "achievementRank"
+  | "historyRank"
+  | "statsCard"
+  | "staffCard"
+  | "subRankTitle"
+  | "subRank";
+
+// 段落配置项
+export interface SegmentOrderItem {
+  type: SegmentType;
+  title?: string;  // 可选的标题配置
+  color?: string;  // 可选的颜色配置
+}
+
 export interface SectionConfig {
   enabled: boolean;
   duration?: number;
@@ -14,7 +41,7 @@ export interface PointThreshold {
   label: string;
 }
 
-export interface IssueTypeConfig {
+export interface BoardTypeConfig {
   name: string;
   datePattern: RegExp | null;
   achievementCount?: number;
@@ -57,6 +84,9 @@ export interface IssueTypeConfig {
     mainRank: string | null;
     subRank: string | null;
   };
+  // 段落顺序配置：定义视频中各段落的排列顺序
+  // 每个元素指定一个段落的类型，可以是单个类型字符串，也可以是带配置的数组
+  segmentOrder: SegmentOrderItem[];
 }
 
 export interface DerivedValues {
@@ -70,7 +100,62 @@ export interface DerivedValues {
   subRankTitleFull: string;
 }
 
-export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
+// 默认段落顺序（周刊标准顺序）
+const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
+  { type: "intro" },
+  { type: "infoCard" },
+  { type: "rules" },
+  { type: "achievementTitle" },
+  { type: "newachievement" },
+  { type: "newRankTitle" },
+  { type: "newRank" },
+  { type: "mainRankTitle" },
+  { type: "mainRank" },
+  { type: "singerRank" },
+  { type: "millionRank" },
+  { type: "achievementRank" },
+  { type: "historyRank" },
+  { type: "statsCard" },
+  { type: "staffCard" },
+  { type: "subRankTitle" },
+  { type: "subRank" },
+];
+
+// 月刊默认顺序
+const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
+  { type: "intro" },
+  { type: "infoCard" },
+  { type: "rules" },
+  { type: "newRankTitle" },
+  { type: "newRank" },
+  { type: "mainRankTitle" },
+  { type: "mainRank" },
+  { type: "singerRank" },
+  { type: "millionRank" },
+  { type: "historyRank" },
+  { type: "statsCard" },
+  { type: "staffCard" },
+  { type: "subRankTitle" },
+  { type: "subRank" },
+];
+
+// 封面周刊默认顺序
+const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
+  { type: "intro" },
+  { type: "rules" },
+  { type: "mainRankTitle" },
+  { type: "mainRank" },
+  { type: "staffCard" },
+  { type: "subRankTitle" },
+];
+
+// 特刊默认顺序
+const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
+  { type: "mainRankTitle" },
+  { type: "mainRank" },
+];
+
+export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
   weekly: {
     name: "周刊",
     datePattern: /^\d{4}-\d{2}-\d{2}$/,
@@ -149,6 +234,8 @@ export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
       mainRank: "total_rank_top20",
       subRank: "total_rank_sub",
     },
+
+    segmentOrder: DEFAULT_WEEKLY_ORDER,
   },
 
   monthly: {
@@ -218,6 +305,8 @@ export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
       mainRank: "total_rank_top20",
       subRank: "total_rank_sub",
     },
+
+    segmentOrder: DEFAULT_MONTHLY_ORDER,
   },
 
   coverWeekly: {
@@ -298,10 +387,9 @@ export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
       mainRank: "songs",
       subRank: "total_rank_sub",
     },
+
+    segmentOrder: DEFAULT_COVER_WEEKLY_ORDER,
   },
-
-
-  
 
   special: {
     name: "特刊",
@@ -349,17 +437,19 @@ export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
       mainRank: "total_rank_top20",
       subRank: null,
     },
+
+    segmentOrder: DEFAULT_SPECIAL_ORDER,
   },
 };
 
-export function detectIssueType(dateStr: string): string {
+export function detectBoardType(dateStr: string): string {
   if (ISSUE_TYPES.weekly.datePattern?.test(dateStr)) return "weekly";
   if (ISSUE_TYPES.monthly.datePattern?.test(dateStr)) return "monthly";
   if (ISSUE_TYPES.coverWeekly.datePattern?.test(dateStr)) return "coverWeekly";
   return "special";
 }
 
-export function getDerivedValues(config: IssueTypeConfig): DerivedValues {
+export function getDerivedValues(config: BoardTypeConfig): DerivedValues {
   const subMax = config.subRankRange ? config.subRankRange[1] : 100;
 
   const isMonthly = config.name === "月刊";
@@ -390,12 +480,12 @@ export function getDerivedValues(config: IssueTypeConfig): DerivedValues {
   };
 }
 
-export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<IssueTypeConfig> } = {}): IssueTypeConfig & DerivedValues & { _type: string; _date: string } {
-  const type = infoData.boardType || detectIssueType(dateStr);
+export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<BoardTypeConfig> } = {}): BoardTypeConfig & DerivedValues & { _type: string; _date: string } {
+  const type = infoData.boardType || detectBoardType(dateStr);
 
   const baseConfig = JSON.parse(
     JSON.stringify(ISSUE_TYPES[type] || ISSUE_TYPES.special),
-  ) as IssueTypeConfig;
+  ) as BoardTypeConfig;
 
   if (infoData.config) {
     deepMerge(baseConfig, infoData.config);
@@ -406,7 +496,30 @@ export function getIssueConfig(dateStr: string, infoData: { boardType?: string; 
 
   Object.assign(baseConfig, getDerivedValues(baseConfig));
 
-  return baseConfig as IssueTypeConfig & DerivedValues & { _type: string; _date: string };
+  return baseConfig as BoardTypeConfig & DerivedValues & { _type: string; _date: string };
+}
+
+// 获取所有可用的段落类型
+export function getAllSegmentTypes(): SegmentType[] {
+  return [
+    "intro",
+    "infoCard",
+    "rules",
+    "achievementTitle",
+    "newachievement",
+    "newRankTitle",
+    "newRank",
+    "mainRankTitle",
+    "mainRank",
+    "singerRank",
+    "millionRank",
+    "achievementRank",
+    "historyRank",
+    "statsCard",
+    "staffCard",
+    "subRankTitle",
+    "subRank",
+  ];
 }
 
 export function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {

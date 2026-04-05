@@ -1,11 +1,13 @@
+/**
+ * 这个文件负责根据传入的参数渲染图片和视频分段，不涉及任何数据处理和逻辑。
+ */
 import fs from 'fs-extra';
 import path from 'path';
 import { spawn } from 'child_process';
 
 import { addAudioFade } from './ffmpeg.js';
-import { MONOREPO_ROOT, PORT } from '../config.js';
+import { MONOREPO_ROOT } from '../config.js';
 import { log } from '../state.js';
-import { getCopyrightLabel } from './helpers.js';
 
 const FPS = 60;
 const CONCURRENCY = 4;
@@ -133,62 +135,27 @@ export async function renderCompositionRaw(
   return renderComposition(comp, props, name, dir, durationSec, 0);
 }
 
-// 渲染榜单片段 - 命名导出
+// 渲染榜单片段 - 纯渲染函数，数据处理移到调用处
 export async function renderRankSegment(
-  data: any,
-  videoPath: string,
-  thumb: string,
-  type: string,
+  props: any,
+  outputName: string,
   dir: string,
   durationSec = 20,
-  config: any = {},
-  cardComponentName?: string, // 可选：指定使用的卡片组件，如 "CoverMainRankCard"
+  fadeDuration = 2,
+  cardComponentName?: string,
 ) {
-  const baseName = `rank_${type}_${data.rank.toString().padStart(3, "0")}.mp4`;
-  const finalPath = path.join(dir, baseName);
+  const finalPath = path.join(dir, outputName);
 
   if (fs.existsSync(finalPath)) return finalPath;
 
-  const videoUrl = `http://localhost:${PORT}/downloads/${path.basename(videoPath)}`;
-
-  const extraFields = {
-    point_before: data.point_before || 0,
-    point_rate: data.rate,
-    copyrightLabel: getCopyrightLabel(data.copyright),
-    vocalists: data.vocal,
-    producers: data.author,
-    synthesizers: data.synthesizer,
-    songType: data.type,
-    thumb,
-    videoSource: videoUrl,
-    view_rate: data.viewR,
-    favorite_rate: data.favoriteR,
-    danmaku_rate: data.danmakuR,
-    coin_rate: data.coinR,
-    like_rate: data.likeR,
-    reply_rate: data.replyR,
-    share_rate: data.shareR,
-    showCount: (config as any).showCount !== false,
-    trendCount: (config as any).trendCount || 7,
-    seperate_ranks:
-      data[(config as any).trendKey || "daily_trends"] || data.daily_trends,
-  }; // 修复原代码遗漏的分号
-
-  const props = {
-    ...data, ...extraFields
-  }; // 修复原代码遗漏的分号
-
-  const temp = path.join(dir, `temp_props_rank_${type}_${data.rank}.json`);
+  const temp = path.join(dir, `temp_props_rank_${Date.now()}.json`);
   fs.writeJsonSync(temp, props);
 
   try {
-    // 优先级：cardComponentName > config.cardComponent > type默认
-    const compName = cardComponentName 
-      || (config as any).cardComponent
-      || (type === "achievement" ? "achievementCard" : (type === "new" ? "NewSongCard" : "MainRankCard"));
+    const compName = cardComponentName || props._compName;
     const frames = Math.round(durationSec * FPS);
 
-    log(`渲染 ${type} #${data.rank} (${durationSec}s)`);
+    log(`渲染 ${compName} -> ${outputName} (${durationSec}s)`);
 
     await runRemotion([
       compName,
@@ -199,17 +166,17 @@ export async function renderRankSegment(
       `--frames=0-${frames - 1}`,
     ]);
 
-    if ((config as any).audioFade !== false && fs.existsSync(finalPath)) {
+    if (fadeDuration > 0 && fs.existsSync(finalPath)) {
       const tempFaded = finalPath.replace('.mp4', '_faded.mp4');
-      log(`添加淡入淡出: ${type} #${data.rank}`);
-      await addAudioFade(finalPath, tempFaded, (config as any).fadeDuration || 2);
+      log(`添加淡入淡出: ${outputName}`);
+      await addAudioFade(finalPath, tempFaded, fadeDuration);
       fs.removeSync(finalPath);
       fs.renameSync(tempFaded, finalPath);
     }
 
     return finalPath;
   } catch (e: any) {
-    log(`渲染失败 ${type} #${data.rank}: ${e.message}`);
+    log(`渲染失败 ${outputName}: ${e.message}`);
     return null;
   } finally {
     if (fs.existsSync(temp)) fs.unlinkSync(temp);

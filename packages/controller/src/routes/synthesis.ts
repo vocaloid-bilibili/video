@@ -13,7 +13,7 @@ import {
 
 // 导入工具函数
 import { getPaths } from '../utils/helpers.js';
-import { getIssueConfig, detectIssueType } from 'shared-config';
+import { getIssueConfig, detectBoardType } from 'shared-config';
 
 // 导入合成任务
 import {
@@ -64,7 +64,7 @@ router.post("/start", async (req, res) => {
 
   resetTask(name);
 
-  const boardType = detectIssueType(name);
+  const boardType = detectBoardType(name);
   const typeName =
     boardType === "weekly" ? "周刊" : boardType === "monthly" ? "月刊" : "特刊";
   log(`开始${typeName}合成: ${name}`);

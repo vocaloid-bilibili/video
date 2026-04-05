@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 // 修复1：导入具体文件，添加.js后缀（解决目录导入错误）
 import { DIR_VIDEO_ROOT } from '../config.js';
-import { detectIssueType } from 'shared-config';
+import { detectBoardType } from 'shared-config';
 
 // 修复2：ES模块中手动定义__dirname（如果用到的话，提前定义更规范）
 const __filename = fileURLToPath(import.meta.url);
@@ -40,8 +40,8 @@ function getCopyrightLabel(copyright: number) {
 }
 
 // 获取期刊类型
-function getIssueType(date: any) {
-  return detectIssueType(date);
+function getBoardType(date: any) {
+  return detectBoardType(date);
 }
 
 // 格式化日期显示
@@ -66,6 +66,6 @@ export {
   getPaths,
   chunkArray,
   getCopyrightLabel,
-  getIssueType,
+  getBoardType,
   formatDateDisplay
 };

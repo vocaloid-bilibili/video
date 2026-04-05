@@ -41,7 +41,7 @@ const DotPattern = () => (
 );
 
 // 根据类型获取显示名称
-const getIssueTypeName = (boardType: string): string => {
+const getBoardTypeName = (boardType: string): string => {
   switch (boardType) {
     case "monthly":
       return "月刊";
@@ -65,7 +65,7 @@ export const Intro = ({
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
 
-  const boardTypeName = getIssueTypeName(boardType);
+  const boardTypeName = getBoardTypeName(boardType);
 
   const containerEntrance = spring({
     frame,

@@ -1,4 +1,4 @@
-import type { IssueTypeConfig, SongInfo } from "shared-config"
+import type { BoardTypeConfig, SongInfo } from "shared-config"
 
 type BoardType = "daily" | "weekly" | "monthly"
 
@@ -29,7 +29,7 @@ type EditorConfig = {
     ending: string
   },
   boardType: string
-  config: IssueTypeConfig
+  config: BoardTypeConfig
   // coverWeekly 模式的主榜名称
   coverWeeklyName?: string
 }

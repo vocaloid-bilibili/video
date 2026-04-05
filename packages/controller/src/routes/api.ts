@@ -40,7 +40,7 @@ import {
 } from '../state.js';
 
 import { getPaths } from '../utils/helpers.js';
-import { detectIssueType, getIssueConfig } from 'shared-config';
+import { detectBoardType, getIssueConfig } from 'shared-config';
 import { downloadFullVideo, getFullVideoInfo } from '../utils/fullVideo.js';
 
 // 导入裁切设置管理
@@ -184,7 +184,7 @@ router.post("/upload", uploadData.array("files"), (req, res) => {
 function isValidIssueFile(filename: string): boolean {
   if (filename.endsWith("_config.json")) return false;
   const dateStr = filename.replace(".json", "");
-  const type = detectIssueType(dateStr);
+  const type = detectBoardType(dateStr);
   return type !== "special" || /^special/.test(dateStr);
 }
 
@@ -201,7 +201,7 @@ router.get("/files", async (req, res) => {
         const date = f.replace(".json", "");
         const { final } = getPaths(date);
         const hasVideo = await fs.pathExists(final);
-        const boardType = detectIssueType(date);
+        const boardType = detectBoardType(date);
         const hasConfig = await fs.pathExists(
           path.join(DIR_DATA, `${date}_config.json`),
         );

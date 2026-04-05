@@ -115,15 +115,13 @@ export async function finalMerge(output: string, ...inputs: string[]) {
 
   const inputArgs = inputs.map((p) => `-i "${p}"`).join(" ");
   const filterParts: string[] = [];
-  const mappingParts: string[] = [];
   
   for (let i = 0; i < inputs.length; i++) {
     filterParts.push(`[${i}:v][${i}:a]`);
-    mappingParts.push(`-map "[outv${i}]" -map "[outa${i}]"`);
   }
 
   const filterComplex = `${filterParts.join("")}concat=n=${inputs.length}:v=1:a=1[outv][outa]`;
-  const cmd = `ffmpeg ${HWACCEL} ${inputArgs} -filter_complex "${filterComplex}" ${mappingParts.join(" ")} -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k "${output}" -y`;
+  const cmd = `ffmpeg ${HWACCEL} ${inputArgs} -filter_complex "${filterComplex}" -map "[outv]" -map "[outa]" -c:v ${VIDEO_CODEC} ${ENCODE_OPTS} -r 60 -c:a aac -ar 48000 -b:a 192k "${output}" -y`;
 
   await execPromise(cmd);
 }
