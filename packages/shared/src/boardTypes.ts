@@ -31,7 +31,6 @@ export interface SegmentOrderItem {
 }
 
 export interface SectionConfig {
-  enabled: boolean;
   duration?: number;
   title?: string;
   color?: string;
@@ -43,7 +42,7 @@ export interface PointThreshold {
 }
 
 export interface BoardTypeConfig {
-  name: string;
+  boardLabel: string;
   datePattern: RegExp | null;
   achievementCount?: number;
   newRankCount: number;
@@ -143,11 +142,12 @@ const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
 // 翻唱周刊默认顺序（只有intro和rules，没有成就和新曲榜）
 const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op" },
+  { type: "infoCard", audioMix: "op" },
   { type: "rules", audioMix: "op" },
   { type: "mainRankTitle" },
   { type: "mainRank" },
-  //{ type: "staffCard", audioMix: "ed" },
-  //{ type: "subRankTitle", audioMix: "ed" },
+  // { type: "staffCard", audioMix: "ed" },
+  // { type: "subRankTitle", audioMix: "ed" },
 ];
 
 // 特刊默认顺序（通常只有排行榜，不加OP/ED）
@@ -156,9 +156,9 @@ const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
   { type: "mainRank" },
 ];
 
-export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
+export const ISSUE_TYPES  = {
   weekly: {
-    name: "周刊",
+    boardLabel: "周刊",
     datePattern: /^\d{4}-\d{2}-\d{2}$/,
 
     achievementCount: 1,
@@ -182,48 +182,44 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
     showAchievements: true,
 
     sections: {
-      intro: { enabled: true, duration: 3 },
-      infoCard: { enabled: true, duration: 5 },
-      rules: { enabled: true, duration: 35 },
+      intro: { duration: 3 },
+      infoCard: { duration: 5 },
+      rules: { duration: 35 },
 
       achievementTitle: {
-        enabled: true,
         duration: 2,
         title: "成就达成展示",
         color: "#FFD700",
       },
-      newachievement: { enabled: true },
+      newachievement: {},
 
       newRankTitle: {
-        enabled: true,
         duration: 2,
         title: "新曲榜",
         color: "#23ade5",
       },
-      newRank: { enabled: true },
+      newRank: {},
 
       mainRankTitle: {
-        enabled: true,
         duration: 2,
         title: "主榜",
         color: "#f25d8e",
       },
-      mainRank: { enabled: true },
+      mainRank: {},
 
-      singerRank: { enabled: true },
-      millionRank: { enabled: true },
-      achievementRank: { enabled: true },
-      historyRank: { enabled: true },
-      statsCard: { enabled: true },
-      staffCard: { enabled: true },
+      singerRank: {},
+      millionRank: {},
+      achievementRank: {},
+      historyRank: {},
+      statsCard: {},
+      staffCard: {},
 
       subRankTitle: {
-        enabled: true,
         duration: 2,
         title: "副榜",
         color: "#66ccff",
       },
-      subRank: { enabled: true },
+      subRank: {},
     },
 
     audioFade: true,
@@ -240,7 +236,7 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
   },
 
   monthly: {
-    name: "月刊",
+    boardLabel: "月刊",
     datePattern: /^\d{4}-\d{2}$/,
 
     newRankCount: 20,
@@ -263,39 +259,36 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
     showAchievements: false,
 
     sections: {
-      intro: { enabled: true, duration: 3 },
-      infoCard: { enabled: true, duration: 5 },
-      rules: { enabled: true, duration: 30 },
-      achievementTitle: { enabled: false },
-      newachievement: { enabled: false }, 
+      intro: { duration: 3 },
+      infoCard: { duration: 5 },
+      rules: { duration: 30 },
+      achievementTitle: {},
+      newachievement: {},
 
       newRankTitle: {
-        enabled: true,
         duration: 2,
         title: "新曲榜",
         color: "#23ade5",
       },
-      newRank: { enabled: true },
+      newRank: {},
       mainRankTitle: {
-        enabled: true,
         duration: 2,
         title: "主榜",
         color: "#f25d8e",
       },
-      mainRank: { enabled: true },
-      singerRank: { enabled: true },
-      millionRank: { enabled: true },
-      achievementRank: { enabled: false },
-      historyRank: { enabled: true },
-      statsCard: { enabled: true },
-      staffCard: { enabled: true },
+      mainRank: {},
+      singerRank: {},
+      millionRank: {},
+      achievementRank: {},
+      historyRank: {},
+      statsCard: {},
+      staffCard: {},
       subRankTitle: {
-        enabled: true,
         duration: 2,
         title: "副榜",
         color: "#66ccff",
       },
-      subRank: { enabled: true },
+      subRank: {},
     },
 
     audioFade: true,
@@ -311,7 +304,7 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
   },
 
   coverWeekly: {
-    name: "周刊",
+    boardLabel: "翻唱周刊",
     datePattern: /^cover_\d{4}-\d{2}-\d{2}$/,
 
     achievementCount: 1,
@@ -335,48 +328,44 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
     showAchievements: true,
 
     sections: {
-      intro: { enabled: true, duration: 3 },
-      infoCard: { enabled: false, duration: 5 },
-      rules: { enabled: true, duration: 35 },
+      intro: { duration: 3 },
+      infoCard: { duration: 5 },
+      rules: { duration: 35 },
 
       achievementTitle: {
-        enabled: false,
         duration: 2,
         title: "成就达成展示",
         color: "#FFD700",
       },
-      newachievement: { enabled: false },
+      newachievement: {},
 
       newRankTitle: {
-        enabled: false,
         duration: 2,
         title: "新曲榜",
         color: "#23ade5",
       },
-      newRank: { enabled: false },
+      newRank: {},
 
       mainRankTitle: {
-        enabled: true,
         duration: 2,
         title: "主榜",
         color: "#f25d8e",
       },
-      mainRank: { enabled: true },
+      mainRank: {},
 
-      singerRank: { enabled: false },
-      millionRank: { enabled: false },
-      achievementRank: { enabled: false },
-      historyRank: { enabled: false },
-      statsCard: { enabled: false },
-      staffCard: { enabled: true },
+      singerRank: {},
+      millionRank: {},
+      achievementRank: {},
+      historyRank: {},
+      statsCard: {},
+      staffCard: {},
 
       subRankTitle: {
-        enabled: true,
         duration: 2,
         title: "副榜",
         color: "#66ccff",
       },
-      subRank: { enabled: false },
+      subRank: {},
     },
 
     audioFade: true,
@@ -393,7 +382,7 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
   },
 
   special: {
-    name: "特刊",
+    boardLabel: "特刊",
     datePattern: null,
 
     newRankCount: 0,
@@ -411,23 +400,23 @@ export const ISSUE_TYPES: Record<string, BoardTypeConfig> = {
     specialRateNote: true,
 
     sections: {
-      intro: { enabled: false },
-      infoCard: { enabled: false },
-      rules: { enabled: false },
-      achievementTitle: { enabled: false },
-      newachievement: { enabled: false }, 
-      newRankTitle: { enabled: false },
-      newRank: { enabled: false },
-      mainRankTitle: { enabled: true, duration: 2 },
-      mainRank: { enabled: true },
-      singerRank: { enabled: false },
-      millionRank: { enabled: false },
-      achievementRank: { enabled: false },
-      historyRank: { enabled: false },
-      statsCard: { enabled: false },
-      staffCard: { enabled: false },
-      subRankTitle: { enabled: false },
-      subRank: { enabled: false },
+      intro: {},
+      infoCard: {},
+      rules: {},
+      achievementTitle: {},
+      newachievement: {},
+      newRankTitle: {},
+      newRank: {},
+      mainRankTitle: { duration: 2 },
+      mainRank: {},
+      singerRank: {},
+      millionRank: {},
+      achievementRank: {},
+      historyRank: {},
+      statsCard: {},
+      staffCard: {},
+      subRankTitle: {},
+      subRank: {},
     },
 
     audioFade: false,
@@ -453,8 +442,8 @@ export function detectBoardType(dateStr: string): string {
 export function getDerivedValues(config: BoardTypeConfig): DerivedValues {
   const subMax = config.subRankRange ? config.subRankRange[1] : 100;
 
-  const isMonthly = config.name === "月刊";
-  const isSpecial = config.name === "特刊";
+  const isMonthly = config.boardLabel === "月刊";
+  const isSpecial = config.boardLabel === "特刊";
 
   return {
     subRankMax: subMax,
@@ -465,24 +454,17 @@ export function getDerivedValues(config: BoardTypeConfig): DerivedValues {
 
     lastPeriodLabel: isMonthly ? "上月" : "上期",
 
-    achievementTitleFull: config.sections?.achievementTitle?.enabled
-      ? `${config.sections.achievementTitle.title}共 ${config.achievementCount} 首达成`
+    achievementTitleFull: `${config.sections?.achievementTitle?.title || "成就"}共 ${config.achievementCount} 首达成`,
+    newRankTitleFull: `${config.sections?.newRankTitle?.title || "新曲榜"} Top ${config.newRankCount}`,
+    mainRankTitleFull: `${config.sections?.mainRankTitle?.title || "主榜"} Top ${config.mainRankCount}`,
+    subRankTitleFull: config.subRankRange
+      ? `${config.sections?.subRankTitle?.title || "副榜"} Top ${subMax}`
       : "",
-    newRankTitleFull: config.sections?.newRankTitle?.enabled
-      ? `${config.sections.newRankTitle.title} Top ${config.newRankCount}`
-      : "",
-    mainRankTitleFull: config.sections?.mainRankTitle?.enabled
-      ? `${config.sections.mainRankTitle.title} Top ${config.mainRankCount}`
-      : "",
-    subRankTitleFull:
-      config.sections?.subRankTitle?.enabled && config.subRankRange
-        ? `${config.sections.subRankTitle.title} Top ${subMax}`
-        : "",
   };
 }
 
 export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<BoardTypeConfig> } = {}): BoardTypeConfig & DerivedValues & { _type: string; _date: string } {
-  const type = infoData.boardType || detectBoardType(dateStr);
+  const type = ( infoData.boardType || detectBoardType(dateStr) ) as keyof typeof ISSUE_TYPES
 
   const baseConfig = JSON.parse(
     JSON.stringify(ISSUE_TYPES[type] || ISSUE_TYPES.special),

@@ -384,15 +384,9 @@ router.get("/songs/:date", async (req, res) => {
     const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
 
     // 提取歌曲列表（根据配置中的数量限制）
-    const achievementList: SongInfo[] = config.sections.newachievement?.enabled
-      ? (data[achievementField] || []).slice(0, config.achievementCount)
-      : [];
-    const newRankList: SongInfo[] = config.sections.newRank?.enabled
-      ? (data[newRankField] || []).slice(0, config.newRankCount)
-      : [];
-    const mainRankList: SongInfo[] = config.sections.mainRank?.enabled
-      ? (data[mainRankField] || []).slice(0, config.mainRankCount)
-      : [];
+    const achievementList: SongInfo[] = (data[achievementField] || []).slice(0, config.achievementCount);
+    const newRankList: SongInfo[] = (data[newRankField] || []).slice(0, config.newRankCount);
+    const mainRankList: SongInfo[] = (data[mainRankField] || []).slice(0, config.mainRankCount);
 
     // 为每首歌曲添加裁切设置和视频下载状态
     const enrichSong = (song: SongInfo, type: any) => {

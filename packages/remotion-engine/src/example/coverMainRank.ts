@@ -41,9 +41,9 @@ export default {
   "share_rank": 3,
   "rank": 2,
   "count": 10,
-  "rank_before": 1,
-  "point_before": 5362065,
-  "rate": "-8.21%",
+  "rank_before": "-",
+  "point_before": "-",
+  "rate": "123%",
   "showCount": false,
   "videoSource": ``
 }

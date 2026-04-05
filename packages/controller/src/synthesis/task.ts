@@ -188,7 +188,7 @@ async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: 
       const videoUrl = `http://localhost:${PORT}/downloads/${path.basename(vid)}`;
       const props = {
         ...songAny,
-        point_before: songAny.point_before || 0,
+        point_before: songAny.point_before,
         point_rate: songAny.rate,
         copyrightLabel: getCopyrightLabel(songAny.copyright),
         vocalists: songAny.vocal,
@@ -205,7 +205,7 @@ async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: 
         reply_rate: songAny.replyR,
         share_rate: songAny.shareR,
         showCount: config.showCount !== false,
-        trendCount: config.trendCount || 7,
+        trendCount: config.trendCount,
         seperate_ranks: songAny[config.trendKey || "daily_trends"] || songAny.daily_trends,
         _compName: cardComponentName
           || config.cardComponent
@@ -300,7 +300,7 @@ async function renderSubRankBatch(chunks: RenderSongInfo[][], segments: string, 
 
 // 段落渲染上下文（包含所有需要的数据）
 interface SegmentContext {
-  date: string;
+  name: string;
   data: RankingData;
   editorConfig: EditorConfig;
   config: any;
@@ -323,12 +323,12 @@ interface SegmentContext {
 const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentOrderItem) => Promise<string | null | undefined>> = {
   // 片头
   intro: async (ctx) => {
-    const { config, introCover, segments, date, fadeDuration } = ctx;
+    const { config, introCover, segments, name, fadeDuration } = ctx;
     return await renderVideo(
       "Intro",
       {
         issue: `#${ctx.data.index}`,
-        date: formatDate(date),
+        date: config.formatDate ? config.formatDate(name) : "",
         coverImg: introCover,
         boardType: config._type,
       },
@@ -783,10 +783,10 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext, item: SegmentO
  * 使用配置驱动的段落顺序，所有段落一律平等
  * @param {string} date 
  */
-async function runSynthesisTask(date: string) {
-  const { base, segments, final } = getPaths(date);
-  const dataFile = path.join(DIR_DATA, `${date}.json`);
-  const configFile = path.join(DIR_DATA, `${date}_config.json`);
+async function runSynthesisTask(name: string) {
+  const { base, segments, final } = getPaths(name);
+  const dataFile = path.join(DIR_DATA, `${name}.json`);
+  const configFile = path.join(DIR_DATA, `${name}_config.json`);
 
   log("读取数据");
   const data: RankingData = await fs.readJson(dataFile);
@@ -795,8 +795,8 @@ async function runSynthesisTask(date: string) {
   const editorConfig: EditorConfig = await fs.readJson(configFile);
   
   // 获取期刊配置
-  const config = getIssueConfig(date, editorConfig);
-  log(`期刊类型: ${config.name} (${config._type})`);
+  const config = getIssueConfig(name, editorConfig);
+  log(`期刊类型: ${config.boardLabel} (${config._type})`);
   log(`段落顺序: ${(config.segmentOrder as SegmentOrderItem[]).map(s => s.type).join(" → ")}`);
 
   const totalSteps = 70;
@@ -826,9 +826,8 @@ async function runSynthesisTask(date: string) {
   }
 
   // 生成封面图片
-  if (config.sections.intro.enabled) {
-    const coverFrame = (config.sections.intro?.duration || DUR_INTRO) * FPS - 31;
-    const coverFileName = `${date}.png`;
+  const coverFrame = (config.sections.intro?.duration || DUR_INTRO) * FPS - 31;
+    const coverFileName = `${name}.png`;
     const coverPath = path.join(base, coverFileName);
 
     if (fs.existsSync(coverPath)) {
@@ -839,8 +838,8 @@ async function runSynthesisTask(date: string) {
     await renderImage(
       "Intro",
       {
-        issue: `#${data.index}`,
-        date: formatDate(date),
+        issue: data.index ? `#${data.index}` : '',
+        date: formatDate(name),
         coverImg: introCover,
         boardType: config._type,
       },
@@ -850,7 +849,6 @@ async function runSynthesisTask(date: string) {
     );
     log(`封面已生成: ${coverFileName}`);
     updateProgress("封面", ++progressCounter, totalSteps);
-  }
 
   // ============== 准备素材阶段 ================
   const achievementField = config.dataFields?.newachievement || "achievement_data";
@@ -858,16 +856,10 @@ async function runSynthesisTask(date: string) {
   const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
   const subRankField = config.dataFields?.subRank || "total_rank_sub";
 
-  const achievementList: RenderSongInfo[] = config.sections.newachievement?.enabled
-    ? (data[achievementField] || []).slice(0, config.achievementCount)
-    : [];
-  const newRankList: RenderSongInfo[] = config.sections.newRank?.enabled
-    ? (data[newRankField] || []).slice(0, config.newRankCount)
-    : [];
-  const mainRankList: RenderSongInfo[] = config.sections.mainRank?.enabled
-    ? (data[mainRankField] || []).slice(0, config.mainRankCount)
-    : [];
-  const subList: RenderSongInfo[] = config.sections.subRank?.enabled && config.subRankRange
+  const achievementList: RenderSongInfo[] = (data[achievementField] || []).slice(0, config.achievementCount);
+  const newRankList: RenderSongInfo[] = (data[newRankField] || []).slice(0, config.newRankCount);
+  const mainRankList: RenderSongInfo[] = (data[mainRankField] || []).slice(0, config.mainRankCount);
+  const subList: RenderSongInfo[] = config.subRankRange
     ? (data[subRankField] || [])
         .filter((i: SongInfo) => {
           if (!config.subRankRange) return false;
@@ -897,9 +889,7 @@ async function runSynthesisTask(date: string) {
   );
   const milChunks = chunkArray(milList, 5);
 
-  const achList = config.sections.achievementRank?.enabled
-    ? data.achievement_record || []
-    : [];
+  const achList = data.achievement_record || [];
   const achChunks = chunkArray(achList, 5);
 
   const subChunks = chunkArray(subList, config.subRankPerPage || 4);
@@ -914,6 +904,9 @@ async function runSynthesisTask(date: string) {
     if (edAudioPath) {
       const edTotalDuration = await getDuration(edAudioPath);
       
+      // 获取 segmentOrder 中的段落类型
+      const orderedTypes = config.segmentOrder.map(item => item.type);
+      
       // 精确计算ED段落总时长（包括所有非subRank的ED段落）
       // ED段落包括: singerRank, millionRank, achievementRank, historyRank, statsCard, staffCard, subRankTitle
       let edSegmentsDuration = 0;
@@ -921,24 +914,23 @@ async function runSynthesisTask(date: string) {
       // singerRank, historyRank, statsCard, staffCard 各自固定 DUR_SHORT (7秒)
       const fixedEdSegments = ['singerRank', 'historyRank', 'statsCard', 'staffCard'];
       for (const segType of fixedEdSegments) {
-        const section = config.sections[segType as keyof typeof config.sections];
-        if (section?.enabled) {
+        if (orderedTypes.includes(segType as SegmentType)) {
           edSegmentsDuration += DUR_SHORT;
         }
       }
       
       // millionRank 每个chunk固定 DUR_SHORT (7秒)
-      if (config.sections.millionRank?.enabled && milChunks.length > 0) {
+      if (orderedTypes.includes('millionRank') && milChunks.length > 0) {
         edSegmentsDuration += milChunks.length * DUR_SHORT;
       }
       
       // achievementRank 每个chunk固定 DUR_SHORT (7秒)
-      if (config.sections.achievementRank?.enabled && achChunks.length > 0) {
+      if (orderedTypes.includes('achievementRank') && achChunks.length > 0) {
         edSegmentsDuration += achChunks.length * DUR_SHORT;
       }
       
       // subRankTitle 固定 DUR_SECTION_TITLE (2秒)
-      if (config.sections.subRankTitle?.enabled) {
+      if (orderedTypes.includes('subRankTitle')) {
         edSegmentsDuration += DUR_SECTION_TITLE;
       }
       
@@ -956,7 +948,7 @@ async function runSynthesisTask(date: string) {
 
   // ============== 构建段落上下文 ================
   const ctx: SegmentContext = {
-    date,
+    name,
     data,
     editorConfig,
     config,
@@ -987,13 +979,6 @@ async function runSynthesisTask(date: string) {
   
   for (const orderItem of config.segmentOrder) {
     const segmentType = orderItem.type;
-    const sectionConfig = config.sections[segmentType];
-    
-    // 检查该段落是否启用
-    if (!sectionConfig?.enabled) {
-      log(`跳过 ${segmentType}（未启用）`);
-      continue;
-    }
 
     // 获取对应的渲染器
     const renderer = segmentRenderers[segmentType];
