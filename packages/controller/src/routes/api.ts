@@ -27,7 +27,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 导入共享配置
-import { DIR_DATA, DIR_VIDEO_ROOT, PORT, type SongInfo } from 'shared-config';
+import { DIR_DATA, DIR_VIDEO_ROOT, PORT } from '../config.js';
+import type { SongInfo } from 'shared-config'
 
 // 导入任务状态管理
 import {
@@ -177,14 +178,22 @@ router.post("/upload", uploadData.array("files"), (req, res) => {
  *   ]
  * }
  */
+/**
+ * 检查文件名是否为有效的期刊文件
+ */
+function isValidIssueFile(filename: string): boolean {
+  if (filename.endsWith("_config.json")) return false;
+  const dateStr = filename.replace(".json", "");
+  const type = detectIssueType(dateStr);
+  return type !== "special" || /^special/.test(dateStr);
+}
+
 router.get("/files", async (req, res) => {
   try {
     const files = await fs.readdir(DIR_DATA);
 
     // 过滤符合命名规则的期刊数据文件
-    const dataFiles = files.filter((f) =>
-      /^\d{4}-\d{2}(-\d{2})?\.json$/.test(f) || ( /^special/.test(f) && ! /config.json$/.test(f) )
-    );
+    const dataFiles = files.filter(isValidIssueFile);
 
     // 并行查询每个文件的状态信息
     const result = await Promise.all(

@@ -220,6 +220,89 @@ export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
     },
   },
 
+  coverWeekly: {
+    name: "周刊",
+    datePattern: /^cover_\d{4}-\d{2}-\d{2}$/,
+
+    achievementCount: 1,
+    newRankCount: 10,
+    mainRankCount: 20,
+    subRankRange: [21, 100],
+    subRankPerPage: 4,
+
+    trendCount: 7,
+    trendKey: "daily_trends",
+
+    pointThresholds: [
+      { key: "count_over_500k", label: "50万分以上" },
+      { key: "count_over_100k", label: "10万分以上" },
+      { key: "count_over_50k", label: "5万分以上" },
+    ],
+
+    playRateCoef: 10,
+
+    showCount: true,
+    showAchievements: true,
+
+    sections: {
+      intro: { enabled: true, duration: 3 },
+      infoCard: { enabled: false, duration: 5 },
+      rules: { enabled: true, duration: 35 },
+
+      achievementTitle: {
+        enabled: false,
+        duration: 2,
+        title: "成就达成展示",
+        color: "#FFD700",
+      },
+      newachievement: { enabled: false },
+
+      newRankTitle: {
+        enabled: false,
+        duration: 2,
+        title: "新曲榜",
+        color: "#23ade5",
+      },
+      newRank: { enabled: false },
+
+      mainRankTitle: {
+        enabled: true,
+        duration: 2,
+        title: "主榜",
+        color: "#f25d8e",
+      },
+      mainRank: { enabled: true },
+
+      singerRank: { enabled: false },
+      millionRank: { enabled: false },
+      achievementRank: { enabled: false },
+      historyRank: { enabled: false },
+      statsCard: { enabled: false },
+      staffCard: { enabled: true },
+
+      subRankTitle: {
+        enabled: true,
+        duration: 2,
+        title: "副榜",
+        color: "#66ccff",
+      },
+      subRank: { enabled: false },
+    },
+
+    audioFade: true,
+    fadeDuration: 2,
+
+    dataFields: {
+      newachievement: "achievement_data",
+      newRank: "new_rank_top10",
+      mainRank: "songs",
+      subRank: "total_rank_sub",
+    },
+  },
+
+
+  
+
   special: {
     name: "特刊",
     datePattern: null,
@@ -272,6 +355,7 @@ export const ISSUE_TYPES: Record<string, IssueTypeConfig> = {
 export function detectIssueType(dateStr: string): string {
   if (ISSUE_TYPES.weekly.datePattern?.test(dateStr)) return "weekly";
   if (ISSUE_TYPES.monthly.datePattern?.test(dateStr)) return "monthly";
+  if (ISSUE_TYPES.coverWeekly.datePattern?.test(dateStr)) return "coverWeekly";
   return "special";
 }
 

@@ -16,7 +16,6 @@ import { RankCore } from "./components/RankCore";
 import { SongInfo } from "./components/SongInfo";
 import { VideoContainer } from "./VideoContainer";
 import type { WeeklyMain } from "./types";
-import { deepMerge } from 'shared-config'
 
 // ------------------------------------------------------------------
 // 主组件
@@ -26,12 +25,6 @@ export const MainRankCard = (props: WeeklyMain) => {
   const frame = useCurrentFrame();
 
   // 配置参数
-  const defaultConfig = {
-    show_count: true,
-    show_seperate: true
-  }
-  const config = props.config ? deepMerge(defaultConfig, props.config) : defaultConfig
-
   const showCount = props.showCount !== false;
 
   // 业务逻辑判断

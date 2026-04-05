@@ -1,7 +1,7 @@
 import { Router } from "express";
 import path from "path";
 import fs from "fs-extra";
-import { DIR_DATA } from "shared-config";
+import { DIR_DATA } from "../config.js";
 import { log } from "../state.js";
 import { getIssueConfig } from "shared-config";
 const router: Router = Router()
@@ -53,7 +53,7 @@ const router: Router = Router()
  */
 router.get("/issue-config/:date", async (req, res) => {
   const { date } = req.params;
-  const infoFile = path.join(DIR_DATA, `${date}信息.json`);
+  const infoFile = path.join(DIR_DATA, `${date}_config.json`);
 
   try {
     const infoData = fs.existsSync(infoFile) ? await fs.readJson(infoFile) : {};

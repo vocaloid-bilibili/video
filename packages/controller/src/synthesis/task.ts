@@ -4,7 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 // 修复1：ES模块导入所有依赖，补全.js后缀
-import { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST, USE_GPU, type SongInfo } from 'shared-config';
+import { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST, USE_GPU } from '../config.js';
+import type {SongInfo} from 'shared-config'
 import { log, updateProgress, setTaskStatus, TASK_STATUS } from '../state.js';
 import { getPaths, chunkArray } from '../utils/helpers.js';
 import { getIssueConfig } from 'shared-config';

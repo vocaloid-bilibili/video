@@ -4,18 +4,10 @@ import { NumberOrNone } from "../types"
 
 export const RankTrend = ({
   isNewSong = false,
-  trendCount = 7,
-  trendData = {
-    "1": 2,
-    "2": 2,
-    "3": 2,
-    "4": 2,
-    "5": 1,
-    "6": 1,
-    "7": 1
-  },
-  rankDiffValue = 0,
-  rank_before = 1,
+  trendCount,
+  trendData,
+  rankDiffValue,
+  rank_before,
   main_rank
 }: {
   isNewSong: boolean,

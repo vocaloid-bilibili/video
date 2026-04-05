@@ -67,10 +67,7 @@ export interface WeeklyMain extends BasicRank {
   rate:          string;
   honor:         any[];
   seperate_ranks:  { [key: string]: NumberOrNone };
-  config?: {
-    show_count?: boolean;
-    show_seperate?: boolean;
-  }
+
 }
 
 
