@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 // 修复1：ES模块导入依赖，补全.js后缀
 import { execPromise, getDuration } from './ffmpeg.js';
-import { DIR_FULL_VIDEO, PORT } from 'shared-config';
+import { DIR_FULL_VIDEO, PORT } from '../config.js';
 import { log } from '../state.js';
 
 // 修复2：手动定义__dirname（ES模块特有）

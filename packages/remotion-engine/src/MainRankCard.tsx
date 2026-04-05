@@ -1,7 +1,6 @@
 // src/RankCard.tsx
 import {
   AbsoluteFill,
-  OffthreadVideo,
   useVideoConfig,
   useCurrentFrame,
   spring,
@@ -17,6 +16,7 @@ import { RankCore } from "./components/RankCore";
 import { SongInfo } from "./components/SongInfo";
 import { VideoContainer } from "./VideoContainer";
 import type { WeeklyMain } from "./types";
+import { deepMerge } from 'shared-config'
 
 // ------------------------------------------------------------------
 // 主组件
@@ -26,24 +26,16 @@ export const MainRankCard = (props: WeeklyMain) => {
   const frame = useCurrentFrame();
 
   // 配置参数
+  const defaultConfig = {
+    show_count: true,
+    show_seperate: true
+  }
+  const config = props.config ? deepMerge(defaultConfig, props.config) : defaultConfig
+
   const showCount = props.showCount !== false;
 
   // 业务逻辑判断
   const isNewSong = props.rank_before === "-" || props.rate === "NEW";
-
-  // 计算各项数据的最佳排名
-  const allRanks = [
-    props.view_rank,
-    props.favorite_rank,
-    props.coin_rank,
-    props.like_rank,
-    props.danmaku_rank,
-    props.reply_rank,
-    props.share_rank,
-  ]
-    .filter((n) => !isNaN(n) && n > 0);
-
-  const minRank = allRanks.length > 0 ? Math.min(...allRanks) : 0;
 
   // 动画逻辑
   const transitionFrames = 35;

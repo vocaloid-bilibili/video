@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { fileURLToPath } from 'url';
 
 // 修复1：导入具体文件，添加.js后缀（解决目录导入错误）
-import { DIR_VIDEO_ROOT } from 'shared-config';
+import { DIR_VIDEO_ROOT } from '../config.js';
 import { detectIssueType } from 'shared-config';
 
 // 修复2：ES模块中手动定义__dirname（如果用到的话，提前定义更规范）

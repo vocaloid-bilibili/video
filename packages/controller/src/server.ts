@@ -28,7 +28,7 @@ import {
   DIR_FULL_VIDEO,
   DIR_AVATAR,
   DIR_STAFF,
-} from 'shared-config';
+} from './config.js';
 
 // 导入路由（注意加.js后缀）
 import apiRoutes from './routes/api.js';

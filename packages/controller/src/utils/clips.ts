@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 // 修复1：ES模块导入config，补全.js后缀
-import { DIR_CLIP_DB } from 'shared-config';
+import { DIR_CLIP_DB } from '../config.js';
 
 // 修复2：手动定义__dirname（ES模块特有，备用）
 const __filename = fileURLToPath(import.meta.url);

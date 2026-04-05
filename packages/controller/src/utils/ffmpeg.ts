@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 
 // 修复1：ES模块导入依赖，补全.js后缀
 import { log } from '../state.js';
-import { HWACCEL, ENCODE_OPTS, VIDEO_CODEC } from 'shared-config';
+import { HWACCEL, ENCODE_OPTS, VIDEO_CODEC } from '../config.js';
 
 
 // ========== 核心函数：命名导出（适配fullVideo.js导入） ==========

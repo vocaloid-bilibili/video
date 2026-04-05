@@ -3,7 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 
 import { addAudioFade } from './ffmpeg.js';
-import { MONOREPO_ROOT, PORT } from 'shared-config';
+import { MONOREPO_ROOT, PORT } from '../config.js';
 import { log } from '../state.js';
 import { getCopyrightLabel } from './helpers.js';
 
