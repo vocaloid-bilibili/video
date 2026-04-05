@@ -41,8 +41,8 @@ const DotPattern = () => (
 );
 
 // 根据类型获取显示名称
-const getIssueTypeName = (issueType: string): string => {
-  switch (issueType) {
+const getIssueTypeName = (boardType: string): string => {
+  switch (boardType) {
     case "monthly":
       return "月刊";
     case "weekly":
@@ -55,17 +55,17 @@ export const Intro = ({
   issue = "#68",
   date = "2025.12.20",
   coverImg = "",
-  issueType = "weekly",
+  boardType = "weekly",
 }: {
   issue?: string;
   date?: string;
   coverImg?: string;
-  issueType?: "weekly" | "monthly" | "special";
+  boardType?: "weekly" | "monthly" | "special";
 }) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
 
-  const issueTypeName = getIssueTypeName(issueType);
+  const boardTypeName = getIssueTypeName(boardType);
 
   const containerEntrance = spring({
     frame,
@@ -213,7 +213,7 @@ export const Intro = ({
               }}
             >
               <div style={{ whiteSpace: "nowrap" }}>
-                {issueTypeName}虚拟歌手
+                {boardTypeName}虚拟歌手
               </div>
               <div
                 style={{ color: STYLES.colors.biliBlue, whiteSpace: "nowrap" }}

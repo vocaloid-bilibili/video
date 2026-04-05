@@ -160,8 +160,8 @@ router.post("/upload", uploadData.array("files"), (req, res) => {
  * @returns {string} res.files[].dataFile - 数据文件名
  * @returns {boolean} res.files[].hasConfig - 是否存在编辑器配置文件
  * @returns {boolean} res.files[].hasVideo - 是否已生成完整视频
- * @returns {string} res.files[].issueType - 期刊类型（weekly/monthly/special）
- * @returns {string} res.files[].issueTypeName - 期刊类型中文名称
+ * @returns {string} res.files[].boardType - 期刊类型（weekly/monthly/special）
+ * @returns {string} res.files[].boardTypeName - 期刊类型中文名称
  *
  * @example
  * // 响应
@@ -172,8 +172,8 @@ router.post("/upload", uploadData.array("files"), (req, res) => {
  *       "dataFile": "2025-01.json",
  *       "hasConfig": true,
  *       "hasVideo": true,
- *       "issueType": "monthly",
- *       "issueTypeName": "月刊"
+ *       "boardType": "monthly",
+ *       "boardTypeName": "月刊"
  *     }
  *   ]
  * }
@@ -201,7 +201,7 @@ router.get("/files", async (req, res) => {
         const date = f.replace(".json", "");
         const { final } = getPaths(date);
         const hasVideo = await fs.pathExists(final);
-        const issueType = detectIssueType(date);
+        const boardType = detectIssueType(date);
         const hasConfig = await fs.pathExists(
           path.join(DIR_DATA, `${date}_config.json`),
         );
@@ -211,11 +211,11 @@ router.get("/files", async (req, res) => {
           dataFile: f,
           hasConfig,
           hasVideo,
-          issueType,
-          issueTypeName:
-            issueType === "weekly"
+          boardType,
+          boardTypeName:
+            boardType === "weekly"
               ? "周刊"
-              : issueType === "monthly"
+              : boardType === "monthly"
                 ? "月刊"
                 : "特刊",
         };
@@ -320,7 +320,7 @@ router.get("/status", (req, res) => res.send(getTask()));
  * @returns {Object[]} res.songs.newRank - 新曲榜歌曲列表
  * @returns {Object[]} res.songs.mainRank - 主榜歌曲列表
  * @returns {number} res.index - 期刊序号
- * @returns {string} res.issueType - 期刊类型
+ * @returns {string} res.boardType - 期刊类型
  * @returns {Object} res.config - 配置信息
  * @returns {string} res.config.name - 期刊名称
  * @returns {number} res.config.newRankCount - 新曲榜数量
@@ -352,7 +352,7 @@ router.get("/status", (req, res) => res.send(getTask()));
  *     "mainRank": [...]
  *   },
  *   "index": 100,
- *   "issueType": "weekly",
+ *   "boardType": "weekly",
  *   "config": {
  *     "name": "第100期",
  *     "newRankCount": 10,
@@ -417,7 +417,7 @@ router.get("/songs/:date", async (req, res) => {
       date,
       songs,
       index: data.index,
-      issueType: config._type,
+      boardType: config._type,
       config: {
         name: config.name,
         achievementCount: config.achievementCount,

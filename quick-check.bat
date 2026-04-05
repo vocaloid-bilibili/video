@@ -58,10 +58,10 @@ if exist "packages\shared\src\config\config.js" (
     echo   [ ] shared/config.js缺失
 )
 
-if exist "packages\shared\src\config\issueTypes.js" (
-    echo   [✓] shared/issueTypes.js存在
+if exist "packages\shared\src\config\boardTypes.js" (
+    echo   [✓] shared/boardTypes.js存在
 ) else (
-    echo   [ ] shared/issueTypes.js缺失
+    echo   [ ] shared/boardTypes.js缺失
 )
 
 echo.

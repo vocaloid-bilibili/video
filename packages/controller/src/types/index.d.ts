@@ -28,8 +28,10 @@ type EditorConfig = {
     opening: string
     ending: string
   },
-  issueType: string
+  boardType: string
   config: IssueTypeConfig
+  // coverWeekly 模式的主榜名称
+  coverWeeklyName?: string
 }
 
 type ValueAndDiff = {

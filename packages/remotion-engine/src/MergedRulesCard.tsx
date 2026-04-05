@@ -1669,11 +1669,11 @@ const PageWrapper = ({
 // 5. 主合成组件
 // ------------------------------------------------------------------
 export const MergedRulesCard = (props: {
-  issueType?: "weekly" | "monthly" | "special";
+  boardType?: "weekly" | "monthly" | "special";
 }) => {
-  const { issueType = "weekly" } = props;
-  const isMonthly = issueType === "monthly";
-  const isSpecialType = issueType === "special";
+  const { boardType = "weekly" } = props;
+  const isMonthly = boardType === "monthly";
+  const isSpecialType = boardType === "special";
 
   const playRateCoef = isMonthly || isSpecialType ? 15 : 10;
   const subRankMax = isMonthly || isSpecialType ? 200 : 100;

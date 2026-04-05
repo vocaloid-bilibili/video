@@ -1102,9 +1102,9 @@
 
           const config = data.config;
           const typeInfo =
-            data.issueType === "weekly"
+            data.boardType === "weekly"
               ? "周刊"
-              : data.issueType === "monthly"
+              : data.boardType === "monthly"
                 ? "月刊"
                 : "特刊";
           document.querySelector("header h1").innerHTML =

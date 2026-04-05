@@ -36,7 +36,7 @@ export const RemotionRoot: React.FC = () => {
           issue: "#68",
           date: "2025.12.20",
           coverImg: "",
-          issueType: "weekly",
+          boardType: "weekly",
         }}
       />
       <Composition
@@ -64,7 +64,7 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          issueType: "weekly",
+          boardType: "weekly",
         }}
       />
       <Composition

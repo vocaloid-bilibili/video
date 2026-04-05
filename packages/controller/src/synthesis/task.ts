@@ -141,7 +141,7 @@ async function prepareAllAssets(songs: RenderSongInfo[], progressCallback: (curr
 }
 
 // 并行渲染榜单
-async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: string, config: Record<string, any>) {
+async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: string, config: Record<string, any>, cardComponentName?: string) {
   const results = new Array(songs.length);
   let currentIndex = 0;
   const typeName = type === "new" ? "新曲榜" : type === "achievement" ? "成就展示" : "主榜";
@@ -176,6 +176,7 @@ async function renderRankBatch(songs: RenderSongInfo[], type: string, segments: 
         segments,
         song._duration,
         config,
+        cardComponentName,
       );
 
       log(`[W${workerId}] 完成: ${typeName} ${song.rank}`);
@@ -317,7 +318,7 @@ async function runSynthesisTask(date: string) {
         issue: `#${data.index}`,
         date: formatDate(date),
         coverImg: introCover,
-        issueType: config._type,
+        boardType: config._type,
       },
       coverFileName,
       base,
@@ -370,7 +371,7 @@ async function runSynthesisTask(date: string) {
           issue: `#${data.index}`,
           date: formatDate(date),
           coverImg: introCover,
-          issueType: config._type,
+          boardType: config._type,
         },
         "01_Intro.mp4",
         segments,
@@ -397,7 +398,7 @@ async function runSynthesisTask(date: string) {
           timeLabel: "统计时间",
           timeRange: data.period,
           note: editorConfig.script?.opening || `第${data.index}期`,
-          issueType: config._type,
+          boardType: config._type,
         },
         "02_InfoCard.mp4",
         segments,
@@ -413,7 +414,7 @@ async function runSynthesisTask(date: string) {
       await renderComposition(
         "RulesAndAchivements",
         {
-          issueType: config._type, // "weekly" | "monthly" | "special"
+          boardType: config._type, // "weekly" | "monthly" | "special"
         },
         "03_Rules.mp4",
         segments,
@@ -568,11 +569,29 @@ async function runSynthesisTask(date: string) {
   // P2-C: 主榜卡片
   if (config.sections.mainRank?.enabled && mainRankList.length > 0) {
     const reversedMainList = [...mainRankList].reverse();
+    
+    // coverWeekly 模式使用 CoverMainRankCard 组件，并添加榜单名字
+    const isCoverWeekly = config._type === "coverWeekly";
+    const mainRankConfig = {
+      ...config,
+      cardComponent: isCoverWeekly ? "CoverMainRankCard" : "MainRankCard",
+    };
+    
+    // 为 coverWeekly 模式添加榜单名称
+    if (isCoverWeekly) {
+      const coverWeeklyName = (editorConfig as any).coverWeeklyName || "本周主榜";
+      reversedMainList.forEach(song => {
+        song.name = coverWeeklyName;
+      });
+      log(`coverWeekly 模式: 榜单名称 = "${coverWeeklyName}"`);
+    }
+    
     const mainRankResults = await renderRankBatch(
       reversedMainList,
       "main",
       segments,
-      config,
+      mainRankConfig,
+      isCoverWeekly ? "CoverMainRankCard" : undefined,
     );
     listP2.push(...mainRankResults);
     progressCounter += reversedMainList.length;

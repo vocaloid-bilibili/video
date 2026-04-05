@@ -390,8 +390,8 @@ export function getDerivedValues(config: IssueTypeConfig): DerivedValues {
   };
 }
 
-export function getIssueConfig(dateStr: string, infoData: { issueType?: string; config?: Partial<IssueTypeConfig> } = {}): IssueTypeConfig & DerivedValues & { _type: string; _date: string } {
-  const type = infoData.issueType || detectIssueType(dateStr);
+export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<IssueTypeConfig> } = {}): IssueTypeConfig & DerivedValues & { _type: string; _date: string } {
+  const type = infoData.boardType || detectIssueType(dateStr);
 
   const baseConfig = JSON.parse(
     JSON.stringify(ISSUE_TYPES[type] || ISSUE_TYPES.special),

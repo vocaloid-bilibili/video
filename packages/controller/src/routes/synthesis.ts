@@ -36,7 +36,7 @@ const router: Router = Router();
  * @param {string} req.body.date - 期刊日期（必需）
  * @returns {Object} res - 启动结果
  * @returns {string} res.status - 状态标识 "started"
- * @returns {string} res.issueType - 期刊类型（weekly/monthly/special）
+ * @returns {string} res.boardType - 期刊类型（weekly/monthly/special）
  *
  * @example
  * // 请求
@@ -47,32 +47,32 @@ const router: Router = Router();
  * })
  *
  * // 响应
- * { "status": "started", "issueType": "weekly" }
+ * { "status": "started", "boardType": "weekly" }
  *
  * // 错误响应
  * { "error": "缺少日期" }
  * { "error": "任务进行中" }
  */
 router.post("/start", async (req, res) => {
-  const { date } = req.body;
+  const { date: name } = req.body;
   const task = getTask();
 
-  if (!date) return res.status(400).send({ error: "缺少日期" });
+  if (!name) return res.status(400).send({ error: "缺少排行名称" });
   if (task.status === TASK_STATUS.PROCESSING) {
     return res.status(400).send({ error: "任务进行中" });
   }
 
-  resetTask(date);
+  resetTask(name);
 
-  const issueType = detectIssueType(date);
+  const boardType = detectIssueType(name);
   const typeName =
-    issueType === "weekly" ? "周刊" : issueType === "monthly" ? "月刊" : "特刊";
-  log(`开始${typeName}合成: ${date}`);
+    boardType === "weekly" ? "周刊" : boardType === "monthly" ? "月刊" : "特刊";
+  log(`开始${typeName}合成: ${name}`);
 
-  res.send({ status: "started", issueType });
+  res.send({ status: "started", boardType });
 
   // 后台异步执行合成任务
-  runSynthesisTask(date).catch((e) => {
+  runSynthesisTask(name).catch((e) => {
     setTaskStatus(TASK_STATUS.FAILED, e.message);
     log(`任务失败: ${e.message}`);
   });

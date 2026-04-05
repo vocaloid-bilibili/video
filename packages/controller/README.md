@@ -28,11 +28,15 @@ API 在 `/routes` 。各种行为都通过它进行，主要就看它。
 
 ## 后端介绍
 
-你就看 `/src/routes`，都在里面。
+后端的功能是比较多的，要和前端交互，然后还要启动渲染视频的任务。你就看 `/src/routes`，都在里面。
+
+### 渲染视频
+
+选择一个JSON配置文件，然后启动任务。它会读取数据文件和config文件。这个还会被稍微处理一下，与默认配置合并。会通过文件名来检测board类型。默认配置在`IssueTypes.ts`里面。
 
 它会生成视频生成配置文件，和视频在同一个文件夹。也就是 `/storage/video` 里面。用完会删掉。
 
-你最想看的可能是 `task.ts` 里面的 `runSynthesisTask` 函数，它里面有详细的生成视频流程。
+`task.ts` 里面的 `runSynthesisTask` 函数是详细的视频生成流程，包括一段一段的段落生成，后面再合并。
 
 ---
 
@@ -89,16 +93,16 @@ API 在 `/routes` 。各种行为都通过它进行，主要就看它。
       "dataFile": "2025-01.json",
       "hasConfig": true,
       "hasVideo": true,
-      "issueType": "monthly",
-      "issueTypeName": "月刊"
+      "boardType": "monthly",
+      "boardTypeName": "月刊"
     },
     {
       "date": "2025-01-15",
       "dataFile": "2025-01-15.json",
       "hasConfig": false,
       "hasVideo": false,
-      "issueType": "weekly",
-      "issueTypeName": "周刊"
+      "boardType": "weekly",
+      "boardTypeName": "周刊"
     }
   ]
 }
@@ -109,8 +113,8 @@ API 在 `/routes` 。各种行为都通过它进行，主要就看它。
 - `dataFile`: 数据文件名
 - `hasConfig`: 是否存在配置文件（`{date}_config.json`）
 - `hasVideo`: 是否已生成完整视频
-- `issueType`: 期刊类型（`weekly`/`monthly`/`special`）
-- `issueTypeName`: 期刊类型中文名称
+- `boardType`: 期刊类型（`weekly`/`monthly`/`special`）
+- `boardTypeName`: 期刊类型中文名称
 
 ---
 
@@ -193,7 +197,7 @@ API 在 `/routes` 。各种行为都通过它进行，主要就看它。
 ```json
 {
   "status": "started",
-  "issueType": "weekly"
+  "boardType": "weekly"
 }
 ```
 
@@ -303,7 +307,7 @@ API 在 `/routes` 。各种行为都通过它进行，主要就看它。
     "mainRank": [...]
   },
   "index": 100,
-  "issueType": "weekly",
+  "boardType": "weekly",
   "config": {
     "name": "第100期",
     "newRankCount": 10,

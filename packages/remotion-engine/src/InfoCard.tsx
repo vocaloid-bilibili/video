@@ -44,14 +44,14 @@ export const InfoCard = ({
   timeLabel = "统计时间",
   timeRange,
   note,
-  issueType = "weekly", // 新增：期刊类型
+  boardType = "weekly", // 新增：期刊类型
 }: any) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
 
   // 根据期刊类型调整标签
   const getOpLabel = () => {
-    switch (issueType) {
+    switch (boardType) {
       case "monthly":
         return "OP / 上月冠军";
       case "special":

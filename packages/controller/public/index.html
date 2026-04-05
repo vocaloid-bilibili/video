@@ -756,7 +756,7 @@
 
           selectEl.innerHTML = '<option value="">选择日期查看分片...</option>';
           files.forEach((f) =>
-            selectEl.add(new Option(`${f.date} (${f.issueTypeName})`, f.date)),
+            selectEl.add(new Option(`${f.date} (${f.boardTypeName})`, f.date)),
           );
           selectEl.value = oldVal;
 
@@ -772,7 +772,7 @@
                   <div class="file-item-header">
                     <span class="file-item-date">${f.date}</span>
                     <div class="file-item-tags">
-                      <span class="file-item-tag ${f.issueType}">${f.issueTypeName}</span>
+                      <span class="file-item-tag ${f.boardType}">${f.boardTypeName}</span>
                       <span class="file-item-tag ${f.hasConfig ? "ok" : "warn"}">${f.hasConfig ? "已配置" : "未配置"}</span>
                     </div>
                   </div>

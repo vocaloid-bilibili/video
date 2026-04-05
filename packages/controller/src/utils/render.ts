@@ -142,6 +142,7 @@ export async function renderRankSegment(
   dir: string,
   durationSec = 20,
   config: any = {},
+  cardComponentName?: string, // 可选：指定使用的卡片组件，如 "CoverMainRankCard"
 ) {
   const baseName = `rank_${type}_${data.rank.toString().padStart(3, "0")}.mp4`;
   const finalPath = path.join(dir, baseName);
@@ -181,7 +182,10 @@ export async function renderRankSegment(
   fs.writeJsonSync(temp, props);
 
   try {
-    const compName = type === "achievement" ? "achievementCard" : (type === "new" ? "NewSongCard" : "MainRankCard");
+    // 优先级：cardComponentName > config.cardComponent > type默认
+    const compName = cardComponentName 
+      || (config as any).cardComponent
+      || (type === "achievement" ? "achievementCard" : (type === "new" ? "NewSongCard" : "MainRankCard"));
     const frames = Math.round(durationSec * FPS);
 
     log(`渲染 ${type} #${data.rank} (${durationSec}s)`);
