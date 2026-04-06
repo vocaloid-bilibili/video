@@ -63,7 +63,6 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          opLabel: "OP / 上期冠军",
           opTitle: "测试",
           opArtist: "测试",
           opCover: "",

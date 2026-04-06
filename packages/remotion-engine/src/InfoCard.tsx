@@ -37,14 +37,14 @@ const DotPattern = () => (
 );
 
 export const InfoCard = ({
-  opLabel = "OP / 上期冠军",
+  opLabel,
   opTitle,
   opArtist,
   opCover,
   timeLabel = "统计时间",
   timeRange,
   note,
-  boardType = "weekly", // 新增：期刊类型
+  boardType = "special"
 }: any) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -61,7 +61,7 @@ export const InfoCard = ({
     }
   };
 
-  const displayOpLabel = opLabel === "OP / 上期冠军" ? getOpLabel() : opLabel;
+  const displayOpLabel = opLabel ?? getOpLabel()
 
   const getSlideAnimation = (enterDelay: number, exitDelay: number) => {
     const entrance = spring({

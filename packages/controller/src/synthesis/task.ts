@@ -342,12 +342,12 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       {
         opLabel: lastPeriodLabel
           ? `OP / ${lastPeriodLabel}冠军`
-          : "OP / 上期冠军",
+          : null,
         opTitle: opData.title || "未知",
         opArtist: opData.author || "Unknown",
         opCover,
         timeLabel: "统计时间",
-        timeRange: ctx.data.period,
+        timeRange: (ctx.config.timeRange as string) || ctx.data.period,
         note: ctx.editorConfig.script?.opening || `第${ctx.data.index}期`,
         ...ctx.config,
       },
