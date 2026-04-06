@@ -56,8 +56,10 @@ interface SongInfo {
 
 }
 
-interface BasicRank extends Appendix, Stats, SongInfo {
+export interface BasicRank extends Appendix, Stats, SongInfo {
   rank: number
+  transitionIn?: boolean
+  transitionOut?: boolean
 }
 
 export interface WeeklyMain extends BasicRank {

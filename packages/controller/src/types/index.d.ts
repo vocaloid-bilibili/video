@@ -4,6 +4,8 @@ type BoardType = "daily" | "weekly" | "monthly"
 
 type RenderSongInfo = SongInfo & {
   rank: number
+  transitionIn: boolean
+  transitionOut: boolean
   _duration: number
   _defaultDuration: number
   _videoPath: string

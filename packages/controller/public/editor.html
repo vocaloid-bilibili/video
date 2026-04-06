@@ -946,7 +946,7 @@
       const API = "/api";
 
       let currentDate = "";
-      let songs = { newRank: [], mainRank: [] };
+      let songs = {}; // 现在是动态结构，键为 cardComponent (如 achievementCard, NewSongCard, MainRankCard)
       let currentSong = null;
       let videoDuration = 0;
       let zoomLevel = 1;
@@ -960,6 +960,19 @@
         ed: { bvid: "", name: "", author: "" },
         script: { opening: "", ending: "" },
       };
+
+      // cardComponent 到中文名称的映射
+      const cardComponentLabels = {
+        achievementCard: "成就达成展示",
+        NewSongCard: "新曲榜",
+        MainRankCard: "主榜",
+        CoverMainRankCard: "主榜",
+        SpecialCard: "特刊"
+      };
+
+      function getGroupLabel(cardComponent) {
+        return cardComponentLabels[cardComponent] || cardComponent;
+      }
 
       async function fetchAPI(url, opts = {}) {
         const res = await fetch(url, opts);
@@ -1097,18 +1110,23 @@
         if (!currentDate) return;
 
         try {
+          const boardNameMap = {
+            weekly: "周刊",
+            monthly: "月刊",
+            coverWeekly: "翻唱周刊",
+            special: "特刊"
+          }
           const data = await fetchAPI(`${API}/songs/${currentDate}`);
           songs = data.songs;
 
           const config = data.config;
-          const typeInfo =
-            data.boardType === "weekly"
-              ? "周刊"
-              : data.boardType === "monthly"
-                ? "月刊"
-                : "特刊";
+          const typeInfo = boardNameMap[data.boardType];
+          // 动态计算各分组数量
+          const groupCounts = Object.entries(songs)
+            .map(([key, list]) => `${getGroupLabel(key)} ${list.length}首`)
+            .join(", ");
           document.querySelector("header h1").innerHTML =
-            `片段编辑器 <span style="font-size: 14px; color: #888; margin-left: 12px;">${typeInfo} - ${currentDate} (新曲${config.newRankCount}首, 主榜${config.mainRankCount}首)</span>`;
+            `片段编辑器 <span style="font-size: 14px; color: #888; margin-left: 12px;">${typeInfo} - ${currentDate} (${groupCounts})</span>`;
 
           renderSongList();
           renderCoverOptions();
@@ -1170,7 +1188,7 @@
       function renderSongList() {
         const container = document.getElementById("panel-songs");
         const renderGroup = (list, title) => {
-          if (!list.length) return "";
+          if (!list || !list.length) return "";
           return `
     <div class="song-group-title">${title}</div>
     ${list
@@ -1193,18 +1211,20 @@
       )
       .join("")}`;
         };
-        
-        const achievementTitle = 
-          songs.newachievement.length > 0 ? `成就达成展示` : "";
-        const newTitle =
-          songs.newRank.length > 0 ? `新曲榜 Top ${songs.newRank.length}` : "";
-        const mainTitle =
-          songs.mainRank.length > 0 ? `主榜 Top ${songs.mainRank.length}` : "";
 
-        container.innerHTML =
-          renderGroup(songs.newachievement, achievementTitle) +
-          renderGroup(songs.newRank, newTitle) +
-          renderGroup(songs.mainRank, mainTitle);
+        // 动态遍历所有分组
+        let html = "";
+        for (const [cardComponent, songList] of Object.entries(songs)) {
+          const label = getGroupLabel(cardComponent);
+          const title = songList.length > 0 ? `${label} Top ${songList.length}` : label;
+          html += renderGroup(songList, title);
+        }
+
+        if (!html) {
+          html = '<div style="padding: 40px; text-align: center; color: #666">该期刊暂无歌曲数据</div>';
+        }
+
+        container.innerHTML = html;
         container.querySelectorAll(".song-item").forEach((el) => {
           el.addEventListener("click", () => selectSong(el.dataset.bvid));
         });
@@ -1212,19 +1232,22 @@
 
       function renderCoverOptions() {
         const container = document.getElementById("coverOptions");
-        const { mainRank } = songs;
-        if (!mainRank || mainRank.length === 0) {
+        // 获取所有分组的歌曲
+        const allSongs = Object.values(songs).flat();
+        if (!allSongs || allSongs.length === 0) {
           container.innerHTML =
             '<div style="color: #666; font-size: 11px; padding: 8px;">请先选择日期</div>';
           return;
         }
 
+        // 优先使用主榜或特刊的歌曲作为封面候选
+        const mainSongs = songs.MainRankCard || songs.SpecialCard || songs.CoverMainRankCard || allSongs;
         const candidates = [];
-        mainRank.slice(0, 20).forEach((s) => {
+        mainSongs.slice(0, 20).forEach((s) => {
           candidates.push({ ...s, reason: `#${s.rank}` });
         });
 
-        const firstAppear = mainRank.find((s) => s.count === 1);
+        const firstAppear = mainSongs.find((s) => s.count === 1);
         if (
           firstAppear &&
           !candidates.find((c) => c.bvid === firstAppear.bvid)
@@ -1248,7 +1271,7 @@
           .join("");
       }
       function selectCover(bvid) {
-        const allSongs = [...(songs.newRank || []), ...songs.mainRank];
+        const allSongs = Object.values(songs).flat();
         const song = allSongs.find((s) => s.bvid === bvid);
         if (song) {
           editorConfig.cover = { bvid: song.bvid, image_url: song.image_url };
@@ -1263,7 +1286,7 @@
       }
 
       function updateClipProgress() {
-        const all = [...songs.newachievement, ...songs.newRank, ...songs.mainRank];
+        const all = Object.values(songs).flat();
         const clipped = all.filter((s) => s._clip).length;
         document.getElementById("clipProgress").textContent =
           `${clipped}/${all.length}`;
@@ -1274,7 +1297,7 @@
           el.classList.toggle("active", el.dataset.bvid === bvid);
         });
 
-        currentSong = [...songs.newachievement, ...songs.newRank, ...songs.mainRank].find(
+        currentSong = Object.values(songs).flat().find(
           (s) => s.bvid === bvid,
         );
         if (!currentSong) return;
@@ -1377,6 +1400,7 @@
           `起点: ${formatTime(start)} (定长 ${clipDuration.toFixed(1)}s)`,
           "success",
         );
+        saveClip();
       }
 
       function setCurrentAsEnd() {
@@ -1397,6 +1421,7 @@
           end - parseFloat(document.getElementById("startTimeInput").value);
         updateDisplay();
         showToast(`终点: ${formatTime(end)}`, "success");
+        saveClip();
       }
 
       function onStartInputChange() {
@@ -1415,6 +1440,7 @@
         clipDuration =
           parseFloat(document.getElementById("endTimeInput").value) - start;
         updateDisplay();
+        saveClip();
       }
 
       function onEndInputChange() {
@@ -1426,6 +1452,7 @@
         clipDuration = end - start;
         document.getElementById("endTimeInput").value = end.toFixed(2);
         updateDisplay();
+        saveClip();
       }
 
       function updateDisplay() {
@@ -1471,6 +1498,7 @@
         clipDuration = dur;
         document.getElementById("endTimeInput").value = end.toFixed(2);
         updateDisplay();
+        saveClip();
       }
 
       // ========== 时间线相关 ==========
@@ -1702,6 +1730,7 @@
           dragging = null;
           document.removeEventListener("mousemove", onHandleMouseMove);
           document.removeEventListener("mouseup", onHandleMouseUp);
+          saveClip();
         };
 
         handleStart.addEventListener("mousedown", (e) => {
@@ -1785,7 +1814,8 @@
       }
 
       async function downloadAllVideos() {
-        const all = [...songs.newachievement, ...songs.newRank, ...songs.mainRank];
+        // 动态获取所有分组的所有歌曲
+        const all = Object.values(songs).flat();
         const toDownload = all
           .filter((s) => !s._videoExists)
           .map((s) => s.bvid);
@@ -1809,7 +1839,9 @@
           const checkInterval = setInterval(async () => {
             try {
               const data = await fetchAPI(`${API}/songs/${currentDate}`);
-              [...data.songs.newachievement, ...data.songs.newRank, ...data.songs.mainRank].forEach((s) => {
+              // 动态获取所有分组
+              const allSongs = Object.values(data.songs).flat();
+              allSongs.forEach((s) => {
                 const listItem = document.querySelector(
                   `.song-item[data-bvid="${s.bvid}"]`,
                 );
@@ -1817,7 +1849,7 @@
                   listItem.querySelector(".song-status").textContent = "OK";
                   listItem.querySelector(".song-status").classList.add("ready");
                 }
-                const localSong = [...songs.newachievement, ...songs.newRank, ...songs.mainRank].find(
+                const localSong = allSongs.find(
                   (ls) => ls.bvid === s.bvid,
                 );
                 if (localSong) {
@@ -1826,11 +1858,7 @@
                 }
               });
 
-              const allDownloaded = [
-                ...data.songs.newachievement,
-                ...data.songs.newRank,
-                ...data.songs.mainRank,
-              ].every((s) => s._videoExists);
+              const allDownloaded = allSongs.every((s) => s._videoExists);
               if (allDownloaded) {
                 clearInterval(checkInterval);
                 showToast("所有视频下载完成", "success");

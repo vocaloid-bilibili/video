@@ -16,6 +16,7 @@ import { SubRank } from "./SubRank";
 import { StatsCard } from "./StatsCard";
 import { StaffCard } from "./StaffCard";
 import { SpecialCard } from "./SpecialCard";
+import { PickupCard } from "./PickupCard";
 import mainRankProps from "./example/mainRank"
 import coverMainRankProps from "./example/coverMainRank"
 import specialProps from "./example/specialRank";
@@ -135,6 +136,15 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="SpecialCard"
         component={SpecialCard}
+        durationInFrames={60 * 20}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={specialProps}
+      />
+      <Composition
+        id="PickupCard"
+        component={PickupCard}
         durationInFrames={60 * 20}
         fps={60}
         width={1920}

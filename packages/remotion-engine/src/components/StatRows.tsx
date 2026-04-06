@@ -11,7 +11,10 @@ import {
 import { StatRow } from "./StatRow";
 import { STYLES } from "../styles";
 
-export const StatRows = ({props}: {props:any}) => {
+export const StatRows = ({props, show_ranks = true}: {
+  props:any
+  show_ranks: boolean
+}) => {
 
 
   // 计算各项数据的最佳排名
@@ -48,6 +51,7 @@ export const StatRows = ({props}: {props:any}) => {
         isBestRank={parseInt(props.view_rank) === minRank}
         rate={props.view_rate}
         bgColor={STYLES.colors.blue}
+        show_rank={show_ranks}
       />
       <StatRow
         label="收藏"
@@ -58,6 +62,7 @@ export const StatRows = ({props}: {props:any}) => {
         isBestRank={parseInt(props.favorite_rank) === minRank}
         rate={props.favorite_rate}
         bgColor={STYLES.colors.orange}
+        show_rank={show_ranks}
       />
       <StatRow
         label="硬币"
@@ -69,6 +74,7 @@ export const StatRows = ({props}: {props:any}) => {
         rate={props.coin_rate}
         bgColor={STYLES.colors.cyan}
         fixValue={props.fixA}
+        show_rank={show_ranks}
       />
       <StatRow
         label="点赞"
@@ -79,6 +85,7 @@ export const StatRows = ({props}: {props:any}) => {
         isBestRank={parseInt(props.like_rank) === minRank}
         rate={props.like_rate}
         bgColor={STYLES.colors.pink}
+        show_rank={show_ranks}
       />
       <StatRow
         label="弹幕"
@@ -89,6 +96,7 @@ export const StatRows = ({props}: {props:any}) => {
         isBestRank={parseInt(props.danmaku_rank) === minRank}
         rate={props.danmaku_rate}
         bgColor={STYLES.colors.purple}
+        show_rank={show_ranks}
       />
       <StatRow
         label="评论"
@@ -100,6 +108,7 @@ export const StatRows = ({props}: {props:any}) => {
         rate={props.reply_rate}
         bgColor={STYLES.colors.yellow}
         fixValue={props.fixD}
+        show_rank={show_ranks}
       />
       <StatRow
         label="分享"
@@ -110,6 +119,7 @@ export const StatRows = ({props}: {props:any}) => {
         isBestRank={parseInt(props.share_rank) === minRank}
         rate={props.share_rate}
         bgColor={STYLES.colors.green}
+        show_rank={show_ranks}
       />
     </div>
   )

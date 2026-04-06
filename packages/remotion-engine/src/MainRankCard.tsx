@@ -33,6 +33,10 @@ export const MainRankCard = (props: WeeklyMain) => {
   // 动画逻辑
   const transitionFrames = 35;
 
+  // 是否启用淡入淡出（默认 true）
+  const transitionIn = props.transitionIn !== false;
+  const transitionOut = props.transitionOut !== false;
+
   const volume = interpolate(
     frame,
     [
@@ -41,50 +45,68 @@ export const MainRankCard = (props: WeeklyMain) => {
       durationInFrames - transitionFrames,
       durationInFrames,
     ],
-    [0, 1, 1, 0],
+    [
+      transitionIn ? 0 : 1,
+      1,
+      1,
+      transitionOut ? 0 : 1,
+    ],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
   const exitStartFrame = durationInFrames - transitionFrames;
-  const exitProgress = interpolate(
-    frame,
-    [exitStartFrame, durationInFrames],
-    [0, 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.in(Easing.back(1.5)),
-    },
-  );
 
-  const videoEntranceY = spring({
-    frame,
-    fps,
-    from: -1000,
-    to: 0,
-    config: { damping: 14 },
-  });
-  const videoExitY = interpolate(exitProgress, [0, 1], [0, -1000]);
+  // 退出进度（仅当 transitionOut 为 true 时有动画）
+  const exitProgress = transitionOut
+    ? interpolate(
+        frame,
+        [exitStartFrame, durationInFrames],
+        [0, 1],
+        {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.in(Easing.back(1.5)),
+        },
+      )
+    : 0;
+
+  // 视频容器位移
+  const videoEntranceY = transitionIn
+    ? spring({
+        frame,
+        fps,
+        from: -1000,
+        to: 0,
+        config: { damping: 14 },
+      })
+    : 0;
+  const videoExitY = transitionOut ? interpolate(exitProgress, [0, 1], [0, -1000]) : 0;
   const videoTranslateY = frame < exitStartFrame ? videoEntranceY : videoExitY;
 
-  const infoEntranceY = spring({
-    frame,
-    fps,
-    from: 300,
-    to: 0,
-    config: { damping: 15 },
-  });
-  const infoExitY = interpolate(exitProgress, [0, 1], [0, 400]);
+  // 底部信息栏位移
+  const infoEntranceY = transitionIn
+    ? spring({
+        frame,
+        fps,
+        from: 300,
+        to: 0,
+        config: { damping: 15 },
+      })
+    : 0;
+  const infoExitY = transitionOut ? interpolate(exitProgress, [0, 1], [0, 400]) : 0;
   const infoTranslateY = frame < exitStartFrame ? infoEntranceY : infoExitY;
 
-  const sidebarEntranceX = spring({
-    frame,
-    fps,
-    from: 800,
-    to: 0,
-    config: { damping: 14, mass: 0.8 },
-  });
-  const sidebarExitX = interpolate(exitProgress, [0, 1], [0, 800]);
+  // 侧边栏位移
+  const sidebarEntranceX = transitionIn
+    ? spring({
+        frame,
+        fps,
+        from: 800,
+        to: 0,
+        config: { damping: 14, mass: 0.8 },
+      })
+    : 0;
+  const sidebarExitX = transitionOut ? interpolate(exitProgress, [0, 1], [0, 800]) : 0;
   const sidebarTranslateX =
     frame < exitStartFrame ? sidebarEntranceX : sidebarExitX;
 
@@ -201,6 +223,7 @@ export const MainRankCard = (props: WeeklyMain) => {
         {/* --- 下半部分：详细数据 --- */}
         <StatRows 
           props={props}
+          show_ranks={true}
         />
 
       </div>

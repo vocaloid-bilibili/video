@@ -1,7 +1,6 @@
 // 特刊用的视频卡片。可定制，也许代码会频繁修改。
 import {
   AbsoluteFill,
-  OffthreadVideo,
   useVideoConfig,
   useCurrentFrame,
   spring,
@@ -13,13 +12,12 @@ import { SongInfo } from "./components/SongInfo";
 import { StatRows } from "./components/StatRows";
 import { STYLES } from "./styles";
 import { OverallPoint } from "./components/OverallPoint";
-import { RankCore } from "./components/RankCore";
+import { PickupRank as RankCore } from "./components/special/PickupRank";
 // import { RankPart as RightTop } from "./components/special/RankPart";
 import { CustomRightTop as RightTop } from './components/special/CustomRightTop'
 import { BasicRank } from "./types";
 
-
-export const SpecialCard = (props: BasicRank) => {
+export const PickupCard = (props: BasicRank) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
 
@@ -29,22 +27,6 @@ export const SpecialCard = (props: BasicRank) => {
   };
 
 
-
-
-  // 计算各项数据的最佳排名
-  const allRanks = [
-    props.view_rank,
-    props.favorite_rank,
-    props.coin_rank,
-    props.like_rank,
-    props.danmaku_rank,
-    props.reply_rank,
-    props.share_rank,
-  ]
-    .filter((n) => !isNaN(n) && n > 0);
-
-  const minRank = allRanks.length > 0 ? Math.min(...allRanks) : 0;
-
   // 动画逻辑
   const transitionFrames = 35;
 
@@ -52,6 +34,7 @@ export const SpecialCard = (props: BasicRank) => {
   const transitionIn = props.transitionIn !== false;
   const transitionOut = props.transitionOut !== false;
 
+  // 根据 transitionIn/transitionOut 控制音量曲线
   const volume = interpolate(
     frame,
     [
@@ -61,10 +44,10 @@ export const SpecialCard = (props: BasicRank) => {
       durationInFrames,
     ],
     [
-      transitionIn ? 0 : 1,
+      transitionIn ? 0 : 1,  // 开始：淡入时从 0 开始，否则从 1 开始
       1,
       1,
-      transitionOut ? 0 : 1,
+      transitionOut ? 0 : 1,  // 结束：淡出时到 0，否则保持 1
     ],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -218,7 +201,7 @@ export const SpecialCard = (props: BasicRank) => {
           <OverallPoint
             isNewSong={true}
             point={props.point}
-            point_before={0}
+            point_before={"-"}
             fixB={props.fixB}
             fixC={props.fixC}
           />
@@ -227,7 +210,7 @@ export const SpecialCard = (props: BasicRank) => {
         {/* 下半部分：详细数据 */}
         <StatRows
           props={props}
-          show_ranks={true}
+          show_ranks={false}
         />
       </div>
     </AbsoluteFill>

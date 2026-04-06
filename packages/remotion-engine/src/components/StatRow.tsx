@@ -36,6 +36,7 @@ export const StatRow = ({
   bgChar,
   isBestRank,
   fixValue,
+  show_rank
 }: any) => (
   <div
     style={{
@@ -107,7 +108,7 @@ export const StatRow = ({
       </div>
     </div>
 
-    <div style={{ textAlign: "right", position: "relative", zIndex: 1 }}>
+    {show_rank && <div style={{ textAlign: "right", position: "relative", zIndex: 1 }}>
       <div style={{ lineHeight: 1 }}>
         <span
           style={{
@@ -142,6 +143,6 @@ export const StatRow = ({
       >
         {rate && rate !== "-" ? `×${formatFix(rate, 2)}` : ""}
       </div>
-    </div>
+    </div>}
   </div>
 );

@@ -10,6 +10,7 @@
 import synthesisRouter from './synthesis.js';
 import configRouter from './config.js';
 import clipsRouter from './clips.js';
+import fullVideoRouter from './fullVideo.js';
 
 import express, { Router } from 'express';
 import multer from 'multer';
@@ -59,6 +60,7 @@ const router: Router = express.Router();
 router.use("/synthesis", synthesisRouter)
 router.use("", configRouter)
 router.use("/clips", clipsRouter)
+router.use("", fullVideoRouter)
 
 // ==================== Multer 文件上传配置 ====================
 
@@ -338,25 +340,24 @@ router.get("/status", (req, res) => res.send(getTask()));
  * {
  *   "date": "2025-01-15",
  *   "songs": {
- *     "newRank": [
+ *     "achievementCard": [
  *       {
  *         "bvid": "BV1xx411c7mD",
  *         "title": "歌曲标题",
  *         "rank": 1,
- *         "_type": "new",
+ *         "_type": "achievement",
  *         "_clip": { "startTime": 10.5, "endTime": 25.0 },
  *         "_videoExists": true,
  *         "_videoUrl": "/downloads/BV1xx411c7mD.mp4"
  *       }
  *     ],
- *     "mainRank": [...]
+ *     "NewSongCard": [...],
+ *     "MainRankCard": [...]
  *   },
  *   "index": 100,
  *   "boardType": "weekly",
  *   "config": {
  *     "name": "第100期",
- *     "newRankCount": 10,
- *     "mainRankCount": 20,
  *     "showCount": true,
  *     "trendCount": 7,
  *     "trendKey": "daily_trends",
@@ -379,17 +380,33 @@ router.get("/songs/:date", async (req, res) => {
     const config = getIssueConfig(date, infoData);
 
 
-    const achievementField = config.dataFields?.newachievement || "achievement_data";
-    const newRankField = config.dataFields?.newRank || "new_rank_top10";
-    const mainRankField = config.dataFields?.mainRank || "total_rank_top20";
+    // 遍历 segmentOrder 获取歌曲列表（只处理 songRank 类型）
+    const songSegmentSongs: Record<string, SongInfo[]> = {};
 
-    // 提取歌曲列表（根据配置中的数量限制）
-    const achievementList: SongInfo[] = (data[achievementField] || []).slice(0, config.achievementCount);
-    const newRankList: SongInfo[] = (data[newRankField] || []).slice(0, config.newRankCount);
-    const mainRankList: SongInfo[] = (data[mainRankField] || []).slice(0, config.mainRankCount);
+    for (const seg of config.segmentOrder) {
+      if (seg.type !== "songRank") continue;
+
+      const segConfig = (seg.config || {}) as Record<string, unknown>;
+      const cardComponent = segConfig.cardComponent as string;
+      const dataField = segConfig.dataField as string;
+
+      if (!cardComponent || !dataField || !data[dataField]) continue;
+
+      const songs = (data[dataField] || []) as SongInfo[];
+      const rankCount = segConfig.rankCount as number | undefined;
+      const defaultCount = cardComponent === "achievementCard"
+        ? (config.achievementCount ?? 0)
+        : 0;
+      const count: number = Number(rankCount ?? defaultCount) || songs.length;
+
+      if (!songSegmentSongs[cardComponent]) {
+        songSegmentSongs[cardComponent] = [];
+      }
+      songSegmentSongs[cardComponent].push(...songs.slice(0, count));
+    }
 
     // 为每首歌曲添加裁切设置和视频下载状态
-    const enrichSong = (song: SongInfo, type: any) => {
+    const enrichSong = (song: SongInfo, type: string) => {
       const clip = getClipSetting(song.bvid);
       const video = getFullVideoInfo(song.bvid);
       return {
@@ -401,11 +418,12 @@ router.get("/songs/:date", async (req, res) => {
       };
     };
 
-    const songs = {
-      newachievement: achievementList.map((s: SongInfo) => enrichSong(s, "achievement")),
-      newRank: newRankList.map((s: SongInfo) => enrichSong(s, "new")),
-      mainRank: mainRankList.map((s: SongInfo) => enrichSong(s, "main")),
-    };
+    const songs = Object.fromEntries(
+      Object.entries(songSegmentSongs).map(([cardComponent, songList]) => [
+        cardComponent,
+        songList.map((s: SongInfo) => enrichSong(s, cardComponent)),
+      ])
+    );
 
     res.send({
       date,
@@ -415,8 +433,6 @@ router.get("/songs/:date", async (req, res) => {
       config: {
         name: config.name,
         achievementCount: config.achievementCount,
-        newRankCount: config.newRankCount,
-        mainRankCount: config.mainRankCount,
         showCount: config.showCount,
         trendCount: config.trendCount,
         trendKey: config.trendKey,

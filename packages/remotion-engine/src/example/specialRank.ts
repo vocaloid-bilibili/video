@@ -41,21 +41,7 @@ export default {
   "share_rank": 3,
   "rank": 2,
   "count": 10,
-  "rank_before": 1,
-  "point_before": 5362065,
-  "rate": "-8.21%",
-  "honor": ["Emerging Hit!", "Mega Hit!!!", "门番候补"],
-  "seperate_ranks": {
-    "1": 3,
-    "2": 3,
-    "3": 3,
-    "4": 1,
-    "5": 2,
-    "6": 2,
-    "7": 2
-  },
-  "trendCount": 7,
-  "showCount": true,
+  "showCount": false,
   "videoSource": ``,
   "extraInfo": "歌姬计划、未来计划、世界计划、舞萌DX、中二节奏、音击、BanG Dream!、太鼓之达人、D4DJ Groovy Mix、Jubeat、节奏过山车、GITADORA、e舞成名、Pop'n Music、MUSECA、Sound Voltex、QQ音速、REFLEC BEAT、乐动时代、ARGONAVIS、QQ炫舞、Melody's、劲舞团、Synchronica、Dance Rail",
 }

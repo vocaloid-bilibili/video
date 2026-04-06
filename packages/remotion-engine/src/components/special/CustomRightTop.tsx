@@ -3,7 +3,7 @@
 import { Img, staticFile } from "remotion"
 import { STYLES } from "../../styles"
 
-export const RankPart = () => {
+export const CustomRightTop = () => {
 
   return (
     <div

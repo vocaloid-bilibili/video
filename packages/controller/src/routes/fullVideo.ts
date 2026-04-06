@@ -92,3 +92,5 @@ router.post("/full-video/:bvid", async (req, res) => {
     res.status(500).send({ error: e.message });
   }
 });
+
+export default router;
