@@ -3,6 +3,7 @@ import React from "react";
 import { Composition } from "remotion";
 import { MainRankCard } from "./MainRankCard";
 import { Intro } from "./Intro";
+import { CoverIntro } from "./CoverIntro";
 import { InfoCard } from "./InfoCard";
 import { SectionTitle } from "./SectionTitle";
 import { MergedRulesCard } from "./MergedRulesCard";
@@ -28,6 +29,20 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="Intro"
         component={Intro}
+        durationInFrames={60 * 3}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          issue: "#68",
+          date: "2025.12.20",
+          coverImg: "",
+          boardType: "weekly",
+        }}
+      />
+      <Composition
+        id="CoverIntro"
+        component={CoverIntro}
         durationInFrames={60 * 3}
         fps={60}
         width={1920}

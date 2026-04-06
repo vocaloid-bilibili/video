@@ -9,9 +9,7 @@ export type SegmentType =
   | "rules"
   | "achievementTitle"
   | "newachievement"
-  | "newRankTitle"
   | "newRank"
-  | "mainRankTitle"
   | "mainRank"
   | "singerRank"
   | "millionRank"
@@ -22,18 +20,93 @@ export type SegmentType =
   | "subRankTitle"
   | "subRank";
 
-// 段落配置项
-export interface SegmentOrderItem {
-  type: SegmentType;
-  title?: string;  // 可选的标题配置
-  color?: string;  // 可选的颜色配置
-  audioMix?: "op" | "ed";  // 音频混音标记：op=OP混音，ed=ED混音
+// ========== 段落配置接口 ==========
+
+// 基础段落配置
+export interface BaseSegmentConfig {
+  duration?: number;
 }
 
-export interface SectionConfig {
-  duration?: number;
+// 标题段落配置
+export interface TitleSegmentConfig extends BaseSegmentConfig {
   title?: string;
   color?: string;
+}
+
+// 信息卡片配置
+export interface InfoCardSegmentConfig extends BaseSegmentConfig {
+  lastPeriodLabel?: string;
+}
+
+// 榜单卡片配置
+export interface RankSegmentConfig extends BaseSegmentConfig {
+  showCount?: boolean;
+  trendCount?: number;
+  trendKey?: string | null;
+  // 标题配置（合并了原来的 xxxRankTitle）
+  showTitle?: boolean;
+  title?: string;
+  color?: string;
+  titleDuration?: number;
+  rankCount?: number;
+  // 数据源字段
+  dataField?: string | null;
+}
+
+// 主榜配置
+export interface MainRankSegmentConfig extends RankSegmentConfig {
+  cardComponent?: string;
+}
+
+// 副榜标题配置
+export interface SubRankTitleConfig extends BaseSegmentConfig {
+  title?: string;
+  color?: string;
+}
+
+// 副榜配置
+export interface SubRankSegmentConfig extends RankSegmentConfig {
+  showCount?: boolean;
+  trendKey?: string | null;
+}
+
+// 成就展示配置
+export interface AchievementSegmentConfig extends BaseSegmentConfig {
+  showCount?: boolean;
+  trendCount?: number;
+  trendKey?: string | null;
+  dataField?: string | null;
+}
+
+// 数据统计配置
+export interface StatsCardSegmentConfig extends BaseSegmentConfig {
+  pointThresholds?: PointThreshold[];
+}
+
+// type 到 config 类型的映射
+export interface SegmentConfigMap {
+  intro: BaseSegmentConfig;
+  infoCard: InfoCardSegmentConfig;
+  rules: BaseSegmentConfig;
+  achievementTitle: TitleSegmentConfig;
+  newachievement: AchievementSegmentConfig;
+  newRank: RankSegmentConfig;
+  mainRank: MainRankSegmentConfig;
+  singerRank: RankSegmentConfig;
+  millionRank: RankSegmentConfig;
+  achievementRank: RankSegmentConfig;
+  historyRank: RankSegmentConfig;
+  statsCard: StatsCardSegmentConfig;
+  staffCard: BaseSegmentConfig;
+  subRankTitle: SubRankTitleConfig;
+  subRank: SubRankSegmentConfig;
+}
+
+// 段落配置项，使用泛型根据 type 推断 config 类型
+export interface SegmentOrderItem<T extends SegmentType = SegmentType> {
+  type: T;
+  audioMix?: "op" | "ed";
+  config?: SegmentConfigMap[T];
 }
 
 export interface PointThreshold {
@@ -56,36 +129,9 @@ export interface BoardTypeConfig {
   showCount: boolean;
   showAchievements: boolean;
   specialRateNote?: boolean;
-  sections: {
-    intro: SectionConfig;
-    infoCard: SectionConfig;
-    rules: SectionConfig;
-    achievementTitle: SectionConfig;
-    newachievement: SectionConfig;
-    newRankTitle: SectionConfig;
-    newRank: SectionConfig;
-    mainRankTitle: SectionConfig;
-    mainRank: SectionConfig;
-    singerRank: SectionConfig;
-    millionRank: SectionConfig;
-    achievementRank: SectionConfig;
-    historyRank: SectionConfig;
-    statsCard: SectionConfig;
-    staffCard: SectionConfig;
-    subRankTitle: SectionConfig;
-    subRank: SectionConfig;
-  };
   audioFade: boolean;
   fadeDuration: number;
-  // 要用JSON文件的哪个字段作为这几个榜的数据
-  dataFields: {
-    newachievement?: string | null;
-    newRank: string | null;
-    mainRank: string | null;
-    subRank: string | null;
-  };
   // 段落顺序配置：定义视频中各段落的排列顺序
-  // 每个元素指定一个段落的类型，可以是单个类型字符串，也可以是带配置的数组
   segmentOrder: SegmentOrderItem[];
 }
 
@@ -95,65 +141,77 @@ export interface DerivedValues {
   newSongPeriod: string;
   lastPeriodLabel: string;
   achievementTitleFull: string;
-  newRankTitleFull: string;
-  mainRankTitleFull: string;
   subRankTitleFull: string;
 }
 
 // 默认段落顺序（周刊标准顺序）
 const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
-  { type: "intro", audioMix: "op" },
-  { type: "infoCard", audioMix: "op" },
-  { type: "rules", audioMix: "op" },
-  { type: "achievementTitle" },
-  { type: "newachievement" },
-  { type: "newRankTitle" },
-  { type: "newRank" },
-  { type: "mainRankTitle" },
-  { type: "mainRank" },
-  { type: "singerRank", audioMix: "ed"  },
-  { type: "millionRank", audioMix: "ed"  },
-  { type: "achievementRank", audioMix: "ed"  },
-  { type: "historyRank", audioMix: "ed"  },
-  { type: "statsCard", audioMix: "ed"  },
-  { type: "staffCard", audioMix: "ed" },
-  { type: "subRankTitle", audioMix: "ed" },
-  { type: "subRank", audioMix: "ed" },
+  { type: "intro", audioMix: "op", config: { duration: 3 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
+  { type: "rules", audioMix: "op", config: { duration: 35 } },
+  { type: "achievementTitle", config: { title: "成就达成展示", color: "#FFD700", duration: 2 } },
+  { type: "newachievement", config: { showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "achievement_data" } },
+  // 新曲榜（包含标题配置）
+  { type: "newRank", config: { 
+    showTitle: true, title: "新曲榜", color: "#23ade5", titleDuration: 2,
+    showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "new_rank_top10"
+  } },
+  // 主榜（包含标题配置）
+  { type: "mainRank", config: { 
+    showTitle: true, title: "主榜", color: "#f25d8e", titleDuration: 2,
+    showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "total_rank_top20"
+  } },
+  { type: "singerRank", audioMix: "ed" },
+  { type: "millionRank", audioMix: "ed" },
+  { type: "achievementRank", audioMix: "ed" },
+  { type: "historyRank", audioMix: "ed" },
+  { type: "statsCard", audioMix: "ed", config: { duration: 7 } },
+  { type: "staffCard", audioMix: "ed", config: { duration: 7 } },
+  { type: "subRankTitle", audioMix: "ed", config: { title: "副榜", color: "#66ccff", duration: 2 } },
+  { type: "subRank", audioMix: "ed", config: { showCount: true, trendKey: "daily_trends", dataField: "total_rank_sub" } },
 ];
 
 // 月刊默认顺序
 const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
-  { type: "intro", audioMix: "op" },
-  { type: "infoCard", audioMix: "op" },
-  { type: "rules", audioMix: "op" },
-  { type: "newRankTitle" },
-  { type: "newRank" },
-  { type: "mainRankTitle" },
-  { type: "mainRank" },
-  { type: "singerRank", audioMix: "ed"  },
-  { type: "millionRank", audioMix: "ed"  },
-  { type: "historyRank", audioMix: "ed"  },
-  { type: "statsCard", audioMix: "ed"  },
-  { type: "staffCard", audioMix: "ed" },
-  { type: "subRankTitle", audioMix: "ed" },
-  { type: "subRank", audioMix: "ed" },
+  { type: "intro", audioMix: "op", config: { duration: 3 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
+  { type: "rules", audioMix: "op", config: { duration: 30 } },
+  // 新曲榜（包含标题配置）
+  { type: "newRank", config: { 
+    showTitle: true, title: "新曲榜", color: "#23ade5", titleDuration: 2,
+    showCount: false, trendCount: 5, trendKey: "weekly_trends", dataField: "new_rank_top20"
+  } },
+  // 主榜（包含标题配置）
+  { type: "mainRank", config: { 
+    showTitle: true, title: "主榜", color: "#f25d8e", titleDuration: 2,
+    showCount: false, trendCount: 5, trendKey: "weekly_trends", dataField: "total_rank_top20"
+  } },
+  { type: "singerRank", audioMix: "ed" },
+  { type: "millionRank", audioMix: "ed" },
+  { type: "achievementRank", audioMix: "ed" },
+  { type: "historyRank", audioMix: "ed" },
+  { type: "statsCard", audioMix: "ed", config: { duration: 7 } },
+  { type: "staffCard", audioMix: "ed", config: { duration: 7 } },
+  { type: "subRankTitle", audioMix: "ed", config: { title: "副榜", color: "#66ccff", duration: 2 } },
+  { type: "subRank", audioMix: "ed", config: { showCount: false, trendKey: "weekly_trends", dataField: "total_rank_sub" } },
 ];
 
 // 翻唱周刊默认顺序（只有intro和rules，没有成就和新曲榜）
 const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
-  { type: "intro", audioMix: "op" },
-  { type: "infoCard", audioMix: "op" },
-  { type: "rules", audioMix: "op" },
-  { type: "mainRankTitle" },
-  { type: "mainRank" },
-  // { type: "staffCard", audioMix: "ed" },
-  // { type: "subRankTitle", audioMix: "ed" },
+  { type: "intro", audioMix: "op", config: { duration: 3 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
+  { type: "rules", audioMix: "op", config: { duration: 35 } },
+  // 主榜（包含标题配置）
+  { type: "mainRank", config: { 
+    showTitle: true, title: "主榜", color: "#f25d8e", titleDuration: 2,
+    showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "songs"
+  } },
 ];
 
 // 特刊默认顺序（通常只有排行榜，不加OP/ED）
 const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
-  { type: "mainRankTitle" },
-  { type: "mainRank" },
+  // 主榜（包含标题配置，默认不显示标题）
+  { type: "mainRank", config: { showTitle: false, dataField: "total_rank_top20" } },
 ];
 
 export const ISSUE_TYPES  = {
@@ -164,7 +222,7 @@ export const ISSUE_TYPES  = {
     achievementCount: 1,
     newRankCount: 10,
     mainRankCount: 20,
-    subRankRange: [21, 100],
+    subRankRange: [21, 100] as [number, number],
     subRankPerPage: 4,
 
     trendCount: 7,
@@ -181,56 +239,8 @@ export const ISSUE_TYPES  = {
     showCount: true,
     showAchievements: true,
 
-    sections: {
-      intro: { duration: 3 },
-      infoCard: { duration: 5 },
-      rules: { duration: 35 },
-
-      achievementTitle: {
-        duration: 2,
-        title: "成就达成展示",
-        color: "#FFD700",
-      },
-      newachievement: {},
-
-      newRankTitle: {
-        duration: 2,
-        title: "新曲榜",
-        color: "#23ade5",
-      },
-      newRank: {},
-
-      mainRankTitle: {
-        duration: 2,
-        title: "主榜",
-        color: "#f25d8e",
-      },
-      mainRank: {},
-
-      singerRank: {},
-      millionRank: {},
-      achievementRank: {},
-      historyRank: {},
-      statsCard: {},
-      staffCard: {},
-
-      subRankTitle: {
-        duration: 2,
-        title: "副榜",
-        color: "#66ccff",
-      },
-      subRank: {},
-    },
-
     audioFade: true,
     fadeDuration: 2,
-
-    dataFields: {
-      newachievement: "achievement_data",
-      newRank: "new_rank_top10",
-      mainRank: "total_rank_top20",
-      subRank: "total_rank_sub",
-    },
 
     segmentOrder: DEFAULT_WEEKLY_ORDER,
   },
@@ -241,7 +251,7 @@ export const ISSUE_TYPES  = {
 
     newRankCount: 20,
     mainRankCount: 20,
-    subRankRange: [21, 200],
+    subRankRange: [21, 200] as [number, number],
     subRankPerPage: 4,
 
     trendCount: 5,
@@ -258,47 +268,8 @@ export const ISSUE_TYPES  = {
     showCount: false,
     showAchievements: false,
 
-    sections: {
-      intro: { duration: 3 },
-      infoCard: { duration: 5 },
-      rules: { duration: 30 },
-      achievementTitle: {},
-      newachievement: {},
-
-      newRankTitle: {
-        duration: 2,
-        title: "新曲榜",
-        color: "#23ade5",
-      },
-      newRank: {},
-      mainRankTitle: {
-        duration: 2,
-        title: "主榜",
-        color: "#f25d8e",
-      },
-      mainRank: {},
-      singerRank: {},
-      millionRank: {},
-      achievementRank: {},
-      historyRank: {},
-      statsCard: {},
-      staffCard: {},
-      subRankTitle: {
-        duration: 2,
-        title: "副榜",
-        color: "#66ccff",
-      },
-      subRank: {},
-    },
-
     audioFade: true,
     fadeDuration: 2,
-
-    dataFields: {
-      newRank: "new_rank_top20",
-      mainRank: "total_rank_top20",
-      subRank: "total_rank_sub",
-    },
 
     segmentOrder: DEFAULT_MONTHLY_ORDER,
   },
@@ -310,7 +281,7 @@ export const ISSUE_TYPES  = {
     achievementCount: 1,
     newRankCount: 10,
     mainRankCount: 20,
-    subRankRange: [21, 100],
+    subRankRange: [21, 100] as [number, number],
     subRankPerPage: 4,
 
     trendCount: 7,
@@ -327,56 +298,8 @@ export const ISSUE_TYPES  = {
     showCount: true,
     showAchievements: true,
 
-    sections: {
-      intro: { duration: 3 },
-      infoCard: { duration: 5 },
-      rules: { duration: 35 },
-
-      achievementTitle: {
-        duration: 2,
-        title: "成就达成展示",
-        color: "#FFD700",
-      },
-      newachievement: {},
-
-      newRankTitle: {
-        duration: 2,
-        title: "新曲榜",
-        color: "#23ade5",
-      },
-      newRank: {},
-
-      mainRankTitle: {
-        duration: 2,
-        title: "主榜",
-        color: "#f25d8e",
-      },
-      mainRank: {},
-
-      singerRank: {},
-      millionRank: {},
-      achievementRank: {},
-      historyRank: {},
-      statsCard: {},
-      staffCard: {},
-
-      subRankTitle: {
-        duration: 2,
-        title: "副榜",
-        color: "#66ccff",
-      },
-      subRank: {},
-    },
-
     audioFade: true,
     fadeDuration: 2,
-
-    dataFields: {
-      newachievement: "achievement_data",
-      newRank: "new_rank_top10",
-      mainRank: "songs",
-      subRank: "total_rank_sub",
-    },
 
     segmentOrder: DEFAULT_COVER_WEEKLY_ORDER,
   },
@@ -399,34 +322,8 @@ export const ISSUE_TYPES  = {
     showAchievements: false,
     specialRateNote: true,
 
-    sections: {
-      intro: {},
-      infoCard: {},
-      rules: {},
-      achievementTitle: {},
-      newachievement: {},
-      newRankTitle: {},
-      newRank: {},
-      mainRankTitle: { duration: 2 },
-      mainRank: {},
-      singerRank: {},
-      millionRank: {},
-      achievementRank: {},
-      historyRank: {},
-      statsCard: {},
-      staffCard: {},
-      subRankTitle: {},
-      subRank: {},
-    },
-
     audioFade: false,
     fadeDuration: 0,
-
-    dataFields: {
-      newRank: null,
-      mainRank: "total_rank_top20",
-      subRank: null,
-    },
 
     segmentOrder: DEFAULT_SPECIAL_ORDER,
   },
@@ -445,25 +342,35 @@ export function getDerivedValues(config: BoardTypeConfig): DerivedValues {
   const isMonthly = config.boardLabel === "月刊";
   const isSpecial = config.boardLabel === "特刊";
 
+  // 从 segmentOrder 中获取各标题的配置
+  const getTitleConfig = (type: SegmentType) => {
+    const item = config.segmentOrder.find(s => s.type === type);
+    return item?.config as Record<string, unknown> || {};
+  };
+
+  const achievementTitleConfig = getTitleConfig("achievementTitle");
+  const subRankTitleConfig = getTitleConfig("subRankTitle");
+
   return {
     subRankMax: subMax,
-
     topN: subMax,
-
     newSongPeriod: isMonthly || isSpecial ? "当月" : "2周内",
-
     lastPeriodLabel: isMonthly ? "上月" : "上期",
-
-    achievementTitleFull: `${config.sections?.achievementTitle?.title || "成就"}共 ${config.achievementCount} 首达成`,
-    newRankTitleFull: `${config.sections?.newRankTitle?.title || "新曲榜"} Top ${config.newRankCount}`,
-    mainRankTitleFull: `${config.sections?.mainRankTitle?.title || "主榜"} Top ${config.mainRankCount}`,
+    achievementTitleFull: `${achievementTitleConfig.title || "成就"}共 ${config.achievementCount} 首达成`,
     subRankTitleFull: config.subRankRange
-      ? `${config.sections?.subRankTitle?.title || "副榜"} Top ${subMax}`
+      ? `${subRankTitleConfig.title || "副榜"} Top ${subMax}`
       : "",
   };
 }
 
-export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<BoardTypeConfig> } = {}): BoardTypeConfig & DerivedValues & { _type: string; _date: string } {
+// 扩展配置类型，包含运行时添加的字段
+export interface IssueConfig extends BoardTypeConfig, DerivedValues {
+  _type: string;
+  _date: string;
+  [key: string]: unknown;
+}
+
+export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<BoardTypeConfig> } = {}): IssueConfig {
   const type = ( infoData.boardType || detectBoardType(dateStr) ) as keyof typeof ISSUE_TYPES
 
   const baseConfig = JSON.parse(
@@ -471,15 +378,16 @@ export function getIssueConfig(dateStr: string, infoData: { boardType?: string; 
   ) as BoardTypeConfig;
 
   if (infoData.config) {
-    deepMerge(baseConfig, infoData.config);
+    deepMerge(baseConfig as unknown as Record<string, unknown>, infoData.config as unknown as Record<string, unknown>);
   }
 
-  baseConfig._type = type;
-  baseConfig._date = dateStr;
+  const configWithRuntime = baseConfig as unknown as IssueConfig;
+  configWithRuntime._type = type;
+  configWithRuntime._date = dateStr;
 
-  Object.assign(baseConfig, getDerivedValues(baseConfig));
+  Object.assign(configWithRuntime, getDerivedValues(baseConfig));
 
-  return baseConfig as BoardTypeConfig & DerivedValues & { _type: string; _date: string };
+  return configWithRuntime;
 }
 
 // 获取所有可用的段落类型
@@ -490,9 +398,7 @@ export function getAllSegmentTypes(): SegmentType[] {
     "rules",
     "achievementTitle",
     "newachievement",
-    "newRankTitle",
     "newRank",
-    "mainRankTitle",
     "mainRank",
     "singerRank",
     "millionRank",
