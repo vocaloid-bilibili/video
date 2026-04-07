@@ -2,37 +2,10 @@ import React, { useMemo } from "react";
 import {
   AbsoluteFill,
   OffthreadVideo,
-  useVideoConfig, // 替代 useRemotionProps 的核心 API
+  useVideoConfig,
 } from "remotion";
-
-// 样式常量（适配全屏布局，移除动画相关配置）
-const STYLES = {
-  // 基础配色
-  colors: {
-    background: "rgba(0, 0, 0, 0.5)", // 半透明背景（叠加在视频上）
-    border: "#e0e0e0",
-    accent: "#ff4757",
-    textPrimary: "#ffffff",
-    textSecondary: "#cccccc",
-    honor: {
-      default: "#2f3542",
-      mega: "#ffa502",
-      emerging: "#2ed573",
-      门番: "#ff3838",
-    },
-  },
-  // 布局尺寸（全屏适配）
-  sizes: {
-    infoTag: { height: 36, paddingX: 16, margin: 8 },
-    honorBadge: { height: 40, paddingX: 20, margin: 8 },
-    trendBar: { height: 80, paddingX: 20, margin: 16 },
-  },
-  // 字体
-  fonts: {
-    sans: "PingFang SC, Microsoft YaHei, sans-serif",
-    number: "SF Pro Display, Roboto, monospace",
-  },
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // 工具函数（保留核心）
 const formatFix = (num: number, precision = 2) => {
@@ -53,7 +26,7 @@ interface InfoTagProps {
 const InfoTag: React.FC<InfoTagProps> = ({
   label,
   value,
-  backgroundColor = STYLES.colors.background,
+  backgroundColor = STYLES.colors.bg,
 }) => {
   return (
     <div
@@ -70,18 +43,18 @@ const InfoTag: React.FC<InfoTagProps> = ({
     >
       <span
         style={{
-          color: STYLES.colors.textSecondary,
+          color: STYLES.colors.textSub,
           fontSize: 14,
-          fontFamily: STYLES.fonts.sans,
+          fontFamily: STYLES.fontMain,
         }}
       >
         {label}
       </span>
       <span
         style={{
-          color: STYLES.colors.textPrimary,
+          color: STYLES.colors.textMain,
           fontSize: 16,
-          fontFamily: STYLES.fonts.sans,
+          fontFamily: STYLES.fontMain,
           fontWeight: 500,
         }}
       >
@@ -181,9 +154,9 @@ const TrendBar: React.FC<TrendBarProps> = ({
             />
             <span
               style={{
-                color: STYLES.colors.textPrimary,
+                color: STYLES.colors.textMain,
                 fontSize: 12,
-                fontFamily: STYLES.fonts.number,
+                fontFamily: STYLES.fontNum,
               }}
             >
               {formatFix(value, 0)}
@@ -203,6 +176,7 @@ interface FullScreenVideoCardProps {
   trendData: number[];
   trendPeriod?: "day" | "week";
   image_url?: string; // 封面图兜底
+  boardType?: BoardType;
 }
 
 // 修正1：组件接收 props 作为参数（Remotion 标准写法）
@@ -219,7 +193,10 @@ export const AchievementCard: React.FC<FullScreenVideoCardProps> = (props) => {
     trendData = [],
     trendPeriod = "day",
     image_url = "",
+    boardType = "weekly",
   } = props;
+
+  const STYLES = getStyles(boardType);
 
   return (
     <AbsoluteFill

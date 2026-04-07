@@ -228,13 +228,19 @@ const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
 const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
   { type: "infoCard", audioMix: "op", config: { duration: 5 } },
-  { type: "rules", audioMix: "op", config: { duration: 35 } },
+  { type: "rules", audioMix: "op", config: { duration: 30 } },
   // 主榜
   { type: "songRank", config: { 
     cardComponent: "CoverMainRankCard",
-    showTitle: true, title: "主榜", color: "#f25d8e", titleDuration: 2,
-    showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "songs"
+    showTitle: true, title: "主榜", color: "#f25d8e", titleDuration: 2, rankCount: 20,
+    showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "total_rank_top20"
   } },
+  { type: "singerRank", audioMix: "ed" },
+  { type: "statsCard", audioMix: "ed", config: { duration: 7 } },
+  { type: "staffCard", audioMix: "ed", config: { duration: 7 } },
+  { type: "subRankTitle", audioMix: "ed", config: { title: "副榜", color: "#66ccff", duration: 2 } },
+  { type: "subRank", audioMix: "ed", config: { 
+    showCount: false, trendKey: "weekly_trends", dataField: "total_rank_sub", range: [21, 200], perPage: 4 } },
 ];
 
 // 特刊默认顺序（通常只有排行榜，不加OP/ED）
@@ -298,11 +304,8 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
     boardLabel: "翻唱周刊",
     datePattern: /^cover_\d{4}-\d{2}-\d{2}$/,
 
-    achievementCount: 1,
-
-
-    trendCount: 7,
-    trendKey: "daily_trends",
+    trendCount: 0,
+    trendKey: null,
 
     pointThresholds: [
       { key: "count_over_500k", label: "50万分以上" },

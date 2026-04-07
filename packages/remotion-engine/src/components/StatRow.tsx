@@ -1,7 +1,8 @@
 // ------------------------------------------------------------------
 // 组件：数据条
 // ------------------------------------------------------------------
-import { STYLES } from "../styles"
+import { STYLES, getStyles } from "../styles"
+import type { BoardType } from "../../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 辅助函数
@@ -36,8 +37,11 @@ export const StatRow = ({
   bgChar,
   isBestRank,
   fixValue,
-  show_rank
-}: any) => (
+  show_rank,
+  boardType = "weekly"
+}: any) => {
+  const STYLES = getStyles(boardType);
+  return (
   <div
     style={{
       flex: 1,
@@ -146,3 +150,4 @@ export const StatRow = ({
     </div>}
   </div>
 );
+};

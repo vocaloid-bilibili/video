@@ -9,25 +9,8 @@ import {
   Img,
 } from "remotion";
 import { BilibiliLogo } from "./Icons";
-
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    blue: "#bbdefb",
-    biliBlue: "#23ade5",
-    orange: "#ffe0b2",
-    pink: "#f8bbd0",
-    yellow: "#fff176",
-    textMain: "#000000",
-    textSub: "#444444",
-  },
-  border: "3px solid #000",
-  shadow: "8px 8px 0px rgba(0,0,0,1)",
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontHeader: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 const DotPattern = () => (
   <AbsoluteFill
@@ -60,10 +43,11 @@ export const Intro = ({
   issue?: string;
   date?: string;
   coverImg?: string;
-  boardType?: "weekly" | "monthly" | "special";
+  boardType?: BoardType;
 }) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   const boardTypeName = getBoardTypeName(boardType);
 

@@ -1,16 +1,20 @@
-import { STYLES } from "../styles"
+import { STYLES, getStyles } from "../styles"
 import { FitTitle } from "./FitTitle"
 import { HonorBadge } from "./HonorBadge"
 import { FitContent } from "./FitContent"
 import { InfoTag } from "./InfoTag"
+import type { BoardType } from "../../../shared/src/boardTypes";
 
 export const SongInfo = ({
   props,
-  infoTranslateY
+  infoTranslateY,
+  boardType = "weekly"
 }: {
   props: any,
-  infoTranslateY: number
+  infoTranslateY: number,
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
   return (
     <div
       style={{

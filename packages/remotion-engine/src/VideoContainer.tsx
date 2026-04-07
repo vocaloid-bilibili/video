@@ -1,16 +1,20 @@
 import { OffthreadVideo } from "remotion"
 
-import { STYLES } from "./styles"
+import { STYLES, getStyles } from "./styles"
+import type { BoardType } from "../../shared/src/boardTypes";
 
 export const VideoContainer = ({
   videoTranslateY,
   videoSource,
   volume,
+  boardType = "weekly",
 }: {
   videoTranslateY: number,
   videoSource: string,
-  volume: number
+  volume: number,
+  boardType?: BoardType,
 }) => {
+  const STYLES = getStyles(boardType);
   return (
     <div
       style={{

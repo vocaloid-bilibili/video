@@ -8,29 +8,8 @@ import {
   Img,
 } from "remotion";
 import React, { useState, useRef, useLayoutEffect } from "react";
-
-// ------------------------------------------------------------------
-// 风格配置
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    cardBg: "#fafafa",
-    textMain: "#000000",
-    textSub: "#333333",
-    accentRed: "#d50000",
-    accentGreen: "#2e7d32",
-    cyan: "#b2ebf2",
-    pink: "#f8bbd0",
-    green: "#c8e6c9",
-    yellow: "#e9dc6aff",
-    purple: "#e1bee7",
-  },
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontNum: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 组件：自适应压缩标题
@@ -388,11 +367,12 @@ const SingerItem = ({ singer, index }: { singer: any; index: number }) => {
 // ------------------------------------------------------------------
 // 主组件：歌手排名列表
 // ------------------------------------------------------------------
-export const SingerRank = (props: { list: any[] }) => {
-  const { list } = props;
+export const SingerRank = (props: { list: any[]; boardType?: BoardType }) => {
+  const { list, boardType = "weekly" } = props;
   const displayList = list || [];
   const { durationInFrames, fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   // 标题入场动画
   const titleEntranceTranslateX = spring({

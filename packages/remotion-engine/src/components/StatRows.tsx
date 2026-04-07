@@ -9,12 +9,15 @@ import {
   CoinIcon,
 } from "../Icons";
 import { StatRow } from "./StatRow";
-import { STYLES } from "../styles";
+import { STYLES, getStyles } from "../styles";
+import type { BoardType } from "../../../shared/src/boardTypes";
 
-export const StatRows = ({props, show_ranks = true}: {
+export const StatRows = ({props, show_ranks = true, boardType = "weekly"}: {
   props:any
   show_ranks: boolean
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
 
 
   // 计算各项数据的最佳排名

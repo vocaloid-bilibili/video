@@ -8,22 +8,8 @@ import {
   Img,
 } from "remotion";
 import React, { useState, useRef, useLayoutEffect } from "react";
-
-// ------------------------------------------------------------------
-// 风格配置
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    cardBg: "#fafafa",
-    textMain: "#000000",
-    textSub: "#333333",
-  },
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontNum: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // 成就徽章宽度映射（根据文字长度预估）
 const HONOR_BADGE_WIDTH: Record<string, number> = {
@@ -330,11 +316,12 @@ const AchievementItem = ({ item, index }: { item: any; index: number }) => {
 // ------------------------------------------------------------------
 // 主组件：成就列表
 // ------------------------------------------------------------------
-export const AchievementRank = (props: { list: any[] }) => {
-  const { list } = props;
+export const AchievementRank = (props: { list: any[]; boardType?: BoardType }) => {
+  const { list, boardType = "weekly" } = props;
   const displayList = list || [];
   const { durationInFrames, fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   // 标题入场动画
   const titleEntranceTranslateX = spring({

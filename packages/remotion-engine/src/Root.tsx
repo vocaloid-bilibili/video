@@ -78,9 +78,6 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{
-          boardType: "weekly",
-        }}
       />
       <Composition
         id="SectionTitle"

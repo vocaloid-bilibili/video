@@ -18,31 +18,8 @@ import {
   ReplyIcon,
   ShareIcon,
 } from "./Icons";
-
-// ------------------------------------------------------------------
-// 1. 全局配置与样式
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    headerBg: "#222",
-    headerText: "#fff",
-    EmergingHitColor: "#6A0DAD",
-    MegaHitColor: "#CCA300",
-    SubGateColor: "#23AFA4",
-    GateColor: "#127436",
-    textMain: "#000000",
-    accentRed: "#d50000",
-    accentBlue: "#2979ff",
-  },
-  border: "3px solid #000",
-  shadow: "8px 8px 0px rgba(0,0,0,1)",
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontHeader: '"Arial Black", "Impact", sans-serif',
-  fontNum: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 const DotPattern = () => (
   <AbsoluteFill
@@ -125,6 +102,81 @@ const RULES_DATA = [
           "收录本家投稿和搬运稿件，同一曲目的同一音频版本认定为同一首歌曲，每期榜单仅收录一个。",
           "优先使用本家投稿；若存在本家则不收录任何搬运稿件。歌姬企划官方代投的歌曲视同本家投稿。",
           "同时收录不同版本，包括完整版、重填词版、音频重置版、其他引擎或歌手翻唱等。仅PV重置不予收录。",
+          "不收录无歌词、无伴奏、仅和声、以语音朗读或对话为主的TALKLOID的歌曲。",
+          "不收录歌曲合集、一稿多曲、多P不同曲目的投稿。",
+          "不收录MMD、手书、MASHUP、对比视频、二创PV、演唱会、试听版、预告等内容。",
+        ],
+      },
+    ],
+  },
+];
+
+const COVER_RULES_DATA = [
+  {
+    title: "收录范围",
+    sections: [
+      {
+        head: "集计对象",
+        items: [
+          "收录投稿在bilibili平台、使用虚拟歌手引擎调教创作的外语歌曲",
+          "投稿在音乐区的VOCALOID·UTAU分区的所有翻唱歌曲",
+          "投稿在音乐区其他分区的虚拟歌手翻唱歌曲",
+        ],
+      },
+      {
+        head: "语言认定",
+        items: [
+          "收录外国语（包括古代外国语）、人造语言歌曲",
+          "收录跨语种声库演唱的外语歌曲",
+          "不收录以汉语族或中国少数民族语言为主的歌曲",
+          "对于多语言混合歌曲，虚拟歌手外语部分占比需至少三分之一且在歌曲中成段出现",
+        ],
+      },
+      { head: "时长要求", items: ["大于20秒"] },
+    ],
+  },
+  {
+    title: "引擎与声库",
+    sections: [
+      {
+        head: "电子合成引擎认定",
+        items: [
+          "收录允许逐音素调节音高等参数的歌声合成引擎和语音合成引擎，包括VOCALOID、Synthesizer V、UTAU、CeVIO、NEUTRINO等。",
+          "不收录变声器或缺乏精细控制的合成引擎。",
+          "不收录完全依赖模型推理输出的声音生成或转换工具",
+          "收录同时由符合收录标准的引擎主导创作，并辅以其他引擎参与的歌曲。",
+        ],
+      },
+      {
+        head: "虚拟歌手声库认定",
+        items: [
+          "收录商业合成引擎制作的声库和和用户自制并公开配布的声库",
+          "新发布的商业声库，在公开发布首个试听曲后方可纳入收录范围",
+          "新自制声库在声库正式公开配布后才可纳入收录，且配布前的相关歌曲不予重新收录。",
+          "不收录混合音源演唱的歌曲",
+          "对于人声歌手与虚拟歌手合唱歌曲，虚拟歌手演唱部分占比需至少三分之一且在歌曲中成段出现。",
+        ],
+      },
+    ],
+  },
+  {
+    title: "认定细则",
+    sections: [
+      {
+        head: "本家认定标准",
+        items: [
+          "由参与制作视频的任一人员投稿的视频，即认定为本家。",
+          "对于一般翻唱作品，作者仅标注调教这。",
+          "对于重编曲翻唱作品，作者同时标注编曲者和调教者。",
+          "不收录仅对原曲进行重编曲或混音而不重新调教的作品。",
+        ],
+      },
+      {
+        head: "稿件收录标准",
+        items: [
+          "收录本家投稿和搬运稿件，同一曲目的同一音频版本认定为同一首歌曲，每期榜单仅收录一个。",
+          "优先使用本家投稿；若存在本家则不收录任何搬运稿件。歌姬企划官方代投的歌曲视同本家投稿。",
+          "不收录原曲作者的重置。",
           "不收录无歌词、无伴奏、仅和声、以语音朗读或对话为主的TALKLOID的歌曲。",
           "不收录歌曲合集、一稿多曲、多P不同曲目的投稿。",
           "不收录MMD、手书、MASHUP、对比视频、二创PV、演唱会、试听版、预告等内容。",
@@ -1477,9 +1529,11 @@ const AchievementListPage = () => {
 const RankRulePage = ({
   subRankMax,
   newSongPeriod,
+  showNew,
 }: {
   subRankMax: number;
   newSongPeriod: string;
+  showNew: boolean;
 }) => {
   const RankRangeBox = ({
     title,
@@ -1559,7 +1613,7 @@ const RankRulePage = ({
           range={`21-${subRankMax}`}
         />
       </div>
-      <div
+      { showNew && <div
         style={{
           backgroundColor: "#fff",
           border: STYLES.border,
@@ -1601,7 +1655,7 @@ const RankRulePage = ({
           </span>
           且没有进入过主榜的新曲。
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
@@ -1669,20 +1723,21 @@ const PageWrapper = ({
 // 5. 主合成组件
 // ------------------------------------------------------------------
 export const MergedRulesCard = (props: {
-  boardType?: "weekly" | "monthly" | "special";
+  boardType?: BoardType;
 }) => {
-  const { boardType = "weekly" } = props;
-  const isMonthly = boardType === "monthly";
-  const isSpecialType = boardType === "special";
+  const { boardType = "coverWeekly" } = props;
+  const STYLES = getStyles(boardType);
 
-  const playRateCoef = isMonthly || isSpecialType ? 15 : 10;
-  const subRankMax = isMonthly || isSpecialType ? 200 : 100;
-  const showAchievements = !isMonthly && !isSpecialType;
-  const newSongPeriod = isMonthly || isSpecialType ? "当月" : "两周以内";
-  const isSpecial = isSpecialType;
+  const playRateCoef = boardType === 'weekly' ? 10 : 15;
+  const subRankMax = boardType === 'monthly'  ? 200 : 100;
+  const showAchievements = boardType === "weekly";
+  const newSongPeriod =  boardType === 'weekly' ?  "两周以内" : "当月";
+  const isSpecial = boardType === 'special';
+  const showNew = boardType !== 'coverWeekly'
 
   const { fps, height } = useVideoConfig();
   const frame = useCurrentFrame();
+  const rules_data = boardType === 'coverWeekly' ? COVER_RULES_DATA : RULES_DATA
 
   const pages: Array<{
     headerTitle: string;
@@ -1692,21 +1747,21 @@ export const MergedRulesCard = (props: {
     {
       headerTitle: "收录规则",
       component: (
-        <RulePageContent data={RULES_DATA[0]} pageIndex={0} total={3} />
+        <RulePageContent data={rules_data[0]} pageIndex={0} total={3} />
       ),
       durationSec: 5,
     },
     {
       headerTitle: "收录规则",
       component: (
-        <RulePageContent data={RULES_DATA[1]} pageIndex={1} total={3} />
+        <RulePageContent data={rules_data[1]} pageIndex={1} total={3} />
       ),
       durationSec: 5,
     },
     {
       headerTitle: "收录规则",
       component: (
-        <RulePageContent data={RULES_DATA[2]} pageIndex={2} total={3} />
+        <RulePageContent data={rules_data[2]} pageIndex={2} total={3} />
       ),
       durationSec: 5,
     },
@@ -1732,13 +1787,15 @@ export const MergedRulesCard = (props: {
     });
   }
 
+
   pages.push({
     headerTitle: "榜单构成",
     component: (
-      <RankRulePage subRankMax={subRankMax} newSongPeriod={newSongPeriod} />
+      <RankRulePage subRankMax={subRankMax} newSongPeriod={newSongPeriod} showNew={showNew} />
     ),
     durationSec: 5,
   });
+
 
   const totalDuration =
     pages.reduce((acc, page) => acc + page.durationSec, 0) * fps;

@@ -12,9 +12,10 @@ import { VideoContainer } from "./VideoContainer";
 import { SongInfo } from "./components/SongInfo";
 import { StatRows } from "./components/StatRows";
 import { RankTrend } from "./components/RankTrend";
-import { STYLES } from "./styles";
+import { STYLES, getStyles } from "./styles";
 import { OverallPoint } from "./components/OverallPoint";
 import { RankCore } from "./components/RankCore";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 主组件：新曲榜卡片
@@ -22,6 +23,8 @@ import { RankCore } from "./components/RankCore";
 export const NewSongCard = (props: any) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
+  const boardType = props.boardType || "weekly";
+  const STYLES = getStyles(boardType);
 
   const safeParse = (val: any) => {
     const num = parseFloat(val);
@@ -162,6 +165,7 @@ export const NewSongCard = (props: any) => {
           videoTranslateY={videoTranslateY}
           videoSource={props.videoSource}
           volume={volume}
+          boardType={boardType}
         />
 
         {/* 2. 底部信息栏 */}

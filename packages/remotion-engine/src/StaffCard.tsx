@@ -6,28 +6,8 @@ import {
   spring,
   Img,
 } from "remotion";
-
-// ------------------------------------------------------------------
-// 样式配置
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    cardBg: "#ffffff",
-    border: "#000000",
-    headerBg: "#222222",
-    headerText: "#ffffff",
-    nameText: "#222222",
-    uidText: "#888888",
-    qqBlue: "#23ADE5",
-    webRed: "#FF5555",
-    dot: "#d7ccc8",
-  },
-  border: "3px solid #000",
-  shadow: "8px 8px 0px rgba(0,0,0,1)",
-  fontMain: '"Microsoft YaHei", "Heiti SC", sans-serif',
-  fontMono: 'Consolas, "Arial Black", monospace',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // 背景装饰点
 const DotPattern = () => (
@@ -47,9 +27,10 @@ interface StaffMember {
   avatar: string;
 }
 
-export const StaffCard = ({ staffList }: { staffList: StaffMember[] }) => {
+export const StaffCard = ({ staffList, boardType = "weekly" }: { staffList: StaffMember[]; boardType?: BoardType }) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   // ------------------- 动画逻辑 -------------------
 

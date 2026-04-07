@@ -1,19 +1,23 @@
 // 修改版的下方歌曲信息栏
 // 没有成就。
 
-import { STYLES } from "../../styles"
+import { STYLES, getStyles } from "../../styles"
 import { FitTitle } from "../FitTitle"
 import { FitContent } from "../FitContent"
 import { InfoTag } from "../InfoTag"
 import { MarqueeTitle } from "../MarqueeTitle"
+import type { BoardType } from "../../../../shared/src/boardTypes";
 
 export const CustomSongInfo = ({
   props,
-  infoTranslateY
+  infoTranslateY,
+  boardType = "weekly"
 }: {
   props: any,
-  infoTranslateY: number
+  infoTranslateY: number,
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
 
 
   return (

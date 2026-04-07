@@ -1,13 +1,17 @@
 // 特刊中显示当前的板块或者榜单名字，右上角。
 
 import { Img, staticFile } from "remotion"
-import { STYLES } from "../../styles"
+import { STYLES, getStyles } from "../../styles"
+import type { BoardType } from "../../../../shared/src/boardTypes";
 
 export const RankPart = ({
-  partName = "主榜"
+  partName = "主榜",
+  boardType = "weekly"
 }: {
-  partName?: string
+  partName?: string,
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
 
   return (
     <div

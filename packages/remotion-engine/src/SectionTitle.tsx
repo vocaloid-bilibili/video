@@ -8,20 +8,8 @@ import {
   Easing,
 } from "remotion";
 import type { CSSProperties, FC } from "react";
-
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    textMain: "#000000",
-    textSub: "#444444",
-  },
-  border: "3px solid #000" as const, // 字面量类型
-  shadow: "8px 8px 0px rgba(0,0,0,1)" as const,
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif' as const,
-  fontNum: "" as const,
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 const DotPattern = () => (
   <AbsoluteFill
@@ -46,6 +34,19 @@ export interface SectionTitleProps {
   titleContainerStyle?: CSSProperties;
 }
 
+export interface SectionTitleProps {
+  title?: string;
+  from?: string | number;
+  to?: string | number;
+  themeColor?: string;
+  edName?: string;
+  edAuthor?: string;
+  showNumber?: boolean;
+  titleStyle?: CSSProperties;
+  titleContainerStyle?: CSSProperties;
+  boardType?: BoardType;
+}
+
 export const SectionTitle: FC<SectionTitleProps> = ({
   title = "",
   from = 10,
@@ -56,7 +57,9 @@ export const SectionTitle: FC<SectionTitleProps> = ({
   showNumber = true,
   titleStyle = {},
   titleContainerStyle = {},
+  boardType = "weekly",
 }) => {
+  const STYLES = getStyles(boardType);
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
 

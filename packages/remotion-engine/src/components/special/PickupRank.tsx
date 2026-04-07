@@ -1,15 +1,19 @@
-import { STYLES } from "../../styles"
+import { STYLES, getStyles } from "../../styles"
+import type { BoardType } from "../../../../shared/src/boardTypes";
 
 
 export const PickupRank = ({
   rank = 1,
   showCount = true,
   count = 10,
+  boardType = "weekly"
 }: {
   rank: number,
   showCount: boolean,
-  count: number
+  count: number,
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
   return (
     <div
       style={{

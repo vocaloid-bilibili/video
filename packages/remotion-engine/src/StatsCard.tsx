@@ -16,28 +16,8 @@ import {
   ReplyIcon,
   ShareIcon,
 } from "./Icons";
-
-// ------------------------------------------------------------------
-// 风格配置
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000",
-    card: "#fff",
-    dot: "#d7ccc8",
-    blue: "#23ADE5",
-    redBg: "#ffb9b4",
-    greenBg: "#d0f9db",
-    redText: "#990000",
-    greenText: "#004d00",
-    gray: "#888",
-    headerBg: "#222",
-    headerText: "#fff",
-  },
-  fontMain: '"Microsoft YaHei", "Heiti SC", sans-serif',
-  fontMono: 'Consolas, "Arial Black", monospace',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 子组件：统计项
@@ -382,6 +362,7 @@ export const StatsCard = (props: {
   topN?: number;
   pointThresholds?: Array<{ key: string; label: string }>;
   newSongPeriod?: string;
+  boardType?: BoardType;
 }) => {
   const {
     stat,
@@ -392,11 +373,13 @@ export const StatsCard = (props: {
       { key: "count_over_100k", label: "10万分以上" },
       { key: "count_over_50k", label: "5万分以上" },
     ],
+    boardType = "weekly",
     newSongPeriod = "2周内",
   } = props;
 
   const { durationInFrames, fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   const cardEntrance = spring({
     frame,

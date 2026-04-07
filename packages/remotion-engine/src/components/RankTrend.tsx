@@ -1,6 +1,7 @@
 import { TrendBar } from "./TrendBar"
-import { STYLES } from "../styles"
+import { STYLES, getStyles } from "../styles"
 import { NumberOrNone } from "../types"
+import type { BoardType } from "../../../shared/src/boardTypes";
 
 export const RankTrend = ({
   isNewSong = false,
@@ -8,15 +9,18 @@ export const RankTrend = ({
   trendData,
   rankDiffValue,
   rank_before,
-  main_rank
+  main_rank,
+  boardType = "weekly"
 }: {
   isNewSong: boolean,
   trendCount: number,
   trendData: { [key: string]: NumberOrNone },
   rankDiffValue: number,
   rank_before: NumberOrNone,
-  main_rank?: NumberOrNone
+  main_rank?: NumberOrNone,
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
 
   let isNewPart = false
   if (main_rank) {

@@ -17,33 +17,8 @@ import {
   ShareIcon,
   StarIcon,
 } from "./Icons";
-
-// ------------------------------------------------------------------
-// 风格配置
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    cardBg: "#ffffff",
-    cardBorder: "#000000",
-    shadow: "rgba(0, 0, 0, 1)",
-    play: "#bbdefb",
-    fav: "#ffe0b2",
-    coin: "#b2ebf2",
-    like: "#f8bbd0",
-    dan: "#e1bee7",
-    rep: "#fff59d",
-    share: "#c8e6c9",
-    red: "#d50000",
-    green: "#2e7d32",
-    gray: "#888888",
-    darkText: "#222222",
-  },
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontNum: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 组件：自适应压缩标题
@@ -231,7 +206,7 @@ const SubRankItem = ({
             style={{
               fontSize: 68,
               lineHeight: 0.9,
-              color: STYLES.colors.darkText,
+              color: STYLES.colors.textMain,
               textShadow: "3px 3px 0 #fff",
               fontFamily: STYLES.fontNum,
               fontWeight: 900,
@@ -703,9 +678,11 @@ export const SubRank = (props: {
   showCount?: boolean;
   trendKey?: string;
   trendCount?: number;
+  boardType?: BoardType;
 }) => {
-  const { list, showCount = true } = props;
+  const { list, showCount = true, boardType = "weekly" } = props;
   const displayList = list || [];
+  const STYLES = getStyles(boardType);
 
   return (
     <AbsoluteFill

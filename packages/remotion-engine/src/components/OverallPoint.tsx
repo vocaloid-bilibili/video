@@ -1,6 +1,7 @@
-import { STYLES } from "../styles";
+import { STYLES, getStyles } from "../styles";
 import { FitContent } from "./FitContent";
 import { safeParse } from "../utils/safeParse.ts";
+import type { BoardType } from "../../../shared/src/boardTypes";
 
 
 export const OverallPoint = ({
@@ -8,15 +9,18 @@ export const OverallPoint = ({
   point_before = 100000,
   point = 100000,
   fixB = 1.0,
-  fixC = 1.0
+  fixC = 1.0,
+  boardType = "weekly"
 
 }: {
   isNewSong: boolean,
   point_before: number | "-",
   point: number,
   fixB: number,
-  fixC: number
+  fixC: number,
+  boardType?: BoardType
 }) => {
+  const STYLES = getStyles(boardType);
   const pointStr = new Intl.NumberFormat().format(safeParse(point));
 
   return (

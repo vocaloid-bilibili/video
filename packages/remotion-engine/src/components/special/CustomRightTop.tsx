@@ -1,9 +1,15 @@
 // 右上角小板块的自定义，不需要任何输入。
 
 import { Img, staticFile } from "remotion"
-import { STYLES } from "../../styles"
+import { STYLES, getStyles } from "../../styles"
+import type { BoardType } from "../../../../shared/src/boardTypes";
 
-export const CustomRightTop = () => {
+export const CustomRightTop = ({
+  boardType = "weekly"
+}: {
+  boardType?: BoardType
+}) => {
+  const STYLES = getStyles(boardType);
 
   return (
     <div

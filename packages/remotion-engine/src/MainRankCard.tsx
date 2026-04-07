@@ -1,4 +1,4 @@
-// src/RankCard.tsx
+// src/MainRankCard.tsx
 import {
   AbsoluteFill,
   useVideoConfig,
@@ -8,7 +8,7 @@ import {
   Easing,
 } from "remotion";
 
-import { STYLES } from "./styles";
+import { STYLES, getStyles } from "./styles";
 import { StatRows } from "./components/StatRows";
 import { OverallPoint } from "./components/OverallPoint";
 import { RankTrend } from "./components/RankTrend";
@@ -16,13 +16,16 @@ import { RankCore } from "./components/RankCore";
 import { SongInfo } from "./components/SongInfo";
 import { VideoContainer } from "./VideoContainer";
 import type { WeeklyMain } from "./types";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 主组件
 // ------------------------------------------------------------------
-export const MainRankCard = (props: WeeklyMain) => {
+export const MainRankCard = (props: WeeklyMain & { boardType?: BoardType }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
+  const boardType = props.boardType || "weekly";
+  const STYLES = getStyles(boardType);
 
   // 配置参数
   const showCount = props.showCount !== false;
@@ -148,6 +151,7 @@ export const MainRankCard = (props: WeeklyMain) => {
           videoTranslateY={videoTranslateY}
           videoSource={props.videoSource}
           volume={volume}
+          boardType={boardType}
         />
 
         {/* 2. 底部信息栏 */}

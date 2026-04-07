@@ -11,17 +11,20 @@ import {
 import { VideoContainer } from "./VideoContainer";
 import { SongInfo } from "./components/SongInfo";
 import { StatRows } from "./components/StatRows";
-import { STYLES } from "./styles";
+import { STYLES, getStyles } from "./styles";
 import { OverallPoint } from "./components/OverallPoint";
 import { RankCore } from "./components/RankCore";
 // import { RankPart as RightTop } from "./components/special/RankPart";
 import { CustomRightTop as RightTop } from './components/special/CustomRightTop'
 import { BasicRank } from "./types";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 
-export const SpecialCard = (props: BasicRank) => {
+export const SpecialCard = (props: BasicRank & { boardType?: BoardType }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
+  const boardType = props.boardType || "weekly";
+  const STYLES = getStyles(boardType);
 
   const safeParse = (val: any) => {
     const num = parseFloat(val);
@@ -157,6 +160,7 @@ export const SpecialCard = (props: BasicRank) => {
           videoTranslateY={videoTranslateY}
           videoSource={props.videoSource}
           volume={volume}
+          boardType={boardType}
         />
 
         {/* 2. 底部信息栏 */}

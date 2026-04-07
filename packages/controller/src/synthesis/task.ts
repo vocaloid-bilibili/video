@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST } from '../config.js';
-import type {SongRankConfig, SongInfo} from 'shared-config'
+import type {SongRankConfig, SongInfo, IssueConfig} from 'shared-config'
 import { log, updateProgress, setTaskStatus, TASK_STATUS } from '../state.js';
 import { getPaths, chunkArray, getCopyrightLabel } from '../utils/helpers.js';
 import { getIssueConfig } from 'shared-config';
@@ -296,7 +296,7 @@ interface SegmentContext {
   name: string;
   data: RankingData;
   editorConfig: EditorConfig;
-  config: any;
+  config: IssueConfig;
   segments: string;
   base: string;
   allSongs: RenderSongInfo[];
@@ -319,7 +319,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       "Intro",
       {
         issue: `#${ctx.data.index}`,
-        date: formatDate(ctx.name),
+        date: formatDate(ctx.name.split('_').at(-1) as string),
         coverImg: ctx.introCover,
         ...ctx.config, // 直接展开 config
       },
@@ -488,7 +488,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
     };
 
     // 添加连接配置
-    const connects = segConfig.connects as number[]
+    const connects = segConfig.connects as number[] || []
     finalSongs.forEach((song, idx) => {
       song.transitionIn = true
       song.transitionOut = true
@@ -711,8 +711,8 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       "SectionTitle",
       {
         title: ctx.config.subRankTitleFull || `副榜 Top ${ctx.config.subRankMax || 100}`,
-        from: ctx.config.subRankRange ? ctx.config.subRankRange[0] : 21,
-        to: ctx.config.subRankRange ? ctx.config.subRankRange[1] : 100,
+        from: ctx.config.subRankRange ?? 21,
+        to: ctx.config.subRankRange ?? 100,
         themeColor: (segConfig.color as string) || "#66ccff",
         edName: ctx.editorConfig.ed?.name || "",
         edAuthor: ctx.editorConfig.ed?.author || "",
@@ -768,46 +768,43 @@ interface SegmentResultItem {
 /**
  * 处理 OP/ED 音频混音
  * @param segmentsDir 段落输出目录
- * @param segmentResults 段落结果列表
+ * @param segmentResults 段落结果列表（直接修改）
  * @param audioMixType 混音类型 ('op' | 'ed')
  * @param audioBvid 音频BV号
- * @returns 处理后的段落路径列表
  */
 async function processAudioMix(
   segmentsDir: string,
   segmentResults: SegmentResultItem[],
   audioMixType: 'op' | 'ed',
   audioBvid: string | undefined,
-): Promise<string[]> {
-  const finalSegments: string[] = segmentResults.map(s => s.path);
-  
-  // 找出所有指定类型的段落
+): Promise<void> {
+  // 找出所有指定类型的段落索引
   const mixIndices = segmentResults
     .map((s, i) => s.orderItem.audioMix === audioMixType ? i : -1)
     .filter(i => i >= 0);
 
   if (!audioBvid || mixIndices.length === 0) {
     log(`${audioMixType.toUpperCase()} 混音跳过: bvid=${audioBvid || '空'}, 段落数量=${mixIndices.length}`);
-    return finalSegments;
+    return;
   }
 
   log(`开始${audioMixType.toUpperCase()}混音: bvid=${audioBvid}, 段落数量=${mixIndices.length}`);
-  
+
   // 检查是否已存在混合后的文件
   const mixedPath = path.join(segmentsDir, `${audioMixType}_mixed.mp4`);
   if (fs.existsSync(mixedPath)) {
     log(`${audioMixType.toUpperCase()}混音文件已存在，直接使用`);
     mixIndices.forEach((origIdx, i) => {
-      finalSegments[origIdx] = i === 0 ? mixedPath : "";
+      segmentResults[origIdx]!.path = i === 0 ? mixedPath : "";
     });
-    return finalSegments;
+    return;
   }
 
   // 下载音频
   const audioPath = await downloadAudio(audioBvid, `${audioBvid}.mp3`);
   if (!audioPath || typeof audioPath !== 'string') {
     log(`警告: ${audioMixType.toUpperCase()}音频下载失败`);
-    return finalSegments;
+    return;
   }
   log(`${audioMixType.toUpperCase()}音频下载完成: ${audioPath}`);
 
@@ -818,13 +815,13 @@ async function processAudioMix(
 
   if (segmentPaths.length === 0) {
     log(`警告: 没有找到有效的${audioMixType.toUpperCase()}段落路径`);
-    return finalSegments;
+    return;
   }
 
   const merged = await concatVideos(segmentPaths, `${audioMixType}_raw.mp4`, segmentsDir);
   if (!merged) {
     log(`警告: ${audioMixType.toUpperCase()}段落合并失败`);
-    return finalSegments;
+    return;
   }
 
   // 替换音频
@@ -832,11 +829,9 @@ async function processAudioMix(
   if (mixed) {
     log(`${audioMixType.toUpperCase()}混音完成: ${mixed}`);
     mixIndices.forEach((origIdx, i) => {
-      finalSegments[origIdx] = i === 0 ? mixed : "";
+      segmentResults[origIdx]!.path = i === 0 ? mixed : "";
     });
   }
-
-  return finalSegments;
 }
 
 // ========== 封面处理 ==========
@@ -864,7 +859,7 @@ async function prepareCoverImage(
     "Intro",
     {
       issue: data.index ? `#${data.index}` : '',
-      date: formatDate(name),
+      date: formatDate(name.split("_").at(-1) as string),
       coverImg: introCover,
       boardType: config._type,
     },
@@ -1016,7 +1011,7 @@ async function runSynthesisTask(name: string) {
   } else {
     // 从主榜获取首登歌曲作为封面
     const mainRankSeg = config.segmentOrder.find(s => 
-      s.type === "songRank" && (s.config as SongRankConfig)?.cardComponent === "MainRankCard"
+      s.type === "songRank" && ["CoverMainRankCard","MainRankCard"].includes((s.config as SongRankConfig)?.cardComponent)
     );
     const mainRankConfig = mainRankSeg?.config as SongRankConfig;
     const mainRankList = mainRankConfig?.dataField 
@@ -1130,8 +1125,8 @@ async function runSynthesisTask(name: string) {
   // ============== 8. 音频混音 ==============
   updateProgress("音频混音", totalSteps - 2, totalSteps);
   
-  // 处理 OP 混音
-  let finalSegments = await processAudioMix(
+    // 处理 OP 混音
+  await processAudioMix(
     segments,
     segmentResults,
     'op',
@@ -1139,7 +1134,7 @@ async function runSynthesisTask(name: string) {
   );
 
   // 处理 ED 混音
-  finalSegments = await processAudioMix(
+  await processAudioMix(
     segments,
     segmentResults,
     'ed',
@@ -1147,7 +1142,7 @@ async function runSynthesisTask(name: string) {
   );
 
   // 过滤空段落（被合并的）
-  const uniqueSegments = finalSegments.filter(s => s && s.length > 0);
+  const uniqueSegments = segmentResults.map(s => s.path).filter(s => s && s.length > 0);
 
   // ============== 9. 最终合并 ==============
   updateProgress("最终合并", totalSteps - 1, totalSteps);

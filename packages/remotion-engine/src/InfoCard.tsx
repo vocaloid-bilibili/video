@@ -6,24 +6,8 @@ import {
   spring,
   Img,
 } from "remotion";
-
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    blue: "#bbdefb",
-    green: "#c8e6c9",
-    purple: "#e1bee7",
-    yellow: "#fff176",
-    textMain: "#000000",
-    textSub: "#444444",
-  },
-  border: "3px solid #000",
-  shadow: "8px 8px 0px rgba(0,0,0,1)",
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontHeader: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 const DotPattern = () => (
   <AbsoluteFill
@@ -48,6 +32,7 @@ export const InfoCard = ({
 }: any) => {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   // 根据期刊类型调整标签
   const getOpLabel = () => {

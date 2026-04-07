@@ -8,23 +8,8 @@ import {
   Img,
 } from "remotion";
 import React, { useState, useRef, useLayoutEffect } from "react";
-
-// ------------------------------------------------------------------
-// 风格配置 (复用 SingerRank)
-// ------------------------------------------------------------------
-const STYLES = {
-  colors: {
-    bg: "#fffbf0",
-    border: "#000000",
-    cardBg: "#fafafa",
-    badgeBg: "#222",
-    textMain: "#000000",
-    textSub: "#333333",
-  },
-  fontMain:
-    '"Microsoft YaHei", "Heiti SC", "Arial Rounded MT Bold", sans-serif',
-  fontNum: '"Arial Black", "Impact", sans-serif',
-};
+import { STYLES, getStyles } from "./styles";
+import type { BoardType } from "../../shared/src/boardTypes";
 
 // ------------------------------------------------------------------
 // 组件：自适应压缩标题 (基于真实DOM宽度)
@@ -294,11 +279,12 @@ const MillionItem = ({ item, index }: { item: any; index: number }) => {
 // ------------------------------------------------------------------
 // 主组件
 // ------------------------------------------------------------------
-export const MillionRank = (props: { list: any[] }) => {
-  const { list } = props;
+export const MillionRank = (props: { list: any[]; boardType?: BoardType }) => {
+  const { list, boardType = "weekly" } = props;
   const displayList = list || [];
   const { durationInFrames, fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const STYLES = getStyles(boardType);
 
   const titleEntranceTranslateX = spring({
     frame: frame - 5,

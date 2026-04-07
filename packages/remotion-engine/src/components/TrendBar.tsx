@@ -1,27 +1,32 @@
 // ------------------------------------------------------------------
 // 组件：趋势条（支持日刊7天/周刊5周）
 // ------------------------------------------------------------------
-import { STYLES } from "../styles";
-
-// 趋势颜色
-const TREND_COLORS = [
-  STYLES.colors.blue,
-  STYLES.colors.orange,
-  STYLES.colors.cyan,
-  STYLES.colors.pink,
-  STYLES.colors.purple,
-  STYLES.colors.yellow,
-  STYLES.colors.green,
-];
+import { STYLES, getStyles } from "../styles";
+import type { BoardType } from "../../../shared/src/boardTypes";
 
 export const TrendBar = ({
   trends,
   count = 7,
+  boardType = "weekly",
 }: {
   trends: Record<string, any>;
   count?: number;
+  boardType?: BoardType;
 }) => {
   if (!trends) return null;
+
+  const STYLES = getStyles(boardType);
+
+  // 趋势颜色
+  const TREND_COLORS = [
+    STYLES.colors.blue,
+    STYLES.colors.orange,
+    STYLES.colors.cyan,
+    STYLES.colors.pink,
+    STYLES.colors.purple,
+    STYLES.colors.yellow,
+    STYLES.colors.green,
+  ];
 
   return (
     <div
