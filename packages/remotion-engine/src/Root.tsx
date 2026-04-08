@@ -3,7 +3,6 @@ import React from "react";
 import { Composition } from "remotion";
 import { MainRankCard } from "./MainRankCard";
 import { Intro } from "./Intro";
-import { CoverIntro } from "./CoverIntro";
 import { InfoCard } from "./InfoCard";
 import { SectionTitle } from "./SectionTitle";
 import { MergedRulesCard } from "./MergedRulesCard";
@@ -24,6 +23,8 @@ import vocalStats from "./example/vocalStats"
 
 import { weeklyMainSchema } from "./types/zod";
 
+const TEMP_BOARD_TYPE = 'coverWeekly'
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -38,21 +39,7 @@ export const RemotionRoot: React.FC = () => {
           issue: "#68",
           date: "2025.12.20",
           coverImg: "",
-          boardType: "weekly",
-        }}
-      />
-      <Composition
-        id="CoverIntro"
-        component={CoverIntro}
-        durationInFrames={60 * 3}
-        fps={60}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          issue: "#68",
-          date: "2025.12.20",
-          coverImg: "",
-          boardType: "weekly",
+          boardType: TEMP_BOARD_TYPE,
         }}
       />
       <Composition
@@ -69,6 +56,7 @@ export const RemotionRoot: React.FC = () => {
           timeLabel: "统计时间",
           timeRange: "2025.12.20 — 2025.12.27",
           note: "测试",
+          board_type: TEMP_BOARD_TYPE
         }}
       />
       <Composition

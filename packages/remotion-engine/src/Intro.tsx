@@ -28,6 +28,8 @@ const getBoardTypeName = (boardType: string): string => {
   switch (boardType) {
     case "monthly":
       return "月刊";
+    case "coverWeekly":
+      return "周刊"
     case "weekly":
     default:
       return "周刊";
@@ -196,14 +198,21 @@ export const Intro = ({
                 textShadow: "4px 4px 0px rgba(0,0,0,0.1)",
               }}
             >
-              <div style={{ whiteSpace: "nowrap" }}>
+              {boardType === 'coverWeekly' ? <><div style={{ whiteSpace: "nowrap" }}>
+                术力口外语
+              </div>
+              <div
+                style={{ color: STYLES.colors.biliBlue, whiteSpace: "nowrap" }}
+              >
+                翻唱曲周刊
+              </div></> : <><div style={{ whiteSpace: "nowrap" }}>
                 {boardTypeName}虚拟歌手
               </div>
               <div
                 style={{ color: STYLES.colors.biliBlue, whiteSpace: "nowrap" }}
               >
                 外语排行榜
-              </div>
+              </div></> }
             </h1>
 
             {/* 期数和日期 */}

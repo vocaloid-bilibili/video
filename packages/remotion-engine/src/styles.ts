@@ -94,7 +94,7 @@ const DEFAULT_STYLES = {
 // 翻唱周刊专用样式
 const COVER_WEEKLY_STYLES = {
   colors: {
-    bg: "#1a1a2e",
+    bg: "#F0F8FF",
     border: "#4a4a6a",
     biliBlue: "#7ec8e3",
     blue: "#4a6fa5",
@@ -104,7 +104,7 @@ const COVER_WEEKLY_STYLES = {
     purple: "#9b59b6",
     yellow: "#f4d03f",
     green: "#58d68d",
-    textMain: "#f0f0f0",
+    textMain: "#000000",
     textSub: "#b0b0b0",
     accentRed: "#ff6b6b",
     accentGreen: "#2ecc71",
