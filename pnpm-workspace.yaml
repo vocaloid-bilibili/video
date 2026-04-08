@@ -1,0 +1,6 @@
+packages:
+  - "packages/controller"
+  - "packages/remotion-engine"
+  - "packages/shared"
+allowBuilds:
+  esbuild: true
