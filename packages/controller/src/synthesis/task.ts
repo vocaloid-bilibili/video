@@ -5,7 +5,7 @@ import { DIR_DATA, DIR_DOWNLOADS, PORT, STAFF_LIST } from '../config.js';
 import type {SongRankConfig, SongInfo, IssueConfig} from 'shared-config'
 import { log, updateProgress, setTaskStatus, TASK_STATUS } from '../state.js';
 import { getPaths, chunkArray, getCopyrightLabel } from '../utils/helpers.js';
-import { getIssueConfig } from 'shared-config';
+import { detectBoardType, getIssueConfig } from 'shared-config';
 import type { SegmentType, SegmentOrderItem } from 'shared-config';
 import {
   downloadImage,

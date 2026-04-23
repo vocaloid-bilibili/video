@@ -133,6 +133,7 @@ export interface PointThreshold {
 }
 
 export interface BoardTypeConfig {
+  boardType: string
   boardLabel: string;
   datePattern: RegExp | null;
   achievementCount?: number;
@@ -385,8 +386,9 @@ export interface IssueConfig extends BoardTypeConfig, DerivedValues {
   [key: string]: unknown;
 }
 
-export function getIssueConfig(dateStr: string, infoData: { boardType?: string; config?: Partial<BoardTypeConfig> } = {}): IssueConfig {
-  const type = ( infoData.boardType || detectBoardType(dateStr) ) as keyof typeof ISSUE_TYPES
+export function getIssueConfig(name: string, infoData: { boardType?: string; config?: Partial<BoardTypeConfig> } = {}): IssueConfig {
+  const boardType = detectBoardType(name);
+  const type = ( infoData.boardType || detectBoardType(name) ) as keyof typeof ISSUE_TYPES
 
   const baseConfig = JSON.parse(
     JSON.stringify(ISSUE_TYPES[type] || ISSUE_TYPES.special),
@@ -398,7 +400,8 @@ export function getIssueConfig(dateStr: string, infoData: { boardType?: string; 
 
   const configWithRuntime = baseConfig as unknown as IssueConfig;
   configWithRuntime._type = type;
-  configWithRuntime._date = dateStr;
+  configWithRuntime.boardType = type;
+  configWithRuntime._date = name;
 
   Object.assign(configWithRuntime, getDerivedValues(baseConfig));
 
