@@ -674,10 +674,8 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       {
         stat: ctx.data.stat,
         comment: ctx.editorConfig.script?.ending || ctx.data.comment || "",
-        topN: ctx.config.topN || ctx.config.subRankMax || 100,
-        pointThresholds: ctx.config.pointThresholds,
-        newSongPeriod: ctx.config.newSongPeriod,
         ...ctx.config,
+        topN: ctx.config.topN || ctx.config.subRankMax || 100,
       },
       `${SEGMENT_PREFIX.statsCard}_StatsCard.mp4`,
       ctx.segments,

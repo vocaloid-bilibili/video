@@ -252,6 +252,7 @@ const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
 
 export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
   weekly: {
+    boardType: "weekly",
     boardLabel: "周刊",
     datePattern: /^\d{4}-\d{2}-\d{2}$/,
 
@@ -278,6 +279,7 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
   },
 
   monthly: {
+    boardType: "monthly",
     boardLabel: "月刊",
     datePattern: /^\d{4}-\d{2}$/,
 
@@ -302,6 +304,7 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
   },
 
   coverWeekly: {
+    boardType: "coverWeekly",
     boardLabel: "翻唱周刊",
     datePattern: /^cover_\d{4}-\d{2}-\d{2}$/,
 
@@ -326,6 +329,7 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
   },
 
   special: {
+    boardType: "special",
     boardLabel: "特刊",
     datePattern: null,
 
