@@ -112,8 +112,8 @@ export const StatRow = ({
       </div>
     </div>
 
-    {show_rank && <div style={{ textAlign: "right", position: "relative", zIndex: 1 }}>
-      <div style={{ lineHeight: 1 }}>
+    <div style={{ textAlign: "right", position: "relative", zIndex: 1 }}>
+      { show_rank && <div style={{ lineHeight: 1 }}>
         <span
           style={{
             color: isBestRank ? STYLES.colors.accentRed : "#333",
@@ -136,7 +136,7 @@ export const StatRow = ({
         >
           位
         </span>
-      </div>
+      </div> }
       <div
         style={{
           fontSize: 19,
@@ -147,7 +147,7 @@ export const StatRow = ({
       >
         {rate && rate !== "-" ? `×${formatFix(rate, 2)}` : ""}
       </div>
-    </div>}
+    </div>
   </div>
 );
 };
