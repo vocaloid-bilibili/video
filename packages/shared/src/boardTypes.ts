@@ -164,7 +164,6 @@ const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
   { type: "infoCard", audioMix: "op", config: { duration: 5 } },
   { type: "rules", audioMix: "op", config: { duration: 35 } },
-  { type: "achievementTitle", audioMix: "op", config: { title: "成就达成展示", color: "#FFD700", duration: 2 } },
   // 成就展示（通过 cardComponent 区分）
   { type: "songRank", config: { 
     cardComponent: "achievementCard",
@@ -230,19 +229,15 @@ const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
   { type: "infoCard", audioMix: "op", config: { duration: 5 } },
   { type: "rules", audioMix: "op", config: { duration: 30 } },
+  { type: "singerRank", audioMix: "op", config: { duration: 7 } },
+  { type: "staffCard", audioMix: "op", config: { duration: 7 } },
   // 主榜
   { type: "songRank", config: { 
     cardComponent: "CoverMainRankCard",
     showTitle: true, title: "主榜", color: "#f25d8e", titleDuration: 2, rankCount: 20,
     showCount: true, trendCount: 7, trendKey: "daily_trends", dataField: "total_rank_top20"
-  } },
-  { type: "singerRank", audioMix: "ed" },
-  { type: "statsCard", audioMix: "ed", config: { duration: 7 } },
-  { type: "staffCard", audioMix: "ed", config: { duration: 7 } },
-  { type: "subRankTitle", audioMix: "ed", config: { title: "副榜", color: "#66ccff", duration: 2 } },
-  { type: "subRank", audioMix: "ed", config: { 
-    showCount: false, trendKey: "weekly_trends", dataField: "total_rank_sub", range: [21, 200], perPage: 4 } },
-];
+  } }]
+
 
 // 特刊默认顺序（通常只有排行榜，不加OP/ED）
 const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
