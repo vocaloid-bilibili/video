@@ -63,7 +63,7 @@ pnpm run dev:remotion
 ```
 
 ### 3. 访问项目
-打开浏览器访问：http://localhost:3002
+打开浏览器访问：https://video.vocabili.top
 
 ## 第四步：验证安装
 
