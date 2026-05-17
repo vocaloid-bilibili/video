@@ -6,14 +6,15 @@ interface SongListPanelProps {
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
   clipProgress: string
+  issueName: string
   children: React.ReactNode
 }
 
-export function SongListPanel({ activeTab, onTabChange, clipProgress, children }: SongListPanelProps) {
+export function SongListPanel({ activeTab, onTabChange, clipProgress, children, issueName }: SongListPanelProps) {
   return (
     <div className="w-[360px] min-w-[360px] bg-neutral-900 border-r border-neutral-700 flex flex-col overflow-hidden">
       <div className="px-3 py-3 bg-neutral-800 border-b border-neutral-700 flex justify-between items-center shrink-0">
-        <span className="text-sm text-neutral-400">编辑器</span>
+        <span className="text-sm text-neutral-400">{issueName}</span>
         <span className="text-sm text-neutral-400">{clipProgress}</span>
       </div>
       <div className="flex bg-neutral-800 border-b border-neutral-700 shrink-0">

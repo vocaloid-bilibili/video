@@ -38,7 +38,7 @@ export default function EditorPage() {
   const [previewEndTime, setPreviewEndTime] = useState(0)
   const [clipDuration, setClipDuration] = useState(20)
   const [activeTab, setActiveTab] = useState<ActiveTab>("songs")
-  const [headerTitle, setHeaderTitle] = useState("片段编辑器")
+  const [issueName, setIssueName] = useState("排行榜")
   const [config, setConfig] = useState<EditorConfig>({
     cover: null,
     ed: { bvid: "", name: "", author: "" },
@@ -59,9 +59,7 @@ export default function EditorPage() {
       const groupCounts = Object.entries(data.songs)
         .map(([key, list]) => `${getGroupLabel(key)} ${list.length}首`)
         .join(", ")
-      setHeaderTitle(
-        `片段编辑器 <span style="font-size: 14px; color: #888; margin-left: 12px;">${typeInfo} - ${date} (${groupCounts})</span>`
-      )
+      setIssueName(`${typeInfo} - ${date} (${groupCounts})`)
 
       // 加载编辑器配置
       const savedConfig = await api.getEditorConfig(date)
@@ -432,7 +430,6 @@ export default function EditorPage() {
         }}
         onDownloadAll={handleDownloadAll}
         onStartSynthesis={handleStartSynthesis}
-        headerTitle={headerTitle}
       />
 
       <main className="flex-1 flex overflow-hidden min-h-0">
@@ -440,6 +437,7 @@ export default function EditorPage() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           clipProgress={clipProgress}
+          issueName={issueName}
         >
           {activeTab === "songs" ? (
             <SongListContent

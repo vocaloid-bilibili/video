@@ -7,7 +7,6 @@ interface EditorHeaderProps {
   onDateChange: (date: string) => void
   onDownloadAll: () => void
   onStartSynthesis: () => void
-  headerTitle: string
 }
 
 export function EditorHeader({
@@ -16,14 +15,14 @@ export function EditorHeader({
   onDateChange,
   onDownloadAll,
   onStartSynthesis,
-  headerTitle,
 }: EditorHeaderProps) {
   return (
     <header className="bg-neutral-800 px-5 py-3 flex justify-between items-center border-b border-neutral-700 shrink-0">
       <h1
         className="text-base font-medium text-neutral-100"
-        dangerouslySetInnerHTML={{ __html: headerTitle }}
-      />
+      >
+        片段编辑器
+      </h1>
       <div className="flex gap-3 items-center">
         <select
           value={selectedDate}
