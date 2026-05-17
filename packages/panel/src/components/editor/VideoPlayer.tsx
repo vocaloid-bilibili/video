@@ -4,7 +4,7 @@ interface VideoPlayerProps {
   videoUrl: string | null
   isLoading: boolean
   loadingText: string
-  onLoadedMetadata?: (duration: number) => void
+  onLoadedMetadata?: (duration: number, url: string) => void
   videoRef: React.RefObject<HTMLVideoElement | null>
 }
 
@@ -16,7 +16,7 @@ export function VideoPlayer({ videoUrl, isLoading, loadingText, onLoadedMetadata
           ref={videoRef}
           src={videoUrl}
           className="max-w-full max-h-full"
-          onLoadedMetadata={(e) => onLoadedMetadata?.(e.currentTarget.duration)}
+          onLoadedMetadata={(e) => onLoadedMetadata?.(e.currentTarget.duration, videoUrl)}
         />
       )}
       {isLoading && (
