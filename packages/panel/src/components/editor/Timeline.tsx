@@ -1,5 +1,34 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
 import { formatTime } from "../../utils"
+
+/**
+ * 根据HTML元素的宽度实时渲染
+ * @param ref HTML元素
+ * @returns HTML元素的宽度
+ */
+function useElementWidth(ref: RefObject<HTMLElement>) {
+  const [width, setWidth] = useState(0)
+  useEffect(() => {
+    if (!ref.current) return
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(entry.contentRect.width)
+    })
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [ref])
+  return width
+}
+
+// 刻度规则
+const getTickInterval = (z: number) => {
+  if (z >= 8) return 2
+  if (z >= 6) return 5
+  if (z >= 4) return 10
+  if (z >= 2) return 15
+  return 30
+}
+
+type DragTarget = "start" | "end" | null
 
 // Timeline - 时间线组件
 interface TimelineProps {
@@ -22,101 +51,107 @@ export function Timeline({
   zoomLevel,
   onZoomChange,
   onSeek,
-  onRangeChange,
-  videoRef,
+  onRangeChange,  // 使用这个函数就会自动保存，所以我们是等结束了再用
 }: TimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState<"start" | "end" | null>(null)
-  const [wrapperWidth, setWrapperWidth] = useState(600)
+  const [dragTarget, setDragTarget] = useState<DragTarget>(null)
 
-  // 更新 wrapper 宽度
+  // 内部实际使用的开始时间和结束时间，拖动结束后上传
+  const [innerStartTime, setInnerStartTime] = useState<number>(startTime)
+  const [innerEndTime, setInnerEndTime] = useState<number>(endTime)
   useEffect(() => {
-    const updateWidth = () => {
-      if (wrapperRef.current) {
-        setWrapperWidth(wrapperRef.current.clientWidth)
-      }
-    }
-    updateWidth()
-    window.addEventListener("resize", updateWidth)
-    return () => window.removeEventListener("resize", updateWidth)
-  }, [])
+    setInnerStartTime(startTime)
+  }, [startTime])
+  useEffect(() => {
+    setInnerEndTime(endTime)
+  }, [endTime])
 
-  const timelineWidth = wrapperWidth * zoomLevel
+  // 监听时间轴宽度
+  const wrapperWidth = useElementWidth(wrapperRef)
+  const timelineWidth = wrapperWidth * zoomLevel - 1   // -1是为了避免小数影响，导致出现滚动条
 
   // 生成刻度
-  const getTickInterval = () => {
-    if (zoomLevel >= 8) return 2
-    if (zoomLevel >= 6) return 5
-    if (zoomLevel >= 4) return 10
-    if (zoomLevel >= 2) return 15
-    return 30
-  }
-
   const ticks: { time: number; percent: number }[] = []
-  const interval = getTickInterval()
+  const interval = getTickInterval(zoomLevel)
   for (let t = 0; t <= duration; t += interval) {
     ticks.push({ time: t, percent: (t / duration) * 100 })
   }
 
-  // 时间更新回调
+  // 跟视频播放进度相关的内容
+  const playhead = document.getElementById("playhead")
+  if (playhead) {
+    playhead.style.left = `${(currentTime / duration) * 100}%`
+  }
+  const currentDisplay = document.getElementById("currentTimeDisplay")
+  if (currentDisplay) {
+    currentDisplay.textContent = formatTime(currentTime)
+  }
+
+  // Ref 不用于 DOM 显示，但是可以长期保存
+  const latestRangeRef = useRef({ start: innerStartTime, end: innerEndTime })
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const handleTimeUpdate = () => {
-      if (duration > 0) {
-        const playhead = document.getElementById("playhead")
-        if (playhead) {
-          playhead.style.left = `${(video.currentTime / duration) * 100}%`
-        }
-        const currentDisplay = document.getElementById("currentTimeDisplay")
-        if (currentDisplay) {
-          currentDisplay.textContent = formatTime(video.currentTime)
-        }
-      }
+    latestRangeRef.current = {
+      start: innerStartTime,
+      end: innerEndTime
     }
+  }, [innerStartTime, innerEndTime])
 
-    video.addEventListener("timeupdate", handleTimeUpdate)
-    return () => video.removeEventListener("timeupdate", handleTimeUpdate)
-  }, [duration, videoRef])
+  // 计算时间线上位置对应时间的公共函数
+  const getTime = useCallback((clientX: number) => {
+    if(!timelineRef.current) return
+
+    const rect = timelineRef.current.getBoundingClientRect()
+    let pct = (clientX - rect.left) / rect.width  // 时间占比
+    pct = Math.max(0, Math.min(1, pct))  // 避免脱离范围
+    const time = pct * duration
+
+    return time
+  }, [duration])
+
+  // 更新拖动位置时的公共函数，更新内部片段
+  const updateDragPosition = useCallback((clientX: number, dragTarget: DragTarget) =>{
+    if(!timelineRef.current || !dragTarget) return
+
+    const time = getTime(clientX)
+
+    if (dragTarget === "start") {
+      const newStart = Math.max(0, Math.min(time, duration - 15)) // 一般不会把开始时间点设置成太后面
+      // 拖头时确保片段长度不变
+      const clipDuration = endTime - startTime
+      let newEnd = newStart + clipDuration
+      if (newEnd > duration) {
+        newEnd = duration
+      }
+      setInnerStartTime(newStart)
+      setInnerEndTime(newEnd)
+    } else {
+      // 时长会变
+      const newEnd = Math.max(startTime + 5, Math.min(time, duration))
+      setInnerEndTime(newEnd)
+    }
+  }, [startTime, endTime, getTime, duration])
 
   // 拖拽手柄
   useEffect(() => {
-    if (!isDragging) return
+    if (!dragTarget) return
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!timelineRef.current) return
-      const rect = timelineRef.current.getBoundingClientRect()
-      let pct = (e.clientX - rect.left) / rect.width
-      pct = Math.max(0, Math.min(1, pct))
-      const time = pct * duration
-
-      if (isDragging === "start") {
-        const newStart = Math.max(0, Math.min(time, duration - 5))
-        const clipDuration = endTime - startTime
-        let newEnd = newStart + clipDuration
-        if (newEnd > duration) {
-          newEnd = duration
-        }
-        onRangeChange(newStart, newEnd)
-      } else {
-        const newEnd = Math.max(startTime + 5, Math.min(time, duration))
-        onRangeChange(startTime, newEnd)
-      }
+    const handlePointerMove = (e: PointerEvent) => {
+      updateDragPosition(e.clientX, dragTarget)
     }
 
-    const handleMouseUp = () => {
-      setIsDragging(null)
+    const handlePointerUp = () => {
+      setDragTarget(null)
+      onRangeChange(latestRangeRef.current.start, latestRangeRef.current.end)
     }
 
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
+    document.addEventListener("pointermove", handlePointerMove)
+    document.addEventListener("pointerup", handlePointerUp)
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
+      document.removeEventListener("pointermove", handlePointerMove)
+      document.removeEventListener("pointerup", handlePointerUp)
     }
-  }, [isDragging, duration, startTime, endTime, onRangeChange])
+  }, [dragTarget, updateDragPosition, onRangeChange])
 
   // 滚轮缩放
   useEffect(() => {
@@ -147,8 +182,10 @@ export function Timeline({
 
       if (newZoom !== zoomLevel) {
         onZoomChange(newZoom)
+        // 等待 DOM 更新后再调整滚动位置
         requestAnimationFrame(() => {
-          const newMouseXInTimeline = wrapper.scrollWidth * mouseRatio
+          const newScrollWidth = wrapper.scrollWidth
+          const newMouseXInTimeline = newScrollWidth * mouseRatio
           wrapper.scrollLeft = Math.max(0, newMouseXInTimeline - mouseXInWrapper)
         })
       }
@@ -158,20 +195,32 @@ export function Timeline({
     return () => wrapper.removeEventListener("wheel", handleWheel)
   }, [zoomLevel, onZoomChange])
 
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest(".timeline-handle")) return
-    if (!timelineRef.current) return
-    const rect = timelineRef.current.getBoundingClientRect()
-    const pct = (e.clientX - rect.left) / rect.width
-    const time = Math.max(0, Math.min(pct * duration, duration))
-    onSeek(time)
-    if (videoRef.current) {
-      videoRef.current.currentTime = time
+  // 移动进度
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // 捕获当前 pointer
+    e.currentTarget.setPointerCapture(e.pointerId)
+
+    // 点击时立即更新
+    onSeek(getTime(e.clientX))
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    // 只有当前元素真正捕获了这个 pointer 时才处理
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
+
+    onSeek(getTime(e.clientX))
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    // 主动释放（通常浏览器也会自动释放）
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
     }
   }
 
-  const startPercent = (startTime / duration) * 100
-  const endPercent = (endTime / duration) * 100
+
+  const startPercent = (innerStartTime / duration) * 100
+  const endPercent = (innerEndTime / duration) * 100
   const currentPercent = (currentTime / duration) * 100
 
   return (
@@ -208,48 +257,50 @@ export function Timeline({
           ref={timelineRef}
           className="relative h-[100px] bg-neutral-700 rounded cursor-pointer"
           style={{ width: `${timelineWidth}px` }}
-          onClick={handleTimelineClick}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
         >
-          {/* 选中区域 */}
+          {/* 选中区域 - 底层 */}
           <div
-            className="absolute top-0 bottom-0 bg-blue-500/30 pointer-events-none"
+            className="absolute top-0 bottom-0 bg-blue-500/30 pointer-events-none z-0"
             style={{ left: `${startPercent}%`, width: `${endPercent - startPercent}%` }}
           />
-          {/* 播放头 */}
-          <div
-            id="playhead"
-            className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-10"
-            style={{ left: `${currentPercent}%` }}
-          >
-            <div className="absolute -top-1.5 -left-[5px] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-red-500" />
-          </div>
           {/* 起点手柄 */}
           <div
-            className="timeline-handle start absolute top-0 bottom-0 w-4 cursor-ew-resize z-10 flex items-center"
+            className="timeline-handle start absolute top-0 bottom-0 w-4 cursor-ew-resize z-20 flex items-center"
             style={{ left: `${startPercent}%` }}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation()
-              setIsDragging("start")
+              setDragTarget("start")
             }}
           >
-            <div className="absolute top-0 bottom-0 left-0 w-0.5 bg-blue-400" />
-            <div className="relative z-10 text-[10px] text-blue-400 bg-neutral-800 px-1.5 py-1 rounded -translate-y-full -mt-1 font-mono whitespace-nowrap">
-              {formatTime(startTime, false)}
+            <div className="absolute top-0 bottom-0 left-0 w-0.5 bg-blue-400 z-20" />
+            <div className="relative z-20 text-[10px] text-blue-400 bg-neutral-800 px-1.5 py-1 rounded -translate-y-full -mt-1 font-mono whitespace-nowrap">
+              {formatTime(innerStartTime, false)}
             </div>
           </div>
           {/* 终点手柄 */}
           <div
-            className="timeline-handle end absolute top-0 bottom-0 w-4 cursor-ew-resize z-10 flex items-center justify-end"
+            className="timeline-handle end absolute top-0 bottom-0 w-4 cursor-ew-resize z-20 flex items-center justify-end"
             style={{ left: `calc(${endPercent}% - 16px)` }}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation()
-              setIsDragging("end")
+              setDragTarget("end")
             }}
           >
-            <div className="absolute top-0 bottom-0 right-0 w-0.5 bg-blue-400" />
-            <div className="relative z-10 text-[10px] text-blue-400 bg-neutral-800 px-1.5 py-1 rounded -translate-y-full -mt-1 font-mono whitespace-nowrap">
-              {formatTime(endTime, false)}
+            <div className="absolute top-0 bottom-0 right-0 w-0.5 bg-blue-400 z-20" />
+            <div className="relative z-20 text-[10px] text-blue-400 bg-neutral-800 px-1.5 py-1 rounded -translate-y-full -mt-1 font-mono whitespace-nowrap">
+              {formatTime(innerEndTime, false)}
             </div>
+          </div>
+          {/* 播放头 - 顶层 */}
+          <div
+            id="playhead"
+            className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-30"
+            style={{ left: `${currentPercent}%` }}
+          >
+            <div className="absolute -top-1.5 -left-[5px] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-red-500" />
           </div>
           {/* 刻度 */}
           <div className="absolute bottom-0 left-0 right-0 h-5 pointer-events-none">

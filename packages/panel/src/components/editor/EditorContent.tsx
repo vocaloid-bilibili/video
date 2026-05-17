@@ -211,6 +211,7 @@ export function EditorContent({
   const handleSeek = useCallback((time: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = time
+      setVideoState((prev) => ({ ...prev, currentTime: time }))
     }
   }, [])
 
@@ -247,7 +248,6 @@ export function EditorContent({
     if (song && onSongUpdate) {
       onSongUpdate(song.bvid, { startTime, endTime, duration })
     }
-    toast.success("保存成功")
     return true
   }, [song, startTime, endTime, onSongUpdate])
 
