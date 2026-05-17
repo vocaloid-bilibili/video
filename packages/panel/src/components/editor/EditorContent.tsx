@@ -6,6 +6,7 @@ import { EditorControls } from "./EditorControls"
 import { SongDetailBar } from "./SongDetailBar"
 import { Timeline } from "./Timeline"
 import { VideoPlayer } from "./VideoPlayer"
+import './EditorContent.css'
 
 // HelpText - 帮助文本
 function HelpText() {
@@ -13,15 +14,15 @@ function HelpText() {
     <div className="px-5 py-2 bg-neutral-800/80 border-t border-neutral-700 shrink-0">
       <span className="text-[10px] text-neutral-500">
         快捷键:{" "}
-        <kbd className="inline-block px-1.5 py-0.5 bg-neutral-700 border border-neutral-600 rounded text-[10px] font-mono mx-0.5">I</kbd>
+        <kbd>I</kbd>
         设起点 |{" "}
-        <kbd className="inline-block px-1.5 py-0.5 bg-neutral-700 border border-neutral-600 rounded text-[10px] font-mono mx-0.5">O</kbd>
+        <kbd>O</kbd>
         设终点 |{" "}
-        <kbd className="inline-block px-1.5 py-0.5 bg-neutral-700 border border-neutral-600 rounded text-[10px] font-mono mx-0.5">Space</kbd>
+        <kbd>Space</kbd>
         播放 |{" "}
-        <kbd className="inline-block px-1.5 py-0.5 bg-neutral-700 border border-neutral-600 rounded text-[10px] font-mono mx-0.5">P</kbd>
+        <kbd>P</kbd>
         预览 |{" "}
-        <kbd className="inline-block px-1.5 py-0.5 bg-neutral-700 border border-neutral-600 rounded text-[10px] font-mono mx-0.5">Ctrl+S</kbd>
+        <kbd>Ctrl+S</kbd>
         保存 | 滚轮缩放 | Shift+滚轮平移 | 左手柄：定长移动 | 右手柄：改变时长
       </span>
     </div>

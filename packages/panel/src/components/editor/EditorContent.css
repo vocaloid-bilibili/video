@@ -1,0 +1,7 @@
+@reference "../../index.css";
+
+@layer utility {
+  kbd {
+    @apply inline-block px-1.5 py-0.5 bg-neutral-700 border border-neutral-600 rounded text-[10px] font-mono mx-0.5
+  }
+}
