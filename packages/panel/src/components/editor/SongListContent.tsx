@@ -43,19 +43,9 @@ export function SongListContent({ songs, selectedBvid, onSelectSong }: SongListC
                 </span>
               </div>
               <div className="text-[11px] text-neutral-500 mt-0.5 truncate">
-                <span
-                  className="font-mono text-[10px] hover:text-blue-400 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigator.clipboard.writeText(s.bvid)
-                    toast.success(`已复制 ${s.bvid}`)
-                  }}
-                  title="点击复制"
-                >
-                  {s.bvid}
-                </span>
+                {s.author}
                 {" · "}
-                {s.author || s.vocal || s.uploader || "Unknown"}
+                {s.vocal}
               </div>
             </div>
             <div

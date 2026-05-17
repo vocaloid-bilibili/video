@@ -195,7 +195,7 @@ export function Timeline({
     return () => wrapper.removeEventListener("wheel", handleWheel)
   }, [zoomLevel, onZoomChange])
 
-  // 移动进度
+  // 移动进度，使用新版setPointerCapture，无需监听document
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // 捕获当前 pointer
     e.currentTarget.setPointerCapture(e.pointerId)
