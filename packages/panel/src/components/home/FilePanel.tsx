@@ -13,21 +13,21 @@ interface FilePanelProps {
 
 export function FilePanel({ files, loading, onRefresh, onUpload, onMerge, onStart }: FilePanelProps) {
   return (
-    <div className="col-files panel">
-      <div className="panel-header">
+    <div className="w-[300px] shrink-0 bg-card border border-border flex flex-col overflow-hidden rounded-lg">
+      <div className="px-4 py-3 border-b border-border text-[13px] font-semibold text-card-foreground bg-muted/50 flex justify-between items-center shrink-0">
         <span>数据文件</span>
-        <button className="icon-btn" onClick={onRefresh} title="刷新">
+        <button className="bg-none border-none p-1.5 cursor-pointer text-muted-foreground rounded hover:text-foreground hover:bg-accent transition-colors text-sm" onClick={onRefresh} title="刷新">
           <RefreshCw size={14} />
         </button>
       </div>
-      <div className="panel-body">
+      <div className="flex-1 overflow-y-auto p-3">
         <FileDropzone onUpload={onUpload} />
 
         <div id="fileList">
           {loading ? (
-            <div className="empty">加载中...</div>
+            <div className="text-center py-10 text-muted-foreground text-xs">加载中...</div>
           ) : files.length === 0 ? (
-            <div className="empty">暂无数据文件</div>
+            <div className="text-center py-10 text-muted-foreground text-xs">暂无数据文件</div>
           ) : (
             files.map((file) => (
               <FileItem key={file.date} file={file} onMerge={onMerge} onStart={onStart} />

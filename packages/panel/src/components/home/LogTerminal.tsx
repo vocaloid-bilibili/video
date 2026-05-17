@@ -11,6 +11,14 @@ interface LogTerminalProps {
   onClear: () => void
 }
 
+const logColors = {
+  error: "text-red-400",
+  success: "text-green-400",
+  skip: "text-yellow-400",
+  info: "text-blue-300",
+  default: "text-foreground",
+}
+
 export function LogTerminal({ logs, onClear }: LogTerminalProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -20,35 +28,29 @@ export function LogTerminal({ logs, onClear }: LogTerminalProps) {
     }
   }, [logs])
 
-  const getLogClass = (type: LogEntry["type"]) => {
-    switch (type) {
-      case "error":
-        return "log-error"
-      case "success":
-        return "log-success"
-      case "skip":
-        return "log-skip"
-      case "info":
-        return "log-info"
-      default:
-        return ""
-    }
-  }
-
   return (
-    <div className="panel terminal">
-      <div className="terminal-header">
-        <span>LOG</span>
-        <button onClick={onClear}>清空</button>
+    <div className="flex-1 bg-zinc-900 flex flex-col overflow-hidden rounded-lg">
+      <div className="px-3.5 py-2.5 bg-neutral-800 border-b border-zinc-700 flex justify-between items-center shrink-0">
+        <span className="text-[11px] text-muted-foreground font-mono">LOG</span>
+        <button
+          onClick={onClear}
+          className="bg-none border-none text-muted-foreground text-[10px] cursor-pointer uppercase px-2 py-1 rounded hover:text-foreground hover:bg-zinc-700 transition-colors"
+        >
+          清空
+        </button>
       </div>
-      <div className="terminal-body" ref={containerRef}>
+      <div
+        className="flex-1 overflow-y-auto p-3 font-mono text-[11px] leading-relaxed text-zinc-300"
+        ref={containerRef}
+        style={{ scrollbarWidth: "thin", scrollbarColor: "#555 transparent" }}
+      >
         {logs.length === 0 ? (
-          <div style={{ color: "#666" }}>等待输出...</div>
+          <div className="text-muted-foreground">等待输出...</div>
         ) : (
           logs.map((log, index) => (
-            <div key={index} className="log-line">
-              <span className="log-time">{log.time}</span>
-              <span className={getLogClass(log.type)}>{log.message}</span>
+            <div key={index} className="mb-0.5">
+              <span className="text-zinc-500 mr-2">{log.time}</span>
+              <span className={logColors[log.type]}>{log.message}</span>
             </div>
           ))
         )}

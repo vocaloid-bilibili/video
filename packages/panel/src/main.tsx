@@ -15,3 +15,11 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+const media = window.matchMedia("(prefers-color-scheme: dark)");
+function updateTheme() {
+  if (media.matches) document.documentElement.classList.add("dark");
+  else document.documentElement.classList.remove("dark");
+}
+updateTheme();
+media.addEventListener("change", updateTheme);

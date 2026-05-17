@@ -14,15 +14,15 @@ import { useEffect, useState, useCallback } from "react"
 import { flushSync } from "react-dom"
 import { toast } from "sonner"
 import { api } from "../api"
-import type { FileInfo, StatusInfo } from "../api"
-import { FilePanel } from "../components/FilePanel"
-import { SegmentPanel } from "../components/SegmentPanel"
-import type { StatusType } from "../components/StatusCard"
-import { StatusCard } from "../components/StatusCard"
-import type { LogEntry } from "../components/LogTerminal"
-import { LogTerminal, parseLog } from "../components/LogTerminal"
-import { RepairDialog } from "../components/RepairDialog"
-import "./HomePage.css"
+import type { StatusInfo } from "../api"
+import type { FileInfo } from "../types/editor"
+import { FilePanel } from "../components/home/FilePanel"
+import { SegmentPanel } from "../components/home/SegmentPanel"
+import type { StatusType } from "../components/home/StatusCard"
+import { StatusCard } from "../components/home/StatusCard"
+import type { LogEntry } from "../components/home/LogTerminal"
+import { LogTerminal, parseLog } from "../components/home/LogTerminal"
+import { RepairDialog } from "../components/home/RepairDialog"
 
 export default function HomePage() {
   // ==================== 状态定义 ====================
@@ -239,15 +239,15 @@ export default function HomePage() {
   return (
     <>
       {/* 页面头部 */}
-      <header>
-        <h1>排行榜合成控制台</h1>
-        <div className="status-indicator">
-          <div className="status-dot" />
+      <header className="flex items-center justify-between h-12 px-5 border-b border-border bg-background shrink-0">
+        <h1 className="text-[15px] font-semibold">排行榜合成控制台</h1>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="w-2 h-2 rounded-full bg-green-500" />
           <span>在线</span>
         </div>
       </header>
 
-      <main>
+      <main className="flex-1 overflow-hidden p-4 gap-4 flex">
         {/* 文件面板：展示文件列表，支持上传、刷新、合并、启动编辑 */}
         <FilePanel
           files={files}
@@ -270,7 +270,7 @@ export default function HomePage() {
         />
 
         {/* 右侧状态区域：状态卡片 + 日志终端 */}
-        <div className="col-status">
+        <div className="flex flex-col gap-4 flex-1">
           <StatusCard
             status={status.status as StatusType}
             targetDate={status.targetDate}

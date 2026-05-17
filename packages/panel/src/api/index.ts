@@ -1,12 +1,7 @@
+import type { FileInfo } from "../types/editor"
+
 const BASE_URL = "http://localhost:3002/api"
 
-export interface FileInfo {
-  date: string
-  boardType: string
-  boardTypeName: string
-  hasConfig: boolean
-  hasVideo: boolean
-}
 
 export interface StatusInfo {
   status: "idle" | "processing" | "completed" | "error"
@@ -81,6 +76,6 @@ export const api = {
   },
 
   navigateToEditor(date: string): void {
-    location.href = `/editor.html?date=${date}`
+    location.href = `/editor?date=${date}`
   },
 }
