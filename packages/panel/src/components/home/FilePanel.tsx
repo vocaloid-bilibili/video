@@ -2,6 +2,7 @@ import { FileItem } from "./FileItem"
 import type { FileInfo } from "../../types/editor"
 import { FileDropzone } from "./FileDropzone"
 import { RefreshCw } from "lucide-react"
+import { cn } from "../../utils"
 
 interface FilePanelProps {
   files: FileInfo[]
@@ -10,11 +11,12 @@ interface FilePanelProps {
   onUpload: (files: File[]) => Promise<void>
   onMerge: (date: string) => void
   onStart: (date: string) => void
+  className: string
 }
 
-export function FilePanel({ files, loading, onRefresh, onUpload, onMerge, onStart }: FilePanelProps) {
+export function FilePanel({ files, loading, onRefresh, onUpload, onMerge, onStart, className }: FilePanelProps) {
   return (
-    <div className="w-[300px] shrink-0 bg-card border border-border flex flex-col overflow-hidden rounded-lg">
+    <div className={cn("bg-card border border-border flex flex-col overflow-hidden rounded-lg", className)}>
       <div className="px-4 py-3 border-b border-border text-[13px] font-semibold text-card-foreground bg-muted/50 flex justify-between items-center shrink-0">
         <span>数据文件</span>
         <button className="bg-none border-none p-1.5 cursor-pointer text-muted-foreground rounded hover:text-foreground hover:bg-accent transition-colors text-sm" onClick={onRefresh} title="刷新">

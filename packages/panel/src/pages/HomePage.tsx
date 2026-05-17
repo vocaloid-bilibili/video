@@ -237,7 +237,7 @@ export default function HomePage() {
   // ==================== 渲染 ====================
 
   return (
-    <>
+    <div className="h-screen w-screen flex flex-col">
       {/* 页面头部 */}
       <header className="flex items-center justify-between h-12 px-5 border-b border-border bg-background shrink-0">
         <h1 className="text-[15px] font-semibold">排行榜合成控制台</h1>
@@ -249,28 +249,33 @@ export default function HomePage() {
 
       <main className="flex-1 overflow-hidden p-4 gap-4 flex">
         {/* 文件面板：展示文件列表，支持上传、刷新、合并、启动编辑 */}
-        <FilePanel
-          files={files}
-          loading={filesLoading}
-          onRefresh={loadFiles}
-          onUpload={uploadFiles}
-          onMerge={handleMerge}
-          onStart={handleStart}
-        />
+        <div className="flex flex-col gap-6 md:flex-row">
+          <FilePanel
+            className="flex-1"
+            files={files}
+            loading={filesLoading}
+            onRefresh={loadFiles}
+            onUpload={uploadFiles}
+            onMerge={handleMerge}
+            onStart={handleStart}
+          />
 
-        {/* 片段面板：按日期筛选片段，支持下载和修复 */}
-        <SegmentPanel
-          files={files}
-          selectedDate={selectedDate}
-          segments={segments}
-          loading={segmentsLoading}
-          onDateChange={handleDateChange}
-          onDownload={handleDownload}
-          onRepair={handleRepair}
-        />
+          {/* 片段面板：按日期筛选片段，支持下载和修复 */}
+          <SegmentPanel
+            className="flex-1"
+            files={files}
+            selectedDate={selectedDate}
+            segments={segments}
+            loading={segmentsLoading}
+            onDateChange={handleDateChange}
+            onDownload={handleDownload}
+            onRepair={handleRepair}
+          />
+        </div>
+
 
         {/* 右侧状态区域：状态卡片 + 日志终端 */}
-        <div className="flex flex-col gap-4 flex-1">
+        <div className="min-w-[300px] flex flex-col gap-4 flex-1">
           <StatusCard
             status={status.status as StatusType}
             targetDate={status.targetDate}
@@ -289,6 +294,6 @@ export default function HomePage() {
         onClose={() => setRepairDialogOpen(false)}
         onConfirm={confirmRepair}
       />
-    </>
+    </div>
   )
 }

@@ -14,6 +14,14 @@ function HelpText() {
     <div className="px-5 py-2 bg-neutral-800/80 border-t border-neutral-700 shrink-0">
       <span className="text-[10px] text-neutral-500">
         快捷键:{" "}
+        <kbd>←</kbd>
+        后退1秒 |{" "}
+        <kbd>→</kbd>
+        前进1秒 |{" "}
+        <kbd>Enter</kbd>
+        下一首 |{" "}
+        <kbd>Shift+Enter</kbd>
+        上一首 |{" "}
         <kbd>I</kbd>
         设起点 |{" "}
         <kbd>O</kbd>
@@ -294,6 +302,22 @@ export function EditorContent({
       }
 
       switch (e.key.toLowerCase()) {
+        case "arrowleft":
+          e.preventDefault()
+          if (video && videoDuration > 0) {
+            const newTime = Math.max(0, video.currentTime - 1)
+            video.currentTime = newTime
+            setCurrentTime(newTime)
+          }
+          break
+        case "arrowright":
+          e.preventDefault()
+          if (video && videoDuration > 0) {
+            const newTime = Math.min(videoDuration, video.currentTime + 1)
+            video.currentTime = newTime
+            setCurrentTime(newTime)
+          }
+          break
         case "i":
           e.preventDefault()
           handleSetStart()

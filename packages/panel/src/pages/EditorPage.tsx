@@ -65,6 +65,33 @@ export default function EditorPage() {
     setSelectedSong(song)
   }, [songs])
 
+  // 获取所有歌曲列表（用于切换上一首/下一首）
+  const allSongsList = Object.values(songs).flat()
+
+  // 选择上一首
+  const handleSelectPrev = useCallback(() => {
+    if (allSongsList.length === 0) return
+    const currentIndex = allSongsList.findIndex((s) => s.bvid === selectedSong?.bvid)
+    if (currentIndex <= 0) {
+      toast.info("已经是第一首")
+      return
+    }
+    const prevSong = allSongsList[currentIndex - 1]
+    setSelectedSong(prevSong)
+  }, [allSongsList, selectedSong])
+
+  // 选择下一首
+  const handleSelectNext = useCallback(() => {
+    if (allSongsList.length === 0) return
+    const currentIndex = allSongsList.findIndex((s) => s.bvid === selectedSong?.bvid)
+    if (currentIndex === -1 || currentIndex >= allSongsList.length - 1) {
+      toast.info("已经是最后一首")
+      return
+    }
+    const nextSong = allSongsList[currentIndex + 1]
+    setSelectedSong(nextSong)
+  }, [allSongsList, selectedSong])
+
   // 视频加载完成回调
   const handleVideoLoad = useCallback(async (bvid: string, _duration: number, url: string) => {
     // 更新列表项状态
@@ -200,6 +227,28 @@ export default function EditorPage() {
       })
     }
   }, [handleDateChange])
+
+  // 键盘快捷键 - 切换上一首/下一首
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 忽略输入框中的按键
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+
+      // Enter: 切换下一首
+      if (e.key === "Enter") {
+        if (e.shiftKey) {
+          e.preventDefault()
+          handleSelectPrev()
+        } else {
+          e.preventDefault()
+          handleSelectNext()
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [handleSelectPrev, handleSelectNext])
 
   // 计算进度
   const allSongs = Object.values(songs).flat()

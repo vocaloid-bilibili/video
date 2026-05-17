@@ -1,3 +1,5 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 const CARD_COMPONENT_LABELS: Record<string, string> = {
   achievementCard: "成就达成展示",
@@ -15,4 +17,8 @@ export function formatTime(seconds: number, showMs = true): string {
 
 export function getGroupLabel(cardComponent: string): string {
   return CARD_COMPONENT_LABELS[cardComponent] || cardComponent
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }

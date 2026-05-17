@@ -159,6 +159,7 @@ export interface DerivedValues {
   subRankTitleFull: string;
 }
 
+
 // 默认段落顺序（周刊标准顺序）
 const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
@@ -245,6 +246,11 @@ const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
   { type: "songRank", config: { cardComponent: "SpecialCard", showTitle: false, dataField: "total_rank_top20", rankCount: 20 } },
 ];
 
+/**
+ * 这些是刊物默认的配置。
+ * 你可以在config文件中填写config字段，会覆盖这里面的字段。
+ * 注意，一个字段会被完整覆盖，比如你想要更改segmentOrder就要填写完整的segmentOrder。
+ */
 export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
   weekly: {
     boardType: "weekly",

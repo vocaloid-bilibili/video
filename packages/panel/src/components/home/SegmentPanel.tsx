@@ -1,4 +1,5 @@
 import type { FileInfo } from "../../api"
+import { cn } from "../../utils"
 
 interface SegmentPanelProps {
   files: FileInfo[]
@@ -8,6 +9,7 @@ interface SegmentPanelProps {
   onDateChange: (date: string) => void
   onDownload: (filename: string) => void
   onRepair: (filename: string) => void
+  className: string
 }
 
 export function SegmentPanel({
@@ -17,9 +19,10 @@ export function SegmentPanel({
   loading,
   onDateChange,
   onRepair,
+  className
 }: SegmentPanelProps) {
   return (
-    <div className="w-[340px] shrink-0 bg-card border border-border flex flex-col overflow-hidden rounded-lg">
+    <div className={cn("bg-card border border-border flex flex-col overflow-hidden rounded-lg", className)}>
       <div className="px-4 py-3 border-b border-border text-[13px] font-semibold text-card-foreground bg-muted/50 flex justify-between items-center shrink-0">
         <span>分片管理</span>
       </div>
