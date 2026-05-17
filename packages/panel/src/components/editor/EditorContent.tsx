@@ -28,35 +28,6 @@ function HelpText() {
   )
 }
 
-// 视频编辑状态
-interface VideoEditState {
-  videoUrl: string | null
-  isLoading: boolean
-  loadingText: string
-  videoDuration: number
-  currentTime: number
-  startTime: number
-  endTime: number
-  zoomLevel: number
-  isPreviewMode: boolean
-  previewEndTime: number
-  clipDuration: number
-}
-
-const defaultVideoState: VideoEditState = {
-  videoUrl: null,
-  isLoading: false,
-  loadingText: "加载中...",
-  videoDuration: 0,
-  currentTime: 0,
-  startTime: 0,
-  endTime: 20,
-  zoomLevel: 1,
-  isPreviewMode: false,
-  previewEndTime: 0,
-  clipDuration: 20,
-}
-
 // EditorContent - 编辑器内容（右侧）
 interface EditorContentProps {
   song: Song | null
@@ -72,36 +43,44 @@ export function EditorContent({
   const videoRef = useRef<HTMLVideoElement>(null)
   const lastSongRef = useRef<Song | null>(null)
 
-  // 视频相关状态 - 使用单一状态对象
-  const [videoState, setVideoState] = useState<VideoEditState>(defaultVideoState)
+  // 视频源状态
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingText, setLoadingText] = useState("加载中...")
+  const [videoDuration, setVideoDuration] = useState(0)
 
-  // 派生状态
-  const {
-    videoUrl, isLoading, loadingText, videoDuration, currentTime,
-    startTime, endTime, zoomLevel, isPreviewMode,
-  } = videoState
+  // 时间范围状态
+  const [startTime, setStartTime] = useState(0)
+  const [endTime, setEndTime] = useState(20)
+  const [clipDuration, setClipDuration] = useState(20)
+
+  // 播放状态
+  const [currentTime, setCurrentTime] = useState(0)
+
+  // UI 状态
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
+  const [previewEndTime, setPreviewEndTime] = useState(0)
 
   // 初始化视频状态
   const initVideoState = useCallback((newSong: Song | null) => {
-    if (!newSong) {
-      setVideoState(defaultVideoState)
-      return
-    }
+    if (!newSong) return
+    
 
-    setVideoState((prev) => ({
-      ...prev,
-      isLoading: !newSong._videoUrl,
-      loadingText: newSong._videoUrl ? "加载中..." : "点击加载视频",
-      videoUrl: newSong._videoUrl || null,
-      startTime: newSong._clip?.startTime || 0,
-      endTime: (newSong._clip?.startTime || 0) + (newSong._clip?.duration || 20),
-      clipDuration: newSong._clip?.duration || 20,
-      zoomLevel: 1,
-      isPreviewMode: false,
-      previewEndTime: 0,
-      currentTime: 0,
-      videoDuration: 0,
-    }))
+    const initStart = newSong._clip?.startTime || 0
+    const initDuration = newSong._clip?.duration || 20
+
+    setVideoUrl(newSong._videoUrl || null)
+    setIsLoading(!newSong._videoUrl)
+    setLoadingText(newSong._videoUrl ? "加载中..." : "点击加载视频")
+    setVideoDuration(0)
+    setCurrentTime(initStart)
+    setStartTime(initStart)
+    setEndTime(initStart + initDuration)
+    setClipDuration(initDuration)
+    setZoomLevel(1)
+    setIsPreviewMode(false)
+    setPreviewEndTime(0)
   }, [])
 
   // 歌曲变更时，重置视频状态
@@ -114,104 +93,90 @@ export function EditorContent({
 
   // 处理视频加载完成
   const handleVideoLoaded = useCallback((duration: number, url: string) => {
-    setVideoState((prev) => ({
-      ...prev,
-      videoDuration: duration,
-      videoUrl: url,
-      isLoading: false,
-    }))
+    setVideoDuration(duration)
+    setVideoUrl(url)
+    setIsLoading(false)
+
+    // 视频加载完成后，跳转到 currentTime 位置
+    if (videoRef.current) {
+      videoRef.current.currentTime = startTime
+      setCurrentTime(startTime)
+    }
+
     if (song && onVideoLoad) {
       onVideoLoad(song.bvid, duration, url)
     }
-  }, [song, onVideoLoad])
+  }, [song, onVideoLoad, startTime])
 
   // 处理开始时间变更
   const handleStartTimeChange = useCallback((time: number) => {
-    setVideoState((prev) => {
-      const validTime = Math.max(0, Math.min(time, prev.videoDuration - 5))
-      const newEnd = Math.max(validTime + 5, Math.min(prev.endTime, prev.videoDuration))
-      return {
-        ...prev,
-        startTime: validTime,
-        endTime: newEnd,
-        clipDuration: newEnd - validTime,
-      }
-    })
-  }, [])
+    const validTime = Math.max(0, Math.min(time, videoDuration - 5))
+    const newEnd = Math.max(validTime + 5, Math.min(endTime, videoDuration))
+    setStartTime(validTime)
+    setEndTime(newEnd)
+    setClipDuration(newEnd - validTime)
+  }, [videoDuration, endTime])
 
   // 处理结束时间变更
   const handleEndTimeChange = useCallback((time: number) => {
-    setVideoState((prev) => {
-      const newEnd = Math.max(prev.startTime + 5, Math.min(time, prev.videoDuration))
-      return {
-        ...prev,
-        endTime: newEnd,
-        clipDuration: newEnd - prev.startTime,
-      }
-    })
-  }, [])
+    const newEnd = Math.max(startTime + 5, Math.min(time, videoDuration))
+    setEndTime(newEnd)
+    setClipDuration(newEnd - startTime)
+  }, [videoDuration, startTime])
 
   // 设置时长
   const handleSetDuration = useCallback((dur: number) => {
-    setVideoState((prev) => {
-      let newEnd = prev.startTime + dur
-      let newStart = prev.startTime
-      if (newEnd > prev.videoDuration) {
-        newEnd = prev.videoDuration
-        newStart = Math.max(0, newEnd - dur)
-      }
-      return {
-        ...prev,
-        startTime: newStart,
-        endTime: newEnd,
-        clipDuration: dur,
-      }
-    })
-  }, [])
+    let newEnd = startTime + dur
+    let newStart = startTime
+    if (newEnd > videoDuration) {
+      newEnd = videoDuration
+      newStart = Math.max(0, newEnd - dur)
+    }
+    setStartTime(newStart)
+    setEndTime(newEnd)
+    setClipDuration(dur)
+  }, [videoDuration, startTime])
 
   // 设置起点（从当前播放位置）
   const handleSetStart = useCallback(() => {
     const video = videoRef.current
-    if (!video || videoState.videoDuration <= 0) return
+    if (!video || videoDuration <= 0) return
 
     let newStart = video.currentTime
-    let newEnd = newStart + videoState.clipDuration
+    let newEnd = newStart + clipDuration
 
-    if (newEnd > videoState.videoDuration) {
-      newEnd = videoState.videoDuration
-      newStart = Math.max(0, newEnd - videoState.clipDuration)
+    if (newEnd > videoDuration) {
+      newEnd = videoDuration
+      newStart = Math.max(0, newEnd - clipDuration)
     }
 
-    setVideoState((prev) => ({
-      ...prev,
-      startTime: newStart,
-      endTime: newEnd,
-    }))
-    toast.success(`起点: ${formatTime(newStart)} (定长 ${videoState.clipDuration.toFixed(1)}s)`)
-  }, [videoState.videoDuration, videoState.clipDuration])
+    setStartTime(newStart)
+    setEndTime(newEnd)
+    toast.success(`起点: ${formatTime(newStart)} (定长 ${clipDuration.toFixed(1)}s)`)
+  }, [videoDuration, clipDuration])
 
   // 设置终点
   const handleSetEnd = useCallback(() => {
     const video = videoRef.current
-    if (!video || videoState.videoDuration <= 0) return
+    if (!video || videoDuration <= 0) return
 
     const newEnd = video.currentTime
-    let newStart = videoState.startTime
+    let newStart = startTime
 
     if (newEnd <= newStart) {
-      newStart = Math.max(0, newEnd - videoState.clipDuration)
-      setVideoState((prev) => ({ ...prev, startTime: newStart }))
+      newStart = Math.max(0, newEnd - clipDuration)
+      setStartTime(newStart)
     }
 
-    setVideoState((prev) => ({ ...prev, endTime: newEnd }))
+    setEndTime(newEnd)
     toast.success(`终点: ${formatTime(newEnd)}`)
-  }, [videoState.videoDuration, videoState.startTime, videoState.clipDuration])
+  }, [videoDuration, startTime, clipDuration])
 
   // 跳转播放
   const handleSeek = useCallback((time: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = time
-      setVideoState((prev) => ({ ...prev, currentTime: time }))
+      setCurrentTime(time)
     }
   }, [])
 
@@ -220,11 +185,8 @@ export function EditorContent({
     const video = videoRef.current
     if (!video) return
 
-    setVideoState((prev) => ({
-      ...prev,
-      isPreviewMode: true,
-      previewEndTime: prev.endTime,
-    }))
+    setIsPreviewMode(true)
+    setPreviewEndTime(endTime)
     video.currentTime = startTime
     video.play()
     toast(`预览 ${formatTime(startTime, false)} - ${formatTime(endTime, false)}`)
@@ -234,7 +196,7 @@ export function EditorContent({
   const handleStopPreview = useCallback(() => {
     const video = videoRef.current
     if (video) video.pause()
-    setVideoState((prev) => ({ ...prev, isPreviewMode: false }))
+    setIsPreviewMode(false)
   }, [])
 
   // 保存
@@ -251,26 +213,53 @@ export function EditorContent({
     return true
   }, [song, startTime, endTime, onSongUpdate])
 
-  // 视频时间更新
+  // 视频时间更新 - 播放时实时同步 currentTime
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || !videoUrl) return
 
     const handleTimeUpdate = () => {
-      setVideoState((prev) => {
-        const newCurrentTime = video.currentTime
-        if (prev.isPreviewMode && newCurrentTime >= prev.previewEndTime) {
-          video.pause()
-          video.currentTime = prev.previewEndTime
-          return { ...prev, currentTime: prev.previewEndTime, isPreviewMode: false }
-        }
-        return { ...prev, currentTime: newCurrentTime }
-      })
+      setCurrentTime(video.currentTime)
     }
 
     video.addEventListener("timeupdate", handleTimeUpdate)
     return () => video.removeEventListener("timeupdate", handleTimeUpdate)
-  }, [])
+  }, [videoUrl])
+
+  // 预览模式控制 - 播放到终点时自动停止
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !videoUrl) return
+
+    // 使用 ref 跟踪当前预览终点，避免闭包问题
+    const previewEndRef = { current: previewEndTime }
+
+    const handleEnded = () => {
+      if (previewEndRef.current > 0) {
+        video.currentTime = previewEndRef.current
+      }
+      setCurrentTime(previewEndRef.current)
+      setIsPreviewMode(false)
+    }
+
+    const handleTimeUpdate = () => {
+      // 检查是否到达预览终点
+      if (isPreviewMode && video.currentTime >= previewEndTime) {
+        video.pause()
+        video.currentTime = previewEndTime
+        setCurrentTime(previewEndTime)
+        setIsPreviewMode(false)
+      }
+    }
+
+    video.addEventListener("ended", handleEnded)
+    video.addEventListener("timeupdate", handleTimeUpdate)
+
+    return () => {
+      video.removeEventListener("ended", handleEnded)
+      video.removeEventListener("timeupdate", handleTimeUpdate)
+    }
+  }, [videoUrl, isPreviewMode, previewEndTime])
 
   // 键盘快捷键
   useEffect(() => {
@@ -297,7 +286,7 @@ export function EditorContent({
           break
         case "p":
           e.preventDefault()
-          if (videoState.isPreviewMode) handleStopPreview()
+          if (isPreviewMode) handleStopPreview()
           else handlePreview()
           break
         case "s":
@@ -311,7 +300,7 @@ export function EditorContent({
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [videoState.isPreviewMode, handleSetStart, handleSetEnd, handlePreview, handleStopPreview, handleSave])
+  }, [isPreviewMode, handleSetStart, handleSetEnd, handlePreview, handleStopPreview, handleSave])
 
   // 自动保存
   const lastSaveRef = useRef<{ start: number; end: number } | null>(null)
@@ -355,7 +344,7 @@ export function EditorContent({
         endTime={endTime}
         currentTime={currentTime}
         zoomLevel={zoomLevel}
-        onZoomChange={(zoom) => setVideoState((prev) => ({ ...prev, zoomLevel: zoom }))}
+        onZoomChange={setZoomLevel}
         onSeek={handleSeek}
         onRangeChange={(start, end) => {
           handleStartTimeChange(start)

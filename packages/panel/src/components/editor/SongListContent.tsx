@@ -1,4 +1,3 @@
-import { toast } from "sonner"
 import type { Song, SongsData } from "../../types/editor"
 import { getGroupLabel } from "../../utils"
 
