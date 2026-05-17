@@ -6,6 +6,7 @@
 vocabili-video/
 ├── packages/
 │   ├── controller/          # 控制器（后端服务）
+│   ├── panel/               # 控制器（前端）
 │   ├── remotion-engine/     # Remotion视频渲染引擎
 │   └── shared/             # 共享配置和类型定义
 └── storage/                # 存储文件目录
@@ -84,6 +85,9 @@ pnpm run workspace:info
 pnpm start
 # 或
 pnpm run dev:controller
+
+# 启动控制面板（前端）
+pnpm run dev:panel
 
 # 启动 Remotion Studio（开发模式）
 pnpm run dev:remotion
