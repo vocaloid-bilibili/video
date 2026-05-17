@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react"
 import { formatTime } from "../../utils"
 
 /**
@@ -6,14 +6,20 @@ import { formatTime } from "../../utils"
  * @param ref HTML元素
  * @returns HTML元素的宽度
  */
-function useElementWidth(ref: RefObject<HTMLElement>) {
+function useElementWidth<T extends HTMLElement>(ref: RefObject<T | null>) {
   const [width, setWidth] = useState(0)
-  useEffect(() => {
-    if (!ref.current) return
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const updateWidth = () => {
+      setWidth(el.clientWidth)
+    }
+    updateWidth()
     const observer = new ResizeObserver(([entry]) => {
       setWidth(entry.contentRect.width)
     })
-    observer.observe(ref.current)
+    observer.observe(el)
     return () => observer.disconnect()
   }, [ref])
   return width
@@ -68,7 +74,7 @@ export function Timeline({
   }, [endTime])
 
   // 监听时间轴宽度
-  const wrapperWidth = useElementWidth(wrapperRef as RefObject<HTMLElement>)
+  const wrapperWidth = useElementWidth(wrapperRef)
   const timelineWidth = wrapperWidth * zoomLevel - 1   // -1是为了避免小数影响，导致出现滚动条
 
   // 生成刻度
