@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { toast } from "sonner"
-import type { ActiveTab, EditorConfig, FileInfo, Song, SongsData } from "../types/editor"
+import type { EditorConfig, FileInfo, Song, SongsData } from "../types/editor"
 import { formatTime, getGroupLabel } from "../utils"
 import { api } from "../api"
 import { SongListPanel } from "../components/editor/SongListPanel"
 import { EditorHeader } from "../components/editor/EditorHeader"
-import { SongListContent } from "../components/editor/SongListContent"
-import { ConfigPanel } from "../components/editor/ConfigPanel"
 import { EditorContent } from "../components/editor/EditorContent"
 
 // ========== 常量 ==========
@@ -37,7 +35,6 @@ export default function EditorPage() {
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [previewEndTime, setPreviewEndTime] = useState(0)
   const [clipDuration, setClipDuration] = useState(20)
-  const [activeTab, setActiveTab] = useState<ActiveTab>("songs")
   const [issueName, setIssueName] = useState("排行榜")
   const [config, setConfig] = useState<EditorConfig>({
     cover: null,
@@ -434,26 +431,16 @@ export default function EditorPage() {
 
       <main className="flex-1 flex overflow-hidden min-h-0">
         <SongListPanel
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
           clipProgress={clipProgress}
           issueName={issueName}
-        >
-          {activeTab === "songs" ? (
-            <SongListContent
-              songs={songs}
-              selectedBvid={selectedSong?.bvid || null}
-              onSelectSong={handleSelectSong}
-            />
-          ) : (
-            <ConfigPanel
-              config={config}
-              songs={songs}
-              onSave={handleSaveConfig}
-              onConfigChange={(newConfig) => setConfig((prev) => ({ ...prev, ...newConfig }))}
-            />
-          )}
-        </SongListPanel>
+          config={config}
+          onConfigChange={(newConfig) => setConfig((prev) => ({ ...prev, ...newConfig }))}
+          onSave={handleSaveConfig}
+          songs={songs}
+          selectedSong={selectedSong}
+          onSelectSong={handleSelectSong}
+        />
+
 
         <EditorContent
           song={selectedSong}
