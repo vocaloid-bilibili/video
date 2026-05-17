@@ -18,6 +18,10 @@ function HelpText() {
         设起点 |{" "}
         <kbd>O</kbd>
         设终点 |{" "}
+        <kbd>Shift+I</kbd>
+        跳转起点 |{" "}
+        <kbd>Shift+O</kbd>
+        跳转终点 |{" "}
         <kbd>Space</kbd>
         播放 |{" "}
         <kbd>P</kbd>
@@ -269,6 +273,26 @@ export function EditorContent({
 
       const video = videoRef.current
 
+      // Shift+I: 跳转到起点
+      if (e.shiftKey && e.key.toLowerCase() === "i") {
+        e.preventDefault()
+        if (video && videoDuration > 0) {
+          video.currentTime = startTime
+          setCurrentTime(startTime)
+        }
+        return
+      }
+
+      // Shift+O: 跳转到终点
+      if (e.shiftKey && e.key.toLowerCase() === "o") {
+        e.preventDefault()
+        if (video && videoDuration > 0) {
+          video.currentTime = endTime
+          setCurrentTime(endTime)
+        }
+        return
+      }
+
       switch (e.key.toLowerCase()) {
         case "i":
           e.preventDefault()
@@ -301,7 +325,7 @@ export function EditorContent({
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [isPreviewMode, handleSetStart, handleSetEnd, handlePreview, handleStopPreview, handleSave])
+  }, [isPreviewMode, handleSetStart, handleSetEnd, handlePreview, handleStopPreview, handleSave, startTime, endTime, videoDuration])
 
   // 自动保存
   const lastSaveRef = useRef<{ start: number; end: number } | null>(null)
