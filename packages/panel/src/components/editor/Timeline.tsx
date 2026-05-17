@@ -297,7 +297,7 @@ export function Timeline({
             }}
           >
             <div className="absolute top-0 bottom-0 right-0 w-0.5 bg-blue-400 z-20" />
-            <div className="relative z-20 text-[10px] text-blue-400 bg-neutral-800 px-1.5 py-1 rounded -translate-y-full -mt-1 font-mono whitespace-nowrap">
+            <div className="relative z-20 text-[10px] text-blue-400 bg-neutral-800 px-1.5 py-1 rounded translate-y-full -mt-1 font-mono whitespace-nowrap">
               {formatTime(innerEndTime, false)}
             </div>
           </div>

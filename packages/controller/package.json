@@ -1,5 +1,5 @@
 {
-  "name": "vocabili-controller",
+  "name": "controller",
   "version": "1.0.0",
   "description": "Bilibili排行榜视频合成控制器",
   "private": true,
