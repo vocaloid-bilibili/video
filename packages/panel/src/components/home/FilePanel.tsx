@@ -1,4 +1,5 @@
-import { FileItem, type FileInfo } from "./FileItem"
+import { FileItem } from "./FileItem"
+import type { FileInfo } from "../../types/editor"
 import { FileDropzone } from "./FileDropzone"
 import { RefreshCw } from "lucide-react"
 

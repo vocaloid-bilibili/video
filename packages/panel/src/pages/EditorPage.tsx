@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { toast } from "sonner"
 import type { ActiveTab, EditorConfig, FileInfo, Song, SongsData } from "../types/editor"
-import { fetchAPI, formatTime, getGroupLabel } from "../utils"
+import { formatTime, getGroupLabel } from "../utils"
+import { api } from "../api"
 import { SongListPanel } from "../components/editor/SongListPanel"
 import { EditorHeader } from "../components/editor/EditorHeader"
 import { SongListContent } from "../components/editor/SongListContent"
@@ -9,9 +10,6 @@ import { ConfigPanel } from "../components/editor/ConfigPanel"
 import { EditorContent } from "../components/editor/EditorContent"
 
 // ========== 常量 ==========
-const API = "/api"
-
-
 const BOARD_NAME_MAP: Record<string, string> = {
   weekly: "周刊",
   monthly: "月刊",
@@ -54,7 +52,7 @@ export default function EditorPage() {
     if (!date) return
 
     try {
-      const data = await fetchAPI<{ songs: SongsData; boardType: string }>(`${API}/songs/${date}`)
+      const data = await api.getSongs(date)
       setSongs(data.songs)
 
       const typeInfo = BOARD_NAME_MAP[data.boardType] || data.boardType
@@ -66,20 +64,16 @@ export default function EditorPage() {
       )
 
       // 加载编辑器配置
-      try {
-        const savedConfig = await fetchAPI<Partial<EditorConfig>>(`${API}/editor-config/${date}`)
-        if (savedConfig && !("error" in savedConfig)) {
-          setConfig({
-            cover: savedConfig.cover || null,
-            ed: savedConfig.ed || { bvid: "", name: "", author: "" },
-            script: savedConfig.script || { opening: "", ending: "" },
-          })
-        }
-      } catch {
-        // 配置不存在
+      const savedConfig = await api.getEditorConfig(date)
+      if (savedConfig) {
+        setConfig({
+          cover: savedConfig.cover || null,
+          ed: savedConfig.ed || { bvid: "", name: "", author: "" },
+          script: savedConfig.script || { opening: "", ending: "" },
+        })
       }
-    } catch (e) {
-      toast.error("加载失败: " + (e as Error).message)
+    } catch {
+      // 错误已由 axios 拦截器统一 toast.error 处理
     }
   }, [])
 
@@ -96,10 +90,7 @@ export default function EditorPage() {
     if (!song._videoExists) {
       setLoadingText("下载视频中...")
       try {
-        const result = await fetchAPI<{ url: string; duration: number }>(
-          `${API}/full-video/${bvid}`,
-          { method: "POST" }
-        )
+        const result = await api.getFullVideo(bvid)
 
         setVideoDuration(result.duration)
         setVideoUrl(result.url)
@@ -118,8 +109,8 @@ export default function EditorPage() {
 
         // 更新当前选中歌曲的状态
         setSelectedSong((prev) => prev ? { ...prev, _videoExists: true, _videoUrl: result.url } : null)
-      } catch (e) {
-        setLoadingText("下载失败: " + (e as Error).message)
+      } catch {
+        setLoadingText("下载失败")
         return
       }
     } else {
@@ -228,11 +219,7 @@ export default function EditorPage() {
     }
 
     try {
-      await fetchAPI(`${API}/clips/${selectedSong.bvid}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startTime, endTime }),
-      })
+      await api.saveClip(selectedSong.bvid, { startTime, endTime })
 
       const newClip = { startTime, endTime, duration }
       setClipDuration(duration)
@@ -252,8 +239,8 @@ export default function EditorPage() {
       setSelectedSong((prev) => prev ? { ...prev, _clip: newClip } : null)
 
       toast.success("保存成功")
-    } catch (e) {
-      toast.error("保存失败: " + (e as Error).message)
+    } catch {
+      // 错误已由拦截器处理
     }
   }, [selectedSong, startTime, endTime])
 
@@ -269,17 +256,13 @@ export default function EditorPage() {
     toast(`开始下载 ${toDownload.length} 个视频...`)
 
     try {
-      await fetchAPI(`${API}/full-video/batch`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bvids: toDownload }),
-      })
+      await api.batchDownload(toDownload)
       toast.success("下载任务已启动")
 
       // 轮询检查下载状态
       const checkInterval = setInterval(async () => {
         try {
-          const data = await fetchAPI<{ songs: SongsData }>(`${API}/songs/${selectedDate}`)
+          const data = await api.getSongs(selectedDate)
           const allSongsData = Object.values(data.songs).flat()
           let allDownloaded = true
 
@@ -306,21 +289,17 @@ export default function EditorPage() {
       }, 3000)
 
       setTimeout(() => clearInterval(checkInterval), 120000)
-    } catch (e) {
-      toast.error("下载失败: " + (e as Error).message)
+    } catch {
+      // 错误已由拦截器处理
     }
   }, [songs, selectedDate])
 
   const handleSaveConfig = useCallback(async () => {
     try {
-      await fetchAPI(`${API}/editor-config/${selectedDate}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      })
+      await api.saveEditorConfig(selectedDate, config)
       toast.success("配置已保存")
-    } catch (e) {
-      toast.error("保存失败: " + (e as Error).message)
+    } catch {
+      // 错误已由拦截器处理
     }
   }, [selectedDate, config])
 
@@ -331,23 +310,19 @@ export default function EditorPage() {
     await handleSaveConfig()
 
     try {
-      await fetchAPI(`${API}/synthesis/start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: selectedDate }),
-      })
+      await api.startSynthesis(selectedDate)
       toast.success("合成任务已启动")
       setTimeout(() => (location.href = "/"), 1000)
-    } catch (e) {
-      toast.error("启动失败: " + (e as Error).message)
+    } catch {
+      // 错误已由拦截器处理
     }
   }, [selectedDate, handleSaveConfig])
 
   // 加载日期列表
   useEffect(() => {
-    fetchAPI<{ files: FileInfo[] }>(`${API}/files`)
+    api.getFiles()
       .then(({ files }) => setDates(files))
-      .catch(console.error)
+      .catch(() => {})
   }, [])
 
   // 从 URL 参数获取日期

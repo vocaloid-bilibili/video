@@ -1,10 +1,4 @@
-export interface FileInfo {
-  date: string
-  boardType: string
-  boardTypeName: string
-  hasConfig: boolean
-  hasVideo: boolean
-}
+import type { FileInfo } from "../../types/editor"
 
 interface FileItemProps {
   file: FileInfo

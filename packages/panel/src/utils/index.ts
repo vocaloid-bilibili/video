@@ -16,10 +16,3 @@ export function formatTime(seconds: number, showMs = true): string {
 export function getGroupLabel(cardComponent: string): string {
   return CARD_COMPONENT_LABELS[cardComponent] || cardComponent
 }
-
-export async function fetchAPI<T>(url: string, opts: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, opts)
-  const data = await res.json()
-  if (data.error) throw new Error(data.error)
-  return data
-}

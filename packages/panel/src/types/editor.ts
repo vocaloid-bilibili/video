@@ -25,6 +25,10 @@ export interface SongsData {
 
 export interface FileInfo {
   date: string
+  boardType: string
+  boardTypeName: string
+  hasConfig: boolean
+  hasVideo: boolean
 }
 
 export type ActiveTab = "songs" | "config"
