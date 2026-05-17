@@ -13,7 +13,7 @@ interface SongListPanelProps {
   issueName: string
   config: EditorConfig
   songs: SongsData
-  selectedSong: Song
+  selectedSong: Song | null
   onSave: () => void
   onConfigChange: (config: Partial<EditorConfig>) => void
   onSelectSong: (bvid: string) => void

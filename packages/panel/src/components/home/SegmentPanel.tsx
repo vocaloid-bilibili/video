@@ -1,4 +1,4 @@
-import { type FileInfo } from "./FileItem"
+import type { FileInfo } from "../../api"
 
 interface SegmentPanelProps {
   files: FileInfo[]
@@ -16,7 +16,6 @@ export function SegmentPanel({
   segments,
   loading,
   onDateChange,
-  onDownload,
   onRepair,
 }: SegmentPanelProps) {
   return (

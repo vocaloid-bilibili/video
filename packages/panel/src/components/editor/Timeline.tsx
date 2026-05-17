@@ -68,7 +68,7 @@ export function Timeline({
   }, [endTime])
 
   // 监听时间轴宽度
-  const wrapperWidth = useElementWidth(wrapperRef)
+  const wrapperWidth = useElementWidth(wrapperRef as RefObject<HTMLElement>)
   const timelineWidth = wrapperWidth * zoomLevel - 1   // -1是为了避免小数影响，导致出现滚动条
 
   // 生成刻度
@@ -99,7 +99,7 @@ export function Timeline({
 
   // 计算时间线上位置对应时间的公共函数
   const getTime = useCallback((clientX: number) => {
-    if(!timelineRef.current) return
+    if(!timelineRef.current) return 0
 
     const rect = timelineRef.current.getBoundingClientRect()
     let pct = (clientX - rect.left) / rect.width  // 时间占比
@@ -116,6 +116,7 @@ export function Timeline({
     const time = getTime(clientX)
 
     if (dragTarget === "start") {
+      if (time == null) return
       const newStart = Math.max(0, Math.min(time, duration - 15)) // 一般不会把开始时间点设置成太后面
       // 拖头时确保片段长度不变
       const clipDuration = endTime - startTime
@@ -127,6 +128,7 @@ export function Timeline({
       setInnerEndTime(newEnd)
     } else {
       // 时长会变
+      if (time == null) return
       const newEnd = Math.max(startTime + 5, Math.min(time, duration))
       setInnerEndTime(newEnd)
     }
@@ -199,7 +201,7 @@ export function Timeline({
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // 捕获当前 pointer
     e.currentTarget.setPointerCapture(e.pointerId)
-
+    if (e.clientX == undefined) return
     // 点击时立即更新
     onSeek(getTime(e.clientX))
   }
@@ -207,7 +209,6 @@ export function Timeline({
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     // 只有当前元素真正捕获了这个 pointer 时才处理
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
-
     onSeek(getTime(e.clientX))
   }
 

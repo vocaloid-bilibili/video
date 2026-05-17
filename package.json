@@ -14,6 +14,7 @@
     "build": "pnpm --filter vocabili-controller build && pnpm --filter vocabili-remotion build && pnpm --filter vocabili-panel build",
     "build:controller": "pnpm --filter vocabili-controller build",
     "build:remotion": "pnpm --filter vocabili-remotion build",
+    "build:panel": "pnpm --filter panel build",
     "start": "pnpm --filter vocabili-controller start",
     "lint": "pnpm --filter vocabili-controller lint && pnpm --filter vocabili-remotion lint && pnpm --filter vocabili-panel lint",
     "lint:controller": "pnpm --filter vocabili-controller lint",
