@@ -1,6 +1,6 @@
 ﻿# deploy.ps1
 Write-Host "📦 开始打包项目..." -ForegroundColor Cyan
-pnpm run build
+pnpm run build:panel
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ 打包失败，停止部署。" -ForegroundColor Red
@@ -19,7 +19,7 @@ ssh "$serverUser@$serverHost" "rm -rf $remotePath/dist/*"
 
 # 上传 dist 文件夹的内容到远程服务器目录
 # 上传 app 文件夹的内容到远程服务器目录
-7z a dist.zip dist
+7z a dist.zip ./packages/panel/dist
 scp dist.zip "$serverUser@${serverHost}:$remotePath"
 
 ssh "$serverUser@$serverHost" "cd $remotePath; unzip dist.zip; "
