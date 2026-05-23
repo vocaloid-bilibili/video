@@ -146,6 +146,7 @@ export interface BoardTypeConfig {
   specialRateNote?: boolean;
   audioFade: boolean;
   fadeDuration: number;
+  timeRange?: string;
   // 段落顺序配置：定义视频中各段落的排列顺序
   segmentOrder: SegmentOrderItem[];
 }

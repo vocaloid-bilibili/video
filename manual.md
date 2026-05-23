@@ -39,18 +39,19 @@ pnpm start
 
 然后你还需要 config 文件，里面除了写基本的那些配置之外，还要增加一个 `config` 字段，用于设置这个特刊的特别定制配置。
 
-参考 [boardTypes.ts](/packages/shared/src/boardTypes.ts) 里面对标准刊的定义，你需要自己更改其中的一些字段，其中最重要的是 `segmentOrder` 字段，你需要完全自己定义这个特刊的段落。示例如下：
+参考 [boardTypes.ts](./packages/shared/src/boardTypes.ts) 里面对标准刊的定义，你需要自己更改其中的一些字段，其中最重要的是 `segmentOrder` 字段，你需要完全自己定义这个特刊的段落。示例如下：
 
 ```json
 {
   "script": {
     "opening": "梦的结唱特刊10。这次尝试了全部自动化"
   },
+  "timeRange": "2026年3月1日——2026年4月30日",
   "boardType": "special",
   "config": {
     "segmentOrder": [
       { "type": "infoCard", "audioMix": "op", "config": { "duration": 5 } },
-      { "type": "rules", "audioMix": "op", "config": { "duration": 35 } },
+      { "type": "rules", "audioMix": "op", "config": { "duration": 32 } },
       {
         "type": "songRank",
         "config": {
@@ -74,7 +75,7 @@ pnpm start
           "color": "#f25d8e",
           "titleDuration": 2,
           "showCount": false,
-          "dataField": "songs",
+          "dataField": "main_songs",
           "rankCount": 30
         }
       }

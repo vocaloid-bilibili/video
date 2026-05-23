@@ -335,14 +335,11 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
     const opData = ctx.data.op || {};
     const opCover = await downloadImage(opData.image_url);
     const segConfig = ctx.orderItem.config as Record<string, unknown> || {};
-    const lastPeriodLabel = (segConfig.lastPeriodLabel as string) || ctx.config.lastPeriodLabel;
     const segmentDuration = (segConfig.duration as number) || 5;
     return await renderVideo(
       "InfoCard",
       {
-        opLabel: lastPeriodLabel
-          ? `OP / ${lastPeriodLabel}冠军`
-          : null,
+        opLabel: null,
         opTitle: opData.title || "未知",
         opArtist: opData.author || "Unknown",
         opCover,
