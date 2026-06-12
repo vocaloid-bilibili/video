@@ -5,7 +5,7 @@ video/
 data/
 public/image/
 storage/
-
+*cookies*
 *.zip
 *.mp4
 *.mp3
