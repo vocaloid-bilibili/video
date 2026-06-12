@@ -1,6 +1,6 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv'
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +11,7 @@ const ENV_PATH = path.join(MONOREPO_ROOT, ".env");
 
 // ✅ 先加载
 dotenv.config({
-  path: ENV_PATH
+  path: ENV_PATH,
 });
 
 const env = process.env;
@@ -19,9 +19,11 @@ const env = process.env;
 export const PORT = env.PORT || 3002;
 export const API_KEY = env.API_KEY || "1145140721";
 export const PYTHON_API = env.PYTHON_API || "http://127.0.0.1:8000/analyze";
-export const CHROME_EXECUTABLE = env.CHROME_EXECUTABLE || `C:\\chrome-headless-shell\\chrome-headless-shell.exe`;
+export const CHROME_EXECUTABLE =
+  env.CHROME_EXECUTABLE ||
+  `C:\\chrome-headless-shell\\chrome-headless-shell.exe`;
 
-export const STORAGE_ROOT = path.resolve(MONOREPO_ROOT, "storage")
+export const STORAGE_ROOT = path.resolve(MONOREPO_ROOT, "storage");
 
 export const DIR_ROOT = MONOREPO_ROOT;
 export const DIR_DATA = path.resolve(STORAGE_ROOT, "data");
@@ -33,14 +35,14 @@ export const DIR_AVATAR = path.resolve(DIR_DOWNLOADS, "avatar");
 export const DIR_STAFF = path.resolve(DIR_DOWNLOADS, "staff");
 export const DIR_FULL_VIDEO = path.resolve(DIR_DOWNLOADS, "full_videos");
 export const DIR_CLIP_DB = path.resolve(DIR_DATA, "clips_db.json");
-
+export const COOKIES_PATH = path.resolve(MONOREPO_ROOT, "cookies.txt");
 export const USE_GPU = process.env.USE_GPU;
 
-console.log("USE_GPU：", USE_GPU)
+console.log("USE_GPU：", USE_GPU);
 
-let VIDEO_CODEC: string
-let ENCODE_OPTS: string
-let HWACCEL: string
+let VIDEO_CODEC: string;
+let ENCODE_OPTS: string;
+let HWACCEL: string;
 
 if (USE_GPU === "NVIDIA") {
   VIDEO_CODEC = "h264_nvenc";
@@ -56,11 +58,7 @@ if (USE_GPU === "NVIDIA") {
   HWACCEL = "";
 }
 
-export {
-  VIDEO_CODEC,
-  ENCODE_OPTS,
-  HWACCEL
-}
+export { VIDEO_CODEC, ENCODE_OPTS, HWACCEL };
 
 export interface StaffMember {
   name: string;
