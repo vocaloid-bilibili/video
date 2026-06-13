@@ -1,24 +1,92 @@
-// utils/download.js (ES模块最终版本)
-import axios from 'axios';
-import fs from 'fs-extra';
-import path from 'path';
-import crypto from 'crypto';
-import { fileURLToPath } from 'url';
+import axios from "axios";
+import fs from "fs-extra";
+import path from "path";
+import crypto from "crypto";
+import { fileURLToPath } from "url";
 
-// 修复1：ES模块导入依赖，补全.js后缀
-import { execPromise, getDuration } from './ffmpeg.js';
-import { DIR_DOWNLOADS, DIR_IMAGES, DIR_FULL_VIDEO, PORT, HWACCEL, VIDEO_CODEC, ENCODE_OPTS } from '../config.js';
-import { log } from '../state.js';
+import { execPromise, getDuration } from "./ffmpeg.js";
+import {
+  DIR_DOWNLOADS,
+  DIR_IMAGES,
+  DIR_FULL_VIDEO,
+  PORT,
+  HWACCEL,
+  VIDEO_CODEC,
+  ENCODE_OPTS,
+  COOKIES_PATH,
+} from "../config.js";
+import { log } from "../state.js";
 
-// 修复2：手动定义__dirname（ES模块特有）
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 保留原有业务逻辑
+// ========== 统一请求配置 ==========
+// 固定UA + Referer，统一应对B站412/防盗链
+const USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
+const BILIBILI_REFERER = "https://www.bilibili.com/";
+
+// ========== Cookie 统一管理 ==========
+// yt-dlp 直接吃 cookies.txt 文件；axios（图片）需要 Cookie 头字符串。
+// 这里把 Netscape 格式的 cookies.txt 解析成 "k=v; k2=v2"，带缓存避免重复读盘。
+let cachedCookieHeader: string | null = null;
+let cachedCookieMtime = 0;
+
+function getCookieHeader(): string {
+  if (!fs.existsSync(COOKIES_PATH)) return "";
+
+  try {
+    const stat = fs.statSync(COOKIES_PATH);
+    // 文件没变就用缓存
+    if (cachedCookieHeader !== null && stat.mtimeMs === cachedCookieMtime) {
+      return cachedCookieHeader;
+    }
+
+    const content = fs.readFileSync(COOKIES_PATH, "utf-8");
+    const pairs: string[] = [];
+
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      // 跳过空行和注释（#HttpOnly_ 前缀的行要保留，单独处理）
+      if (!trimmed) continue;
+      const real = trimmed.startsWith("#HttpOnly_")
+        ? trimmed.slice("#HttpOnly_".length)
+        : trimmed;
+      if (real.startsWith("#")) continue;
+
+      // Netscape 格式：domain flag path secure expiry name value
+      const cols = real.split("\t");
+      if (cols.length >= 7) {
+        const name = cols[5];
+        const value = cols[6];
+        if (name) pairs.push(`${name}=${value}`);
+      }
+    }
+
+    cachedCookieHeader = pairs.join("; ");
+    cachedCookieMtime = stat.mtimeMs;
+    return cachedCookieHeader;
+  } catch (e) {
+    log(`读取 cookies 失败: ${(e as Error).message}`);
+    return "";
+  }
+}
+
+// 统一的 axios 请求头（图片等直链下载用），存在 cookie 自动带上
+function buildHttpHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    Referer: BILIBILI_REFERER,
+    "User-Agent": USER_AGENT,
+  };
+  const cookie = getCookieHeader();
+  if (cookie) headers.Cookie = cookie;
+  return headers;
+}
+
+// ========== 锁管理 ==========
 const downloadLocks = new Map();
 const LOCK_TIMEOUT = 60 * 1000;
 
-// ========== 工具函数（保留原有逻辑） ==========
 function isValidBvid(bvid: string) {
   if (!bvid || typeof bvid !== "string") return false;
   return /^BV[a-zA-Z0-9]{10}$/.test(bvid);
@@ -57,7 +125,28 @@ function releaseLock(lockKey: string) {
   downloadLocks.delete(lockKey);
 }
 
-// ========== 核心函数：命名导出（适配task.js导入） ==========
+/**
+ * 通用 yt-dlp 命令构建器：统一 Cookie、UA、Referer、超时
+ * @param url 视频链接
+ * @param outputPath 输出路径（音频转码场景请传不带扩展名的模板）
+ * @param extraArgs 额外 yt-dlp 参数
+ */
+function buildYtDlpCmd(
+  url: string,
+  outputPath: string,
+  extraArgs = "",
+): string {
+  let baseCmd =
+    `yt-dlp "${url}" -o "${outputPath}" --playlist-items 1 --force-overwrites --no-warnings ` +
+    `--user-agent "${USER_AGENT}" --referer "${BILIBILI_REFERER}" --socket-timeout 15 ${extraArgs}`;
+
+  if (fs.existsSync(COOKIES_PATH)) {
+    baseCmd += ` --cookies "${COOKIES_PATH}"`;
+  }
+  return baseCmd;
+}
+
+// ========== 图片 / 封面下载 ==========
 export async function downloadImage(url: string): Promise<string> {
   if (!url) return "";
   const hash = crypto.createHash("md5").update(url).digest("hex");
@@ -66,38 +155,57 @@ export async function downloadImage(url: string): Promise<string> {
   const localPath = path.join(DIR_IMAGES, filename);
   const publicUrl = `http://localhost:${PORT}/downloads/images/${filename}`;
 
-  if (fs.existsSync(localPath)) return publicUrl;
-
-  try {
-    const res = await axios({
-      url,
-      method: "GET",
-      responseType: "stream",
-      timeout: 30000,
-      headers: {
-        Referer: "https://www.bilibili.com/",
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
-    const w = fs.createWriteStream(localPath);
-    res.data.pipe(w);
-    return new Promise((resolve, reject) => {
-      w.on("finish", () => resolve(publicUrl));
-      w.on("error", reject);
-    });
-  } catch (e) {
-    return url;
+  if (fs.existsSync(localPath) && fs.statSync(localPath).size > 100) {
+    return publicUrl;
   }
+
+  // 带重试，统一请求头（含 cookie）
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await axios({
+        url,
+        method: "GET",
+        responseType: "stream",
+        timeout: 30000,
+        headers: buildHttpHeaders(),
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        const w = fs.createWriteStream(localPath);
+        res.data.pipe(w);
+        w.on("finish", () => resolve());
+        w.on("error", reject);
+      });
+
+      // 校验文件非空
+      if (fs.existsSync(localPath) && fs.statSync(localPath).size > 100) {
+        return publicUrl;
+      }
+      if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+    } catch (e) {
+      if (fs.existsSync(localPath)) {
+        try {
+          fs.unlinkSync(localPath);
+        } catch {}
+      }
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      }
+    }
+  }
+
+  log(`图片下载失败，回退原链接: ${url}`);
+  return url;
 }
 
-// 下载完整视频（仅P1）- 内部函数无需导出
+// ========== 完整视频下载（内部） ==========
 async function downloadFullVideoInternal(bvid: string) {
   if (!isValidBvid(bvid)) return null;
 
   fs.ensureDirSync(DIR_FULL_VIDEO);
   const outputPath = path.join(DIR_FULL_VIDEO, `${bvid}.mp4`);
 
-  // 已存在且有效
   if (fs.existsSync(outputPath)) {
     try {
       const dur = await getDuration(outputPath);
@@ -113,7 +221,6 @@ async function downloadFullVideoInternal(bvid: string) {
   const gotLock = await acquireLock(lockKey);
 
   if (!gotLock) {
-    // 等待结束，检查文件
     if (fs.existsSync(outputPath)) {
       try {
         const dur = await getDuration(outputPath);
@@ -124,26 +231,45 @@ async function downloadFullVideoInternal(bvid: string) {
   }
 
   try {
-    log(`下载视频: ${bvid}`);
     const url = `https://www.bilibili.com/video/${bvid}`;
-    const cmd = `yt-dlp "${url}" -o "${outputPath}" --playlist-items 1 --format "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best" --merge-output-format mp4 --force-overwrites --no-warnings`;
+    const formatArgs = `--format "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best" --merge-output-format mp4`;
+    const cmd = buildYtDlpCmd(url, outputPath, formatArgs);
+    const useCookies = fs.existsSync(COOKIES_PATH);
 
-    await execPromise(cmd);
+    // 内层重试：3 次指数退避
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        log(
+          `下载视频: ${bvid} (尝试 ${attempt}/${maxRetries})` +
+            (useCookies ? " [cookies]" : ""),
+        );
+        await execPromise(cmd);
 
-    if (fs.existsSync(outputPath)) {
-      const dur = await getDuration(outputPath);
-      return { path: outputPath, duration: dur };
+        if (fs.existsSync(outputPath)) {
+          const dur = await getDuration(outputPath);
+          if (dur > 10) {
+            return { path: outputPath, duration: dur };
+          }
+          fs.unlinkSync(outputPath);
+        }
+      } catch (e: any) {
+        log(`视频下载失败 ${bvid} (${attempt}/${maxRetries}): ${e.message}`);
+      }
+
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 5000 * attempt));
+      }
     }
-    return null;
-  } catch (e) {
-    log(`下载失败: ${bvid}`);
+
+    log(`视频下载彻底失败: ${bvid}`);
     return null;
   } finally {
     releaseLock(lockKey);
   }
 }
 
-// 从完整视频裁剪片段 - 内部函数无需导出
+// ========== 裁剪片段 ==========
 async function clipFromFullVideo(
   fullVideoPath: string,
   startTime: number,
@@ -156,20 +282,24 @@ async function clipFromFullVideo(
     await execPromise(cmd);
     return true;
   } catch (e) {
-    // GPU 失败，回退到 CPU
+    // GPU 失败回退 CPU
     const cpuCmd = `ffmpeg -ss ${startTime} -i "${fullVideoPath}" -t ${duration} -c:v libx264 -preset fast -crf 23 -r 60 -g 60 -bf 0 -pix_fmt yuv420p -movflags +faststart -c:a aac -ar 48000 -b:a 192k -y "${outputPath}"`;
     await execPromise(cpuCmd);
     return true;
   }
 }
 
-export async function downloadClip(bvid: string, startTime: number, duration: number, retries = 3) {
+export async function downloadClip(
+  bvid: string,
+  startTime: number,
+  duration: number,
+  retries = 3,
+) {
   if (!isValidBvid(bvid)) return null;
 
   const fileName = `${bvid}_${startTime.toFixed(2)}_${duration}.mp4`;
   const outputPath = path.join(DIR_DOWNLOADS, fileName);
 
-  // 已存在且有效
   if (fs.existsSync(outputPath)) {
     try {
       const actualDuration = await getDuration(outputPath);
@@ -187,6 +317,7 @@ export async function downloadClip(bvid: string, startTime: number, duration: nu
 
   if (!gotLock) {
     if (fs.existsSync(outputPath)) return outputPath;
+    return null; // 没拿到锁且无文件，直接退出，避免误删他人锁
   }
 
   try {
@@ -232,19 +363,56 @@ export async function downloadClip(bvid: string, startTime: number, duration: nu
   }
 }
 
-// 关键：命名导出downloadAudio（解决task.js导入错误）
+// ========== 音频下载 ==========
 export async function downloadAudio(bvid: string, name: string) {
   if (!isValidBvid(bvid)) return null;
 
+  // name 期望以 .mp3 结尾
   const output = path.join(DIR_DOWNLOADS, name);
   if (fs.existsSync(output) && fs.statSync(output).size > 1000) return output;
 
-  const cmd = `yt-dlp -x --audio-format mp3 --playlist-items 1 -o "${output}" "https://www.bilibili.com/video/${bvid}" --force-overwrites`;
-  try {
-    await execPromise(cmd);
-    return output;
-  } catch (e) {
-    log(`音频下载失败: ${bvid}`);
+  const lockKey = `audio_${name}`;
+  const gotLock = await acquireLock(lockKey);
+
+  if (!gotLock) {
+    if (fs.existsSync(output) && fs.statSync(output).size > 1000) return output;
     return null;
+  }
+
+  try {
+    const url = `https://www.bilibili.com/video/${bvid}`;
+    // 关键：-o 传不带扩展名的模板，让 yt-dlp 转码后自己补 .mp3，避免文件名错位
+    const base = output.replace(/\.mp3$/i, "");
+    const audioArgs = `-x --audio-format mp3`;
+    const cmd = buildYtDlpCmd(url, base, audioArgs);
+    const useCookies = fs.existsSync(COOKIES_PATH);
+
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        log(
+          `下载音频: ${bvid} (尝试 ${attempt}/${maxRetries})` +
+            (useCookies ? " [cookies]" : ""),
+        );
+        await execPromise(cmd);
+
+        // 下载后确认文件确实存在且有效
+        if (fs.existsSync(output) && fs.statSync(output).size > 1000) {
+          return output;
+        }
+        log(`音频下载后未找到有效文件: ${bvid}`);
+      } catch (e: any) {
+        log(`音频下载失败 ${bvid} (${attempt}/${maxRetries}): ${e.message}`);
+      }
+
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 3000 * attempt));
+      }
+    }
+
+    log(`音频下载彻底失败: ${bvid}`);
+    return null;
+  } finally {
+    releaseLock(lockKey);
   }
 }
