@@ -11,8 +11,8 @@ export function SongDetailBar({ song }: SongDetailBarProps) {
 
   const title = song.title || song.name || "-"
   const bvid = song.bvid || "-"
-  const author = song.author || song.uploader || "-"
-  const vocal = song.vocal || "-"
+  const producer = song.producer || song.uploader || "-"
+  const vocalist = song.vocalist || "-"
 
   return (
     <div className="px-5 py-2.5 bg-neutral-800 border-b border-neutral-700 flex items-center gap-4 shrink-0 truncate">
@@ -31,8 +31,8 @@ export function SongDetailBar({ song }: SongDetailBarProps) {
         >
           {bvid}
         </span>
-        <span>{author}</span>
-        <span>{vocal}</span>
+        <span>{producer}</span>
+        <span>{vocalist}</span>
       </div>
       <a
         href={`https://www.bilibili.com/video/${song.bvid}`}

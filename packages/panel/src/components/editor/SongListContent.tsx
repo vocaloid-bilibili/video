@@ -42,9 +42,9 @@ export function SongListContent({ songs, selectedBvid, onSelectSong }: SongListC
                 </span>
               </div>
               <div className="text-[11px] text-neutral-500 mt-0.5 truncate">
-                {s.author}
+                {s.producer}
                 {" · "}
-                {s.vocal}
+                {s.vocalist}
               </div>
             </div>
             <div

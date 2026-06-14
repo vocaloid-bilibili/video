@@ -24,7 +24,7 @@ export default function EditorPage() {
   const [issueName, setIssueName] = useState("排行榜")
   const [config, setConfig] = useState<EditorConfig>({
     cover: null,
-    ed: { bvid: "", name: "", author: "" },
+    ed: { bvid: "", name: "", producer: "" },
     script: { opening: "", ending: "" },
   })
 
@@ -47,7 +47,7 @@ export default function EditorPage() {
       if (savedConfig) {
         setConfig({
           cover: savedConfig.cover || null,
-          ed: savedConfig.ed || { bvid: "", name: "", author: "" },
+          ed: savedConfig.ed || { bvid: "", name: "", producer: "" },
           script: savedConfig.script || { opening: "", ending: "" },
         })
       }

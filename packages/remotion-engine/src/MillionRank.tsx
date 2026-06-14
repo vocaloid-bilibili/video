@@ -110,7 +110,7 @@ const MillionItem = ({ item, index }: { item: any; index: number }) => {
   const exitTranslateY = interpolate(exitVal, [0, 1], [0, 50]);
   const exitOpacity = interpolate(exitVal, [0, 1], [1, 0]);
 
-  const coverSrc = item.image_url || "";
+  const coverSrc = item.thumbnail || "";
   const pubDateSimple = item.pubdate ? item.pubdate.split(" ")[0] : "";
 
   // 计算徽章宽度预估（根据数字位数）
@@ -208,7 +208,7 @@ const MillionItem = ({ item, index }: { item: any; index: number }) => {
           }}
         >
           <FitTitle
-            text={item.author}
+            text={item.producer}
             style={{
               fontSize: 24,
               fontWeight: 700,

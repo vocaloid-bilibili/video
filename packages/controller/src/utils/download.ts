@@ -146,56 +146,109 @@ function buildYtDlpCmd(
   return baseCmd;
 }
 
+// ========== 图片专用请求头（无Cookie） ==========
+function buildImageHeaders(): Record<string, string> {
+  return {
+    Referer: BILIBILI_REFERER,
+    "User-Agent": USER_AGENT,
+    Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+  };
+}
+
 // ========== 图片 / 封面下载 ==========
 export async function downloadImage(url: string): Promise<string> {
-  if (!url) return "";
-  const hash = crypto.createHash("md5").update(url).digest("hex");
-  const ext = path.extname(url).split("?")[0] || ".jpg";
+  if (!url) {
+    log("图片下载跳过：URL为空");
+    return "";
+  }
+
+  // 防御性清洗：去除首尾空白，兼容数据里的不可见字符
+  const targetUrl = url.trim().replace(/^\/\//, "https://");
+
+  // URL合法性预校验
+  try {
+    new URL(targetUrl);
+  } catch (e) {
+    log(`图片下载跳过：URL格式非法 [${targetUrl}]`);
+    return url;
+  }
+
+  const hash = crypto.createHash("md5").update(targetUrl).digest("hex");
+  const extMatch = targetUrl.match(/\.(jpg|jpeg|png|webp|gif)(\?|@|$)/i);
+  const ext = `.${extMatch?.[1]?.toLowerCase() ?? "jpg"}`;
   const filename = `${hash}${ext}`;
   const localPath = path.join(DIR_IMAGES, filename);
   const publicUrl = `http://localhost:${PORT}/downloads/images/${filename}`;
+
+  fs.ensureDirSync(DIR_IMAGES);
 
   if (fs.existsSync(localPath) && fs.statSync(localPath).size > 100) {
     return publicUrl;
   }
 
-  // 带重试，统一请求头（含 cookie）
   const maxRetries = 3;
+  const DOWNLOAD_TIMEOUT = 15000;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const res = await axios({
-        url,
+        url: targetUrl,
         method: "GET",
         responseType: "stream",
-        timeout: 30000,
-        headers: buildHttpHeaders(),
+        timeout: 10000,
+        // 核心：使用图片专用头，不带Cookie
+        headers: buildImageHeaders(),
+        validateStatus: (status) => status >= 200 && status < 300,
+        maxRedirects: 5,
       });
 
-      await new Promise<void>((resolve, reject) => {
-        const w = fs.createWriteStream(localPath);
-        res.data.pipe(w);
-        w.on("finish", () => resolve());
-        w.on("error", reject);
-      });
+      const contentLength = Number(res.headers["content-length"] || 0);
+      if (contentLength > 0 && contentLength < 100) {
+        throw new Error(`响应内容过小: ${contentLength}字节，疑似拦截`);
+      }
 
-      // 校验文件非空
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          const writeStream = fs.createWriteStream(localPath);
+          res.data.on("error", (err: Error) => {
+            writeStream.destroy();
+            reject(new Error(`响应流错误: ${err.message}`));
+          });
+          writeStream.on("error", (err) => {
+            res.data.destroy();
+            reject(new Error(`写入流错误: ${err.message}`));
+          });
+          writeStream.on("finish", () => resolve());
+          res.data.pipe(writeStream);
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("下载超时")), DOWNLOAD_TIMEOUT)
+        ),
+      ]);
+
       if (fs.existsSync(localPath) && fs.statSync(localPath).size > 100) {
         return publicUrl;
       }
+
       if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+      throw new Error("下载文件无效，大小不足100字节");
+
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const status = (e as any).response?.status;
+      log(`图片下载失败(第${attempt}/${maxRetries}次) [${targetUrl}]: 状态码=${status || "无"}, 原因=${errMsg}`);
+
       if (fs.existsSync(localPath)) {
-        try {
-          fs.unlinkSync(localPath);
-        } catch {}
+        try { fs.unlinkSync(localPath); } catch {}
       }
+
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 1000 * attempt));
       }
     }
   }
 
-  log(`图片下载失败，回退原链接: ${url}`);
+  log(`图片下载彻底失败，回退原链接: ${url}`);
   return url;
 }
 

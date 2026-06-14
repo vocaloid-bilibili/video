@@ -26,7 +26,7 @@ export function ConfigPanel({ config, songs, onSave, onConfigChange }: ConfigPan
 
   const handleCoverSelect = (song: Song) => {
     onConfigChange({
-      cover: { bvid: song.bvid, image_url: song.image_url || "" },
+      cover: { bvid: song.bvid, thumbnail: song.thumbnail || "" },
     })
     toast.success("已选择封面")
   }
@@ -78,7 +78,7 @@ export function ConfigPanel({ config, songs, onSave, onConfigChange }: ConfigPan
                 }`}
               >
                 <img
-                  src={s.image_url}
+                  src={s.thumbnail}
                   alt=""
                   referrerPolicy="no-referrer"
                   className="w-12 h-7 object-cover rounded bg-neutral-900"
@@ -122,8 +122,8 @@ export function ConfigPanel({ config, songs, onSave, onConfigChange }: ConfigPan
           <label className="block text-[11px] text-neutral-500 mb-1">作者</label>
           <input
             type="text"
-            value={config.ed.author}
-            onChange={(e) => onConfigChange({ ed: { ...config.ed, author: e.target.value } })}
+            value={config.ed.producer}
+            onChange={(e) => onConfigChange({ ed: { ...config.ed, producer: e.target.value } })}
             placeholder="ED作者"
             className="w-full p-2 bg-neutral-700 border border-neutral-600 text-neutral-100 text-xs rounded focus:outline-none focus:border-blue-500"
           />

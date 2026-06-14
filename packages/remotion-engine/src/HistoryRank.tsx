@@ -112,7 +112,7 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
   const exitTranslateY = interpolate(exitVal, [0, 1], [0, 50]);
   const exitOpacity = interpolate(exitVal, [0, 1], [1, 0]);
 
-  const coverSrc = item.image_url || "";
+  const coverSrc = item.thumbnail || "";
 
   // 格式化得分（添加逗号分隔）
   const formatPoint = (num: number) => new Intl.NumberFormat().format(num);
@@ -211,7 +211,7 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
           }}
         >
           <FitTitle
-            text={item.author}
+            text={item.producer}
             style={{
               fontSize: 24,
               fontWeight: 700,

@@ -129,7 +129,7 @@ const SubRankItem = ({
   const exitTranslateY = interpolate(exitVal, [0, 1], [0, 50]);
   const exitOpacity = interpolate(exitVal, [0, 1], [1, 0]);
 
-  const coverSrc = item.image_url || "";
+  const coverSrc = item.thumbnail || "";
   const isNew = item.rank_before === "-";
   const rankDiff =
     !isNew && item.rank_before ? Number(item.rank_before) - item.rank : 0;
@@ -374,9 +374,9 @@ const SubRankItem = ({
                 <span
                   style={{ fontWeight: "bold", color: "#333", marginRight: 8 }}
                 >
-                  {item.author}
+                  {item.producer}
                 </span>
-                {item.vocal && <span>feat. {item.vocal}</span>}
+                {item.vocalist && <span>feat. {item.vocalist}</span>}
               </FitTitle>
             </div>
             <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>

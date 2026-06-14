@@ -2,20 +2,20 @@ export interface Song {
   bvid: string
   title?: string
   name?: string
-  author?: string
+  producer?: string
   uploader?: string
-  vocal?: string
+  vocalist?: string
   rank?: number | string
   count?: number
-  image_url?: string
+  thumbnail?: string
   _clip?: { startTime: number; endTime: number; duration: number }
   _videoExists?: boolean
   _videoUrl?: string
 }
 
 export interface EditorConfig {
-  cover: { bvid: string; image_url: string } | null
-  ed: { bvid: string; name: string; author: string }
+  cover: { bvid: string; thumbnail: string } | null
+  ed: { bvid: string; name: string; producer: string }
   script: { opening: string; ending: string }
 }
 

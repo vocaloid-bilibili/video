@@ -121,7 +121,7 @@ const AchievementItem = ({ item, index }: { item: any; index: number }) => {
   const exitOpacity = interpolate(exitVal, [0, 1], [1, 0]);
 
   // 处理图片链接
-  const coverSrc = item.image_url || "";
+  const coverSrc = item.thumbnail || "";
 
   // 处理日期
   const pubDateSimple = item.pubdate ? item.pubdate.split(" ")[0] : "";
@@ -254,7 +254,7 @@ const AchievementItem = ({ item, index }: { item: any; index: number }) => {
           }}
         >
           <FitTitle
-            text={item.author}
+            text={item.producer}
             style={{
               fontSize: 24,
               fontWeight: 700,

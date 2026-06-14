@@ -175,7 +175,7 @@ interface FullScreenVideoCardProps {
   honorBadge?: { title: string; type?: "default" | "mega" | "emerging" | "门番" };
   trendData: number[];
   trendPeriod?: "day" | "week";
-  image_url?: string; // 封面图兜底
+  thumbnail?: string; // 封面图兜底
   boardType?: BoardType;
 }
 
@@ -192,7 +192,7 @@ export const AchievementCard: React.FC<FullScreenVideoCardProps> = (props) => {
     honorBadge = { title: "成就", type: "default" },
     trendData = [],
     trendPeriod = "day",
-    image_url = "",
+    thumbnail = "",
     boardType = "weekly",
   } = props;
 
@@ -219,7 +219,7 @@ export const AchievementCard: React.FC<FullScreenVideoCardProps> = (props) => {
           />
         ) : (
           <img
-            src={image_url}
+            src={thumbnail}
             alt="封面"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />

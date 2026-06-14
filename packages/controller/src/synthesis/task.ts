@@ -99,7 +99,7 @@ async function prepareAllAssets(songs: RenderSongInfo[], progressCallback: (curr
             const actualDuration = await getDuration(filePath);
             if (actualDuration >= song._duration - 1) {
               song._videoPath = filePath;
-              song._thumbPath = await downloadImage(song.image_url);
+              song._thumbPath = await downloadImage(song.thumbnail);
               skippedCount++;
               log(`跳过已有: ${song.bvid}`);
               return;
@@ -115,7 +115,7 @@ async function prepareAllAssets(songs: RenderSongInfo[], progressCallback: (curr
 
         const [vid, thumb] = await Promise.all([
           downloadClip(song.bvid, song._startTime, song._duration),
-          downloadImage(song.image_url),
+          downloadImage(song.thumbnail),
         ]);
 
         if (vid){
@@ -187,8 +187,8 @@ async function renderRankBatch(songs: RenderSongInfo[], cardComponent: string, s
         point_before: songAny.point_before,
         point_rate: songAny.rate,
         copyrightLabel: getCopyrightLabel(songAny.copyright),
-        vocalists: songAny.vocal,
-        producers: songAny.author,
+        vocalists: songAny.vocalist,
+        producers: songAny.producer,
         synthesizers: songAny.synthesizer,
         songType: songAny.type,
         thumb,
@@ -260,7 +260,7 @@ async function renderSubRankBatch(chunks: RenderSongInfo[][], segments: string, 
         const processed = await Promise.all(
           chunk.map(async (item) => ({
             ...item,
-            image_url: await downloadImage(item.image_url),
+            thumbnail: await downloadImage(item.thumbnail),
           })),
         );
 
@@ -333,7 +333,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
   // 信息卡片
   infoCard: async (ctx) => {
     const opData = ctx.data.op || {};
-    const opCover = await downloadImage(opData.image_url);
+    const opCover = await downloadImage(opData.thumbnail);
     const segConfig = ctx.orderItem.config as Record<string, unknown> || {};
     const segmentDuration = (segConfig.duration as number) || 5;
     return await renderVideo(
@@ -341,7 +341,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       {
         opLabel: null,
         opTitle: opData.title || "未知",
-        opArtist: opData.author || "Unknown",
+        opArtist: opData.producer || "Unknown",
         opCover,
         timeLabel: "统计时间",
         timeRange: (ctx.config.timeRange as string) || ctx.data.period,
@@ -419,8 +419,8 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
           { label: "发布日期", value: item.pubdate || "未知" },
           { label: "时长", value: item.duration || "未知" },
           { label: "类型", value: item.type || "未知" },
-          { label: "作者", value: item.author || "未知" },
-          { label: "演唱", value: item.vocal || "未知" },
+          { label: "作者", value: item.producer || "未知" },
+          { label: "演唱", value: item.vocalist || "未知" },
         ];
         const honorTypeMap: Record<string, string> = {
           "Emerging Hit!": "emerging",
@@ -432,7 +432,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
         const honorType = honorTypeMap[honorTitle] || "default";
         const videoSrc = item.bvid
           ? `https://www.bilibili.com/video/${item.bvid}`
-          : item.image_url || "";
+          : item.thumbnail || "";
 
         return {
           ...item,
@@ -576,7 +576,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       const processed = await Promise.all(
         ctx.milChunks[i]!.map(async (item) => ({
           ...item,
-          image_url: await downloadImage(item.image_url),
+          thumbnail: await downloadImage(item.thumbnail),
         })),
       );
       const result = await renderVideo(
@@ -614,7 +614,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
       const processed = await Promise.all(
         ctx.achChunks[i]!.map(async (item) => ({
           ...item,
-          image_url: await downloadImage(item.image_url),
+          thumbnail: await downloadImage(item.thumbnail),
         })),
       );
       const result = await renderVideo(
@@ -649,7 +649,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
     const historyProcessed = await Promise.all(
       historyList.map(async (item) => ({
         ...item,
-        image_url: await downloadImage(item.image_url),
+        thumbnail: await downloadImage(item.thumbnail),
       })),
     );
     return await renderVideo(
@@ -710,7 +710,7 @@ const segmentRenderers: Record<SegmentType, (ctx: SegmentContext) => Promise<str
         to: ctx.config.subRankRange ?? 100,
         themeColor: (segConfig.color as string) || "#66ccff",
         edName: ctx.editorConfig.ed?.name || "",
-        edAuthor: ctx.editorConfig.ed?.author || "",
+        edAuthor: ctx.editorConfig.ed?.producer || "",
         ...ctx.config,
       },
       `${SEGMENT_PREFIX.subRankTitle}_SubRankTitle.mp4`,
@@ -1000,8 +1000,8 @@ async function runSynthesisTask(name: string) {
   // ============== 2. 准备封面 ==============
   // 选择封面图片
   let introCover = "";
-  if (editorConfig.cover?.image_url) {
-    introCover = await downloadImage(editorConfig.cover.image_url);
+  if (editorConfig.cover?.thumbnail) {
+    introCover = await downloadImage(editorConfig.cover.thumbnail);
     log(`封面: 使用指定 ${editorConfig.cover.bvid}`);
   } else {
     // 从主榜获取首登歌曲作为封面
@@ -1017,7 +1017,7 @@ async function runSynthesisTask(name: string) {
       : mainRankList[0];
     
     if (firstAppearSong) {
-      introCover = await downloadImage(firstAppearSong.image_url);
+      introCover = await downloadImage(firstAppearSong.thumbnail);
       log(`封面: ${config.showCount ? `主榜首上榜 #${firstAppearSong.rank}` : "主榜第一"}`);
     }
   }

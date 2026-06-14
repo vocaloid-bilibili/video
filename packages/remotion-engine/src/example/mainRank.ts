@@ -31,7 +31,7 @@ export default {
   "fixC": 1.0,
   "fixD": 0.91,
   "point": 4921590,
-  "image_url": "http://i0.hdslb.com/bfs/archive/04e40ffb1696b9d5f22d846c076647f32e327d96.jpg",
+  "thumbnail": "http://i0.hdslb.com/bfs/archive/04e40ffb1696b9d5f22d846c076647f32e327d96.jpg",
   "view_rank": 1,
   "favorite_rank": 2,
   "coin_rank": 1,

@@ -29,7 +29,7 @@ export interface Stats {
   fixC:          number;
   fixD:          number;
   point:         number;
-  image_url:     string;
+  thumbnail:     string;
   view_rank:     number;
   favorite_rank: number;
   coin_rank:     number;
@@ -44,11 +44,11 @@ interface SongInfo {
   bvid:          string;
   aid:           number;
   name:          string;
-  author:        string;
+  producer:        string;
   uploader:      string;
   copyright:     number;
   synthesizer:   string;
-  vocal:         string;
+  vocalist:         string;
   type:          string;
   pubdate:       string;
   duration:      string;

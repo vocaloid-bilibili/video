@@ -37,7 +37,7 @@ const stats = z.object({
   "fixC": z.number(),
   "fixD": z.number(),
   "point": z.number(),
-  "image_url": z.string(),
+  "thumbnail": z.string(),
   "view_rank": z.number(),
   "favorite_rank": z.number(),
   "coin_rank": z.number(),

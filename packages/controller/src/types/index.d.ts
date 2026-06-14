@@ -13,18 +13,19 @@ type RenderSongInfo = SongInfo & {
   _startTime: number
   _isManual: boolean
   _isAuto: boolean
+  thumbnail: string
 
 }
 
 type EditorConfig = {
   cover: {
-    image_url: string
+    thumbnail: string
     bvid: string
   }
   ed: {
     bvid: string
     name: string
-    author: string
+    producer: string
   }
   script: {
     opening: string
@@ -53,10 +54,10 @@ interface ArtistStat {
 interface SongRecord {
   title: string
   bvid: string
-  author: string
+  producer: string
   pubdate: string
   name: string
-  image_url: string
+  thumbnail: string
 }
 
 
@@ -84,9 +85,9 @@ interface RankingData {
   op: {
     title: string
     bvid: string
-    author: string
+    producer: string
     pubdate: string
-    image_url: string
+    thumbnail: string
   }
   stat: Record<string, ValueAndDiff>
   total_rank_top20: SongInfo[]
