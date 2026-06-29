@@ -29,12 +29,14 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@remotion/eslint-config-flat": "^4.0.462",
     "@types/react": "19.2.7",
     "@types/web": "0.0.166",
-    "eslint": "9.19.0",
+    "eslint": "10.4.0",
     "prettier": "3.6.0",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.62.0"
   },
   "sideEffects": [
     "*.css"
