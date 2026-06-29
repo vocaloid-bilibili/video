@@ -1,17 +1,15 @@
- 
-import { 
-  useRef,
-  useState,
-  useLayoutEffect
-} from "react";
+// packages/remotion-engine/src/components/FitContent.tsx
 
-export const FitContent = ({
+import { useLayoutEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+export function FitContent({
   children,
   style,
 }: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-}) => {
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -19,19 +17,19 @@ export const FitContent = ({
   useLayoutEffect(() => {
     const container = containerRef.current;
     const content = contentRef.current;
+
     if (!container || !content) return;
 
     content.style.transform = "scaleX(1)";
+
     const availableWidth = container.clientWidth;
     const actualWidth = content.scrollWidth;
+    const nextScale =
+      actualWidth > availableWidth && availableWidth > 0
+        ? availableWidth / actualWidth
+        : 1;
 
-    if (actualWidth > availableWidth && availableWidth > 0) {
-      setScale(availableWidth / actualWidth);
-    } else {
-      setScale(1);
-    }
-
-    content.style.transform = `scaleX(${actualWidth > availableWidth ? availableWidth / actualWidth : 1})`;
+    setScale(nextScale);
   }, [children]);
 
   return (
@@ -44,7 +42,6 @@ export const FitContent = ({
         ...style,
       }}
     >
-      {/* 占位元素：撑开高度 */}
       <div
         style={{
           visibility: "hidden",
@@ -56,7 +53,6 @@ export const FitContent = ({
         {children}
       </div>
 
-      {/* 实际显示元素：绝对定位 */}
       <div
         ref={contentRef}
         style={{
@@ -74,4 +70,4 @@ export const FitContent = ({
       </div>
     </div>
   );
-};
+}

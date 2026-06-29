@@ -1,124 +1,30 @@
-// src/HistoryRank.tsx
-import {
-  AbsoluteFill,
-  useVideoConfig,
-  useCurrentFrame,
-  spring,
-  interpolate,
-  Img,
-} from "remotion";
-import React, { useState, useRef, useLayoutEffect } from "react";
-import { STYLES, getStyles } from "./styles";
+// packages/remotion-engine/src/HistoryRank.tsx
+
+import { AbsoluteFill } from "remotion";
+
+import { FitTitle } from "./components/FitTitle";
+import { ListImage, ListRankPage } from "./components/ListRankPage";
+import { formatNumber } from "./utils/safeParse";
+import { getStyles } from "./styles";
 import type { BoardType } from "../../shared/src/boardTypes";
 
-// ------------------------------------------------------------------
-// 组件：自适应压缩标题 (基于真实DOM宽度)
-// ------------------------------------------------------------------
-const FitTitle = ({
-  text,
-  style,
+interface HistoryRankItem {
+  title?: string;
+  producer?: string;
+  thumbnail?: string;
+  point?: number;
+  rank?: number;
+}
+
+function HistoryItem({
+  item,
+  boardType,
 }: {
-  text: string;
-  style?: React.CSSProperties;
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    const textEl = textRef.current;
-    if (!container || !textEl) return;
-
-    const availableWidth = container.clientWidth;
-    const actualWidth = textEl.scrollWidth;
-
-    if (actualWidth > availableWidth && availableWidth > 0) {
-      setScale(availableWidth / actualWidth);
-    } else {
-      setScale(1);
-    }
-  }, [text, style]);
-
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        maxWidth: "100%",
-        position: "relative",
-        ...style,
-        display: "block",
-      }}
-    >
-      <div
-        style={{
-          visibility: "hidden",
-          width: "100%",
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {text}
-      </div>
-
-      <div
-        ref={textRef}
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          whiteSpace: "nowrap",
-          transformOrigin: "left center",
-          transform: `scaleX(${scale})`,
-        }}
-      >
-        {text}
-      </div>
-    </div>
-  );
-};
-
-// ------------------------------------------------------------------
-// 组件：单个历史回顾卡片
-// ------------------------------------------------------------------
-const HistoryItem = ({ item, index }: { item: any; index: number }) => {
-  const { fps, durationInFrames } = useVideoConfig();
-  const frame = useCurrentFrame();
-  const [imgError, setImgError] = useState(false);
-
-  // 动画配置：入场
-  const entrance = spring({
-    frame: frame - index * 3,
-    fps,
-    from: 50,
-    to: 0,
-    config: { damping: 12 },
-  });
-  const opacity = interpolate(frame - index * 3, [0, 5], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  // 动画配置：退场
-  const exitStartFrame = durationInFrames - 40;
-  const exitVal = interpolate(
-    frame,
-    [exitStartFrame + index * 2, exitStartFrame + index * 2 + 15],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-
-  const exitTranslateY = interpolate(exitVal, [0, 1], [0, 50]);
-  const exitOpacity = interpolate(exitVal, [0, 1], [1, 0]);
-
-  const coverSrc = item.thumbnail || "";
-
-  // 格式化得分（添加逗号分隔）
-  const formatPoint = (num: number) => new Intl.NumberFormat().format(num);
-
-  // 排名徽章宽度预估（#1 到 #100，宽度在 120-180 之间）
-  const badgeWidth = item.rank >= 10 ? 160 : 140;
+  item: HistoryRankItem;
+  boardType: BoardType;
+}) {
+  const styles = getStyles(boardType);
+  const badgeWidth = Number(item.rank || 0) >= 10 ? 160 : 140;
 
   return (
     <div
@@ -127,18 +33,14 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
         alignItems: "stretch",
         border: "3px solid #222",
         borderRadius: 14,
-        backgroundColor: STYLES.colors.cardBg,
+        backgroundColor: styles.colors.cardBg,
         boxShadow: "8px 8px 0 #000",
-        height: 176,
-        flexShrink: 0,
+        height: "100%",
         overflow: "hidden",
         position: "relative",
         width: "100%",
-        transform: `translateY(${entrance + exitTranslateY}px)`,
-        opacity: opacity * exitOpacity,
       }}
     >
-      {/* 1. 封面图 */}
       <div
         style={{
           height: "100%",
@@ -147,34 +49,11 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
           backgroundColor: "#ddd",
           borderRight: "3px solid #222",
           overflow: "hidden",
-          position: "relative",
         }}
       >
-        {!imgError && coverSrc ? (
-          <Img
-            src={coverSrc}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#aaa",
-              fontSize: 24,
-              fontWeight: "bold",
-            }}
-          >
-            NO IMG
-          </div>
-        )}
+        <ListImage src={item.thumbnail || ""} />
       </div>
 
-      {/* 2. 信息区 */}
       <div
         style={{
           flex: 1,
@@ -188,21 +67,19 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
           overflow: "hidden",
         }}
       >
-        {/* 标题 - 全宽压缩 */}
         <div style={{ width: "100%", overflow: "hidden" }}>
           <FitTitle
-            text={item.title}
+            text={item.title || ""}
             style={{
               fontSize: 36,
               fontWeight: 900,
               color: "#222",
-              fontFamily: STYLES.fontMain,
+              fontFamily: styles.fontMain,
               whiteSpace: "nowrap",
             }}
           />
         </div>
 
-        {/* 作者 - 避开右下角徽章 */}
         <div
           style={{
             width: `calc(100% - ${badgeWidth}px)`,
@@ -211,32 +88,30 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
           }}
         >
           <FitTitle
-            text={item.producer}
+            text={item.producer || ""}
             style={{
               fontSize: 24,
               fontWeight: 700,
               color: "#333",
-              fontFamily: STYLES.fontMain,
+              fontFamily: styles.fontMain,
               whiteSpace: "nowrap",
             }}
           />
         </div>
 
-        {/* 得分 */}
         <div
           style={{
             fontSize: 24,
             fontWeight: 700,
             color: "#333",
-            fontFamily: STYLES.fontNum,
+            fontFamily: styles.fontNum,
             paddingLeft: 8,
           }}
         >
-          {formatPoint(item.point)} pt
+          {formatNumber(item.point)} pt
         </div>
       </div>
 
-      {/* 3. 排名徽章 - 绝对定位右下角 */}
       <div
         style={{
           position: "absolute",
@@ -253,7 +128,7 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
       >
         <span
           style={{
-            fontFamily: STYLES.fontNum,
+            fontFamily: styles.fontNum,
             fontSize: 36,
             fontWeight: 900,
             color: "#fff",
@@ -264,124 +139,35 @@ const HistoryItem = ({ item, index }: { item: any; index: number }) => {
         </span>
         <span
           style={{
-            fontFamily: STYLES.fontNum,
+            fontFamily: styles.fontNum,
             fontSize: 48,
             fontWeight: 900,
             color: "#fff",
             lineHeight: 1,
           }}
         >
-          {item.rank}
+          {item.rank || "-"}
         </span>
       </div>
     </div>
   );
-};
+}
 
-// ------------------------------------------------------------------
-// 主组件：历史回顾列表
-// ------------------------------------------------------------------
-export const HistoryRank = (props: { list: any[]; boardType?: BoardType }) => {
-  const { list, boardType = "weekly" } = props;
-  const displayList = list || [];
-  const { durationInFrames, fps } = useVideoConfig();
-  const frame = useCurrentFrame();
-  const STYLES = getStyles(boardType);
-
-  // 标题入场动画
-  const titleEntranceTranslateX = spring({
-    frame: frame - 5,
-    fps,
-    from: 100,
-    to: 0,
-    config: { damping: 12 },
-  });
-
-  const titleEntranceOpacity = interpolate(frame - 5, [0, 15], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  // 标题退场动画
-  const exitStartFrame = durationInFrames - 30;
-  const exitProgress = interpolate(
-    frame,
-    [exitStartFrame, exitStartFrame + 20],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-
-  const titleExitOpacity = interpolate(exitProgress, [0, 1], [1, 0]);
-  const titleExitTranslateX = interpolate(exitProgress, [0, 1], [0, 50]);
-
-  // 布局计算 - 与MillionRank/AchievementRank统一
-  const cardHeight = 176;
-  const cardGap = 14;
-  const maxCards = 5;
-  const totalCardsHeight = maxCards * cardHeight + (maxCards - 1) * cardGap;
-  const availableHeight = 1040;
-  const verticalPadding = (availableHeight - totalCardsHeight) / 2;
-
+export function HistoryRank({
+  list = [],
+  boardType = "weekly",
+}: {
+  list: HistoryRankItem[];
+  boardType?: BoardType;
+}) {
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: STYLES.colors.bg,
-        fontFamily: STYLES.fontMain,
-        backgroundImage: "radial-gradient(#d7ccc8 3px, transparent 3px)",
-        backgroundSize: "24px 24px",
-        padding: "20px 24px",
-        display: "flex",
-        flexDirection: "row",
-        gap: 30,
-        boxSizing: "border-box",
-      }}
-    >
-      {/* 1. 左侧卡片列表 */}
-      <div
-        style={{
-          width: "calc(100% - 380px)",
-          display: "flex",
-          flexDirection: "column",
-          gap: cardGap,
-          justifyContent: "flex-start",
-          height: "100%",
-          paddingTop: verticalPadding,
-          paddingRight: 20,
-        }}
-      >
-        {displayList.map((item, idx) => (
-          <HistoryItem key={idx} item={item} index={idx} />
-        ))}
-      </div>
-
-      {/* 2. 右侧标题区域 */}
-      <div
-        style={{
-          width: 340,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          alignItems: "flex-end",
-          flexShrink: 0,
-          paddingBottom: verticalPadding,
-          opacity: titleEntranceOpacity * titleExitOpacity,
-          transform: `translateX(${titleEntranceTranslateX + titleExitTranslateX}px)`,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 80,
-            fontWeight: 900,
-            color: "#222",
-            fontFamily: STYLES.fontMain,
-            lineHeight: 1,
-            textShadow: "4px 4px 0px #fff",
-            whiteSpace: "nowrap",
-          }}
-        >
-          历史回顾
-        </div>
-      </div>
+    <AbsoluteFill>
+      <ListRankPage
+        title="历史回顾"
+        items={list}
+        boardType={boardType}
+        renderItem={(item) => <HistoryItem item={item} boardType={boardType} />}
+      />
     </AbsoluteFill>
   );
-};
+}

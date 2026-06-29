@@ -1,31 +1,29 @@
-// ------------------------------------------------------------------
-// 组件：趋势条（支持日刊7天/周刊5周）
-// ------------------------------------------------------------------
-import { STYLES, getStyles } from "../styles";
+// packages/remotion-engine/src/components/TrendBar.tsx
+
+import { getStyles } from "../styles";
 import type { BoardType } from "../../../shared/src/boardTypes";
 
-export const TrendBar = ({
+export function TrendBar({
   trends,
   count = 7,
   boardType = "weekly",
 }: {
-  trends: Record<string, any>;
+  trends?: Record<string, unknown>;
   count?: number;
   boardType?: BoardType;
-}) => {
+}) {
   if (!trends) return null;
 
-  const STYLES = getStyles(boardType);
+  const styles = getStyles(boardType);
 
-  // 趋势颜色
-  const TREND_COLORS = [
-    STYLES.colors.blue,
-    STYLES.colors.orange,
-    STYLES.colors.cyan,
-    STYLES.colors.pink,
-    STYLES.colors.purple,
-    STYLES.colors.yellow,
-    STYLES.colors.green,
+  const trendColors = [
+    styles.colors.blue,
+    styles.colors.orange,
+    styles.colors.cyan,
+    styles.colors.pink,
+    styles.colors.purple,
+    styles.colors.yellow,
+    styles.colors.green,
   ];
 
   return (
@@ -49,7 +47,7 @@ export const TrendBar = ({
             key={day}
             style={{
               flex: 1,
-              backgroundColor: TREND_COLORS[idx % TREND_COLORS.length],
+              backgroundColor: trendColors[idx % trendColors.length],
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -61,16 +59,16 @@ export const TrendBar = ({
               style={{
                 fontSize: count > 5 ? 14 : 16,
                 fontWeight: 900,
-                fontFamily: STYLES.fontNum,
+                fontFamily: styles.fontNum,
                 color: "#333",
                 lineHeight: 1,
               }}
             >
-              {displayValue}
+              {String(displayValue)}
             </span>
           </div>
         );
       })}
     </div>
   );
-};
+}

@@ -1,57 +1,56 @@
-// src/Intro.tsx
+// packages/remotion-engine/src/Intro.tsx
+
 import {
   AbsoluteFill,
-  useVideoConfig,
-  useCurrentFrame,
-  spring,
-  interpolate,
   Easing,
   Img,
+  interpolate,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
 } from "remotion";
+
+import { DotPattern } from "./components/FramedPage";
 import { BilibiliLogo } from "./Icons";
-import { STYLES, getStyles } from "./styles";
+import { getStyles } from "./styles";
 import type { BoardType } from "../../shared/src/boardTypes";
 
-const DotPattern = () => (
-  <AbsoluteFill
-    style={{
-      backgroundImage: "radial-gradient(#d7ccc8 3px, transparent 3px)",
-      backgroundSize: "24px 24px",
-      opacity: 0.6,
-      zIndex: 0,
-    }}
-  />
-);
-
-// 根据类型获取显示名称
-const getBoardTypeName = (boardType: string): string => {
-  switch (boardType) {
-    case "monthly":
-      return "月刊";
-    case "coverWeekly":
-      return "周刊"
-    case "weekly":
-    default:
-      return "周刊";
-  }
-};
-
-export const Intro = ({
-  issue = "#68",
-  date = "2025.12.20",
-  coverImg = "",
-  boardType = "weekly",
-}: {
+interface IntroProps {
   issue?: string;
   date?: string;
   coverImg?: string;
   boardType?: BoardType;
-}) => {
+}
+
+function getBoardTypeName(boardType: BoardType): string {
+  switch (boardType) {
+    case "monthly":
+      return "月刊";
+    case "coverWeekly":
+    case "weekly":
+    default:
+      return "周刊";
+  }
+}
+
+function getTitleLines(boardType: BoardType): [string, string] {
+  if (boardType === "coverWeekly") {
+    return ["术力口外语", "翻唱曲周刊"];
+  }
+
+  return [`${getBoardTypeName(boardType)}虚拟歌手`, "外语排行榜"];
+}
+
+export function Intro({
+  issue = "#68",
+  date = "2025.12.20",
+  coverImg = "",
+  boardType = "weekly",
+}: IntroProps) {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
-  const STYLES = getStyles(boardType);
-
-  const boardTypeName = getBoardTypeName(boardType);
+  const styles = getStyles(boardType);
+  const [titleLine1, titleLine2] = getTitleLines(boardType);
 
   const containerEntrance = spring({
     frame,
@@ -61,18 +60,17 @@ export const Intro = ({
     config: { damping: 14, mass: 1 },
   });
 
-  const titleDelay = 15;
   const titleProgress = spring({
-    frame: frame - titleDelay,
+    frame: frame - 15,
     fps,
     config: { damping: 12 },
   });
+
   const titleY = interpolate(titleProgress, [0, 1], [40, 0]);
   const titleOpacity = interpolate(titleProgress, [0, 1], [0, 1]);
 
-  const imgDelay = 25;
   const imgScale = spring({
-    frame: frame - imgDelay,
+    frame: frame - 25,
     fps,
     from: 0,
     to: 1,
@@ -81,6 +79,7 @@ export const Intro = ({
 
   const exitFrames = 30;
   const exitStart = durationInFrames - exitFrames;
+
   const exitProgress = interpolate(
     frame,
     [exitStart, durationInFrames],
@@ -95,8 +94,8 @@ export const Intro = ({
   const translateY = frame < exitStart ? containerEntrance : containerExit;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: STYLES.colors.bg }}>
-      <DotPattern />
+    <AbsoluteFill style={{ backgroundColor: styles.colors.bg }}>
+      <DotPattern boardType={boardType} />
 
       <div
         style={{
@@ -113,9 +112,9 @@ export const Intro = ({
             width: 1750,
             height: 850,
             backgroundColor: "#fff",
-            border: STYLES.border,
+            border: styles.border,
             borderRadius: 32,
-            boxShadow: STYLES.shadow,
+            boxShadow: styles.shadow,
             display: "flex",
             padding: 40,
             gap: 40,
@@ -131,8 +130,8 @@ export const Intro = ({
               top: 0,
               bottom: 0,
               width: 20,
-              backgroundColor: STYLES.colors.biliBlue,
-              borderRight: STYLES.border,
+              backgroundColor: styles.colors.biliBlue,
+              borderRight: styles.border,
             }}
           />
 
@@ -179,7 +178,7 @@ export const Intro = ({
                   borderRadius: 10,
                   fontSize: 64,
                   fontWeight: "bold",
-                  fontFamily: STYLES.fontMain,
+                  fontFamily: styles.fontMain,
                 }}
               >
                 术力口数据库
@@ -191,31 +190,24 @@ export const Intro = ({
                 fontSize: 100,
                 lineHeight: 1.15,
                 margin: "0 0 36px 0",
-                fontFamily: STYLES.fontMain,
-                color: STYLES.colors.textMain,
+                fontFamily: styles.fontMain,
+                color: styles.colors.textMain,
                 opacity: titleOpacity,
                 transform: `translateY(${titleY}px)`,
                 textShadow: "4px 4px 0px rgba(0,0,0,0.1)",
               }}
             >
-              {boardType === 'coverWeekly' ? <><div style={{ whiteSpace: "nowrap" }}>
-                术力口外语
-              </div>
+              <div style={{ whiteSpace: "nowrap" }}>{titleLine1}</div>
               <div
-                style={{ color: STYLES.colors.biliBlue, whiteSpace: "nowrap" }}
+                style={{
+                  color: styles.colors.biliBlue,
+                  whiteSpace: "nowrap",
+                }}
               >
-                翻唱曲周刊
-              </div></> : <><div style={{ whiteSpace: "nowrap" }}>
-                {boardTypeName}虚拟歌手
+                {titleLine2}
               </div>
-              <div
-                style={{ color: STYLES.colors.biliBlue, whiteSpace: "nowrap" }}
-              >
-                外语排行榜
-              </div></> }
             </h1>
 
-            {/* 期数和日期 */}
             <div
               style={{
                 display: "flex",
@@ -226,21 +218,18 @@ export const Intro = ({
             >
               <div
                 style={{
-                  backgroundColor: STYLES.colors.yellow,
-                  border: STYLES.border,
+                  backgroundColor: styles.colors.yellow,
+                  border: styles.border,
                   boxShadow: "5px 5px 0 rgba(0,0,0,1)",
                   borderRadius: 16,
                   padding: "14px 32px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 <span
                   style={{
                     fontSize: 56,
-                    fontWeight: "900",
-                    fontFamily: STYLES.fontHeader,
+                    fontWeight: 900,
+                    fontFamily: styles.fontHeader,
                     color: "#000",
                   }}
                 >
@@ -251,20 +240,17 @@ export const Intro = ({
               <div
                 style={{
                   backgroundColor: "#fff",
-                  border: STYLES.border,
+                  border: styles.border,
                   boxShadow: "5px 5px 0 rgba(0,0,0,1)",
                   borderRadius: 16,
                   padding: "14px 32px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 <span
                   style={{
                     fontSize: 48,
                     fontWeight: "bold",
-                    fontFamily: STYLES.fontHeader,
+                    fontFamily: styles.fontHeader,
                     color: "#333",
                     letterSpacing: 3,
                   }}
@@ -275,7 +261,6 @@ export const Intro = ({
             </div>
           </div>
 
-          {/* 右侧封面区 */}
           <div
             style={{
               flex: 5.5,
@@ -291,21 +276,22 @@ export const Intro = ({
                 width: 520,
                 height: 520,
                 borderRadius: "50%",
-                backgroundColor: STYLES.colors.pink,
-                border: STYLES.border,
+                backgroundColor: styles.colors.pink,
+                border: styles.border,
                 right: -80,
                 top: -80,
                 transform: `scale(${imgScale})`,
                 zIndex: 0,
               }}
             />
+
             <div
               style={{
                 position: "absolute",
                 width: 280,
                 height: 280,
-                backgroundColor: STYLES.colors.orange,
-                border: STYLES.border,
+                backgroundColor: styles.colors.orange,
+                border: styles.border,
                 left: 0,
                 bottom: 0,
                 transform: `scale(${imgScale}) rotate(-15deg)`,
@@ -313,7 +299,6 @@ export const Intro = ({
               }}
             />
 
-            {/* 封面图 */}
             <div
               style={{
                 width: "95%",
@@ -357,7 +342,7 @@ export const Intro = ({
                     style={{
                       fontSize: 48,
                       fontWeight: "bold",
-                      fontFamily: STYLES.fontHeader,
+                      fontFamily: styles.fontHeader,
                     }}
                   >
                     NO COVER
@@ -370,4 +355,4 @@ export const Intro = ({
       </div>
     </AbsoluteFill>
   );
-};
+}

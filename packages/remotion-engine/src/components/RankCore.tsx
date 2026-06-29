@@ -1,19 +1,25 @@
-import { STYLES, getStyles } from "../styles"
+// packages/remotion-engine/src/components/RankCore.tsx
+
+import { getStyles } from "../styles";
 import type { BoardType } from "../../../shared/src/boardTypes";
 
-
-export const RankCore = ({
+export function RankCore({
   rank = 1,
   showCount = true,
   count = 10,
-  boardType = "weekly"
+  label = "本期排名",
+  watermark = "RANK",
+  boardType = "weekly",
 }: {
-  rank: number,
-  showCount: boolean,
-  count: number,
-  boardType?: BoardType
-}) => {
-  const STYLES = getStyles(boardType);
+  rank?: number | string;
+  showCount?: boolean;
+  count?: number;
+  label?: string;
+  watermark?: string;
+  boardType?: BoardType;
+}) {
+  const styles = getStyles(boardType);
+
   return (
     <div
       style={{
@@ -42,7 +48,7 @@ export const RankCore = ({
           letterSpacing: 2,
         }}
       >
-        本期排名
+        {label}
       </div>
 
       <div
@@ -57,9 +63,9 @@ export const RankCore = ({
         <div
           style={{
             fontSize: 80,
-            fontFamily: STYLES.fontNum,
+            fontFamily: styles.fontNum,
             fontWeight: "900",
-            color: STYLES.colors.textMain,
+            color: styles.colors.textMain,
             lineHeight: 1,
             letterSpacing: "-4px",
             textShadow: "4px 4px 0px rgba(255,255,255,1)",
@@ -82,7 +88,7 @@ export const RankCore = ({
                 fontSize: 18,
                 fontWeight: "bold",
                 color: "#444",
-                fontFamily: STYLES.fontMain,
+                fontFamily: styles.fontMain,
               }}
             >
               累计
@@ -90,8 +96,8 @@ export const RankCore = ({
             <span
               style={{
                 fontSize: 26,
-                fontFamily: STYLES.fontNum,
-                color: STYLES.colors.accentRed,
+                fontFamily: styles.fontNum,
+                color: styles.colors.accentRed,
                 fontWeight: "900",
                 lineHeight: 1,
                 margin: "0 2px",
@@ -105,7 +111,7 @@ export const RankCore = ({
                 fontSize: 18,
                 fontWeight: "bold",
                 color: "#444",
-                fontFamily: STYLES.fontMain,
+                fontFamily: styles.fontMain,
               }}
             >
               周上榜
@@ -127,8 +133,8 @@ export const RankCore = ({
           fontFamily: "Arial Black",
         }}
       >
-        RANK
+        {watermark}
       </div>
     </div>
-  )
+  );
 }

@@ -1,68 +1,52 @@
-// server.js (ES模块版本)
-import 'dotenv/config'; // 加载环境变量
+// packages/controller/src/server.ts
 
-// 添加全局错误处理
-process.on('uncaughtException', (error) => {
-  console.error('❌ 未捕获异常:', error.message);
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import {
+  DIR_AVATAR,
+  DIR_DOWNLOADS,
+  DIR_FULL_VIDEO,
+  DIR_STAFF,
+  DIR_VIDEO_ROOT,
+  ensureStorageDirs,
+  PORT,
+} from "./config.js";
+import apiRoutes from "./routes/api.js";
+import { errorHandler } from "./utils/http.js";
+
+process.on("uncaughtException", (error) => {
+  console.error("❌ 未捕获异常:", error.message);
   console.error(error.stack);
 });
 
-process.on('unhandledRejection', (reason) => {
-  console.error('❌ 未处理的Promise拒绝:', reason);
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ 未处理的 Promise 拒绝:", reason);
 });
 
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import fs from 'fs-extra';
-import { fileURLToPath } from 'url';
-
-// 导入配置（从shared包）
-import {
-  PORT,
-  DIR_DATA,
-  DIR_DOWNLOADS,
-  DIR_IMAGES,
-  DIR_VIDEO_ROOT,
-  DIR_AUDIO_CACHE,
-  DIR_FULL_VIDEO,
-  DIR_AVATAR,
-  DIR_STAFF,
-} from './config.js';
-
-// 导入路由（注意加.js后缀）
-import apiRoutes from './routes/api.js';
-
-// ES模块中手动定义__dirname（关键！）
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 创建目录（逻辑不变）
-fs.ensureDirSync(DIR_DATA);
-fs.ensureDirSync(DIR_DOWNLOADS);
-fs.ensureDirSync(DIR_IMAGES);
-fs.ensureDirSync(DIR_VIDEO_ROOT);
-fs.ensureDirSync(DIR_AUDIO_CACHE);
-fs.ensureDirSync(DIR_AVATAR);
-fs.ensureDirSync(DIR_STAFF);
+ensureStorageDirs();
 
-// 初始化Express应用
 const app = express();
 
-// 中间件配置（逻辑不变）
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
+
 app.use("/downloads", express.static(DIR_DOWNLOADS));
 app.use("/downloads/full_videos", express.static(DIR_FULL_VIDEO));
 app.use("/video", express.static(DIR_VIDEO_ROOT));
 app.use("/config/avatar", express.static(DIR_AVATAR));
 app.use("/config/staff", express.static(DIR_STAFF));
 
-// 挂载路由
 app.use("/api", apiRoutes);
 
-// 启动服务
+app.use(errorHandler);
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

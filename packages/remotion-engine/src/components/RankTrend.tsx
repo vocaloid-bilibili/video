@@ -1,33 +1,32 @@
-import { TrendBar } from "./TrendBar"
-import { STYLES, getStyles } from "../styles"
-import { NumberOrNone } from "../types"
+// packages/remotion-engine/src/components/RankTrend.tsx
+
+import { getStyles } from "../styles";
+import { TrendBar } from "./TrendBar";
 import type { BoardType } from "../../../shared/src/boardTypes";
 
-export const RankTrend = ({
+type NumberOrNone = number | "-";
+
+export function RankTrend({
   isNewSong = false,
-  trendCount,
+  trendCount = 7,
   trendData,
-  rankDiffValue,
-  rank_before,
+  rankDiffValue = 0,
+  rank_before = "-",
   main_rank,
-  boardType = "weekly"
+  boardType = "weekly",
 }: {
-  isNewSong: boolean,
-  trendCount: number,
-  trendData: { [key: string]: NumberOrNone },
-  rankDiffValue: number,
-  rank_before: NumberOrNone,
-  main_rank?: NumberOrNone,
-  boardType?: BoardType
-}) => {
-  const STYLES = getStyles(boardType);
-
-  let isNewPart = false
-  if (main_rank) {
-    isNewSong = true
-    isNewPart = true
-  }
-
+  isNewSong?: boolean;
+  trendCount?: number;
+  trendData?: Record<string, unknown>;
+  rankDiffValue?: number;
+  rank_before?: NumberOrNone;
+  main_rank?: NumberOrNone;
+  boardType?: BoardType;
+}) {
+  const styles = getStyles(boardType);
+  const isNewPart =
+    main_rank !== undefined && main_rank !== "-" && main_rank !== 0;
+  const displayAsNew = isNewSong || isNewPart;
 
   return (
     <div
@@ -58,7 +57,6 @@ export const RankTrend = ({
         TREND
       </div>
 
-      {/* 上部：排名变动区域 */}
       <div
         style={{
           flex: 1,
@@ -69,7 +67,7 @@ export const RankTrend = ({
           padding: "0 8px",
         }}
       >
-        {isNewSong ? (
+        {displayAsNew ? (
           <div
             style={{
               flex: 1,
@@ -84,8 +82,8 @@ export const RankTrend = ({
               style={{
                 fontSize: 64,
                 fontWeight: "900",
-                fontFamily: STYLES.fontNum,
-                color: STYLES.colors.accentRed,
+                fontFamily: styles.fontNum,
+                color: styles.colors.accentRed,
                 lineHeight: 1,
                 textShadow: "3px 3px 0 rgba(0,0,0,0.1)",
               }}
@@ -95,7 +93,6 @@ export const RankTrend = ({
           </div>
         ) : (
           <>
-            {/* 左侧：排名变动 */}
             <div
               style={{
                 flex: 1,
@@ -131,9 +128,9 @@ export const RankTrend = ({
                     <span
                       style={{
                         fontSize: 24,
-                        color: STYLES.colors.accentRed,
+                        color: styles.colors.accentRed,
                         marginRight: 2,
-                        fontFamily: STYLES.fontNum,
+                        fontFamily: styles.fontNum,
                       }}
                     >
                       ▲
@@ -142,8 +139,8 @@ export const RankTrend = ({
                       style={{
                         fontSize: 30,
                         fontWeight: "900",
-                        color: STYLES.colors.accentRed,
-                        fontFamily: STYLES.fontNum,
+                        color: styles.colors.accentRed,
+                        fontFamily: styles.fontNum,
                         lineHeight: 1,
                       }}
                     >
@@ -155,9 +152,9 @@ export const RankTrend = ({
                     <span
                       style={{
                         fontSize: 24,
-                        color: STYLES.colors.accentGreen,
+                        color: styles.colors.accentGreen,
                         marginRight: 2,
-                        fontFamily: STYLES.fontNum,
+                        fontFamily: styles.fontNum,
                       }}
                     >
                       ▼
@@ -166,8 +163,8 @@ export const RankTrend = ({
                       style={{
                         fontSize: 30,
                         fontWeight: "900",
-                        color: STYLES.colors.accentGreen,
-                        fontFamily: STYLES.fontNum,
+                        color: styles.colors.accentGreen,
+                        fontFamily: styles.fontNum,
                         lineHeight: 1,
                       }}
                     >
@@ -180,7 +177,7 @@ export const RankTrend = ({
                       fontSize: 24,
                       fontWeight: "900",
                       color: "#888",
-                      fontFamily: STYLES.fontNum,
+                      fontFamily: styles.fontNum,
                     }}
                   >
                     ◼ 持平
@@ -189,7 +186,6 @@ export const RankTrend = ({
               </div>
             </div>
 
-            {/* 分隔线 */}
             <div
               style={{
                 width: 2,
@@ -199,7 +195,6 @@ export const RankTrend = ({
               }}
             />
 
-            {/* 右侧：上周排名 */}
             <div
               style={{
                 flex: 1,
@@ -221,32 +216,22 @@ export const RankTrend = ({
               >
                 上期排名
               </span>
-              <div
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 36,
+                  fontSize: 30,
+                  fontWeight: "900",
+                  fontFamily: styles.fontNum,
+                  color: "#444",
+                  lineHeight: 1,
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 30,
-                    fontWeight: "900",
-                    fontFamily: STYLES.fontNum,
-                    color: "#444",
-                    lineHeight: 1,
-                  }}
-                >
-                  #{rank_before}
-                </span>
-              </div>
+                #{rank_before}
+              </span>
             </div>
           </>
         )}
       </div>
 
-      {/* 中间：可能有总榜排名 */}
       {isNewPart && (
         <div
           style={{
@@ -258,29 +243,31 @@ export const RankTrend = ({
             zIndex: 1,
           }}
         >
-          <span
-            style={{ fontSize: 18, color: "#999", fontWeight: "bold" }}
-          >
+          <span style={{ fontSize: 18, color: "#999", fontWeight: "bold" }}>
             总榜排名
           </span>
           <span
             style={{
               fontSize: 26,
               fontWeight: "900",
-              fontFamily: STYLES.fontNum,
+              fontFamily: styles.fontNum,
               color: "#444",
             }}
           >
-            #{main_rank || "-"}
+            #{main_rank}
           </span>
         </div>
       )}
-      {/* 下部：趋势条 */}
+
       {trendData && (
         <div style={{ padding: "0 8px 8px 8px" }}>
-          <TrendBar trends={trendData} count={trendCount} />
+          <TrendBar
+            trends={trendData}
+            count={trendCount}
+            boardType={boardType}
+          />
         </div>
       )}
     </div>
-  )
+  );
 }

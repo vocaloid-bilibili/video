@@ -1,27 +1,41 @@
+// packages/controller/src/config.ts
+
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs-extra";
 import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ 必须指向 .env 文件
-export const MONOREPO_ROOT = path.resolve(process.cwd(), "../../");
-const ENV_PATH = path.join(MONOREPO_ROOT, ".env");
+export const MONOREPO_ROOT = path.resolve(__dirname, "../../..");
+export const ENV_PATH = path.join(MONOREPO_ROOT, ".env");
 
-// ✅ 先加载
-dotenv.config({
-  path: ENV_PATH,
-});
+dotenv.config({ path: ENV_PATH });
 
 const env = process.env;
 
-export const PORT = env.PORT || 3002;
-export const API_KEY = env.API_KEY || "1145140721";
-export const PYTHON_API = env.PYTHON_API || "http://127.0.0.1:8000/analyze";
-export const CHROME_EXECUTABLE =
-  env.CHROME_EXECUTABLE ||
-  `C:\\chrome-headless-shell\\chrome-headless-shell.exe`;
+function getEnvString(name: string, fallback: string): string {
+  const value = env[name];
+  return value && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function getEnvNumber(name: string, fallback: number): number {
+  const value = Number(env[name]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+export const PORT = getEnvNumber("PORT", 3002);
+export const API_KEY = getEnvString("API_KEY", "1145140721");
+export const PYTHON_API = getEnvString(
+  "PYTHON_API",
+  "http://127.0.0.1:8000/analyze",
+);
+
+export const CHROME_EXECUTABLE = getEnvString(
+  "CHROME_EXECUTABLE",
+  "C:\\chrome-headless-shell\\chrome-headless-shell.exe",
+);
 
 export const STORAGE_ROOT = path.resolve(MONOREPO_ROOT, "storage");
 
@@ -36,29 +50,53 @@ export const DIR_STAFF = path.resolve(DIR_DOWNLOADS, "staff");
 export const DIR_FULL_VIDEO = path.resolve(DIR_DOWNLOADS, "full_videos");
 export const DIR_CLIP_DB = path.resolve(DIR_DATA, "clips_db.json");
 export const COOKIES_PATH = path.resolve(MONOREPO_ROOT, "cookies.txt");
-export const USE_GPU = process.env.USE_GPU;
 
-console.log("USE_GPU：", USE_GPU);
+export type GpuVendor = "NVIDIA" | "INTEL" | "CPU";
 
-let VIDEO_CODEC: string;
-let ENCODE_OPTS: string;
-let HWACCEL: string;
+function getGpuVendor(): GpuVendor {
+  const value = getEnvString("USE_GPU", "CPU").toUpperCase();
 
-if (USE_GPU === "NVIDIA") {
-  VIDEO_CODEC = "h264_nvenc";
-  ENCODE_OPTS = "-preset p1 -rc vbr -cq 23 -b:v 6M -maxrate 10M";
-  HWACCEL = "-hwaccel cuda";
-} else if (USE_GPU === "INTEL") {
-  VIDEO_CODEC = "h264_qsv";
-  ENCODE_OPTS = "-preset fast -b:v 6M -maxrate 10M";
-  HWACCEL = "";
-} else {
-  VIDEO_CODEC = "libx264";
-  ENCODE_OPTS = "-preset medium -crf 23";
-  HWACCEL = "";
+  if (value === "NVIDIA") return "NVIDIA";
+  if (value === "INTEL") return "INTEL";
+
+  return "CPU";
 }
 
-export { VIDEO_CODEC, ENCODE_OPTS, HWACCEL };
+export const USE_GPU = getGpuVendor();
+
+function getEncodeConfig(gpu: GpuVendor): {
+  videoCodec: string;
+  encodeOpts: string;
+  hwaccel: string;
+} {
+  if (gpu === "NVIDIA") {
+    return {
+      videoCodec: "h264_nvenc",
+      encodeOpts: "-preset p1 -rc vbr -cq 23 -b:v 6M -maxrate 10M",
+      hwaccel: "-hwaccel cuda",
+    };
+  }
+
+  if (gpu === "INTEL") {
+    return {
+      videoCodec: "h264_qsv",
+      encodeOpts: "-preset fast -b:v 6M -maxrate 10M",
+      hwaccel: "",
+    };
+  }
+
+  return {
+    videoCodec: "libx264",
+    encodeOpts: "-preset medium -crf 23",
+    hwaccel: "",
+  };
+}
+
+const encodeConfig = getEncodeConfig(USE_GPU);
+
+export const VIDEO_CODEC = encodeConfig.videoCodec;
+export const ENCODE_OPTS = encodeConfig.encodeOpts;
+export const HWACCEL = encodeConfig.hwaccel;
 
 export interface StaffMember {
   name: string;
@@ -78,3 +116,16 @@ export const STAFF_LIST: StaffMember[] = [
   { name: "蓝溪水", uid: "675685757" },
   { name: "白板だよ", uid: "621087695" },
 ];
+
+export function ensureStorageDirs(): void {
+  [
+    DIR_DATA,
+    DIR_DOWNLOADS,
+    DIR_IMAGES,
+    DIR_VIDEO_ROOT,
+    DIR_AUDIO_CACHE,
+    DIR_AVATAR,
+    DIR_STAFF,
+    DIR_FULL_VIDEO,
+  ].forEach((dir) => fs.ensureDirSync(dir));
+}

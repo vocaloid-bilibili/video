@@ -9,7 +9,7 @@
     "dev": "tsx watch src/server.js",
     "start": "tsx watch src/server.js",
     "build": "echo 'Controller does not need build step'",
-    "lint": "eslint src --ext .js"
+    "lint": "eslint src"
   },
   "dependencies": {
     "axios": "^1.13.2",

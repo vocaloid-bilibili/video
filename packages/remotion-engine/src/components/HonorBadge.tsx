@@ -1,42 +1,39 @@
-// 组件：成就胶囊
-export const HonorBadge = ({ text }: { text: string }) => {
-  let color = "#333";
-  let bg = "rgba(255,255,255,0.75)";
-  let border = "rgba(0,0,0,0.5)";
+// packages/remotion-engine/src/components/HonorBadge.tsx
 
-  if (text.includes("Emerging")) {
-    color = "#6A0DAD";
-    bg = "rgba(106, 13, 173, 0.25)";
-    border = "rgba(106, 13, 173, 0.4)";
-  } else if (text.includes("Mega")) {
-    color = "#CCA300";
-    bg = "rgba(204, 163, 0, 0.25)";
-    border = "rgba(204, 163, 0, 0.4)";
-  } else if (text === "门番") {
-    color = "#127436";
-    bg = "rgba(18, 116, 54, 0.25)";
-    border = "rgba(18, 116, 54, 0.4)";
-  } else if (text.includes("门番")) {
-    color = "#23AFA4";
-    bg = "rgba(35, 175, 164, 0.25)";
-    border = "rgba(35, 175, 164, 0.4)";
-  }
+import { getStyles } from "../styles";
+import type { BoardType } from "../../../shared/src/boardTypes";
+
+export type HonorText = "Emerging Hit!" | "Mega Hit!!!" | "门番" | "门番候补";
+
+export function HonorBadge({
+  text,
+  boardType = "weekly",
+}: {
+  text: string;
+  boardType?: BoardType;
+}) {
+  const styles = getStyles(boardType);
+  const honorColors = styles.colors.honor;
+
+  const preset =
+    honorColors[text as keyof typeof honorColors] || honorColors.default;
 
   return (
     <div
       style={{
         display: "inline-block",
-        backgroundColor: bg,
-        border: `3px solid ${border}`,
+        backgroundColor: preset.bg,
+        border: `3px solid ${preset.border}`,
         borderRadius: 10,
         padding: "6px 18px",
         fontSize: 26,
         fontWeight: "900",
-        color: color,
+        color: preset.text,
         boxShadow: "3px 3px 0 rgba(0,0,0,0.1)",
+        whiteSpace: "nowrap",
       }}
     >
       {text}
     </div>
   );
-};
+}

@@ -1,81 +1,129 @@
-// src/InfoCard.tsx
+// packages/remotion-engine/src/InfoCard.tsx
+
 import {
   AbsoluteFill,
-  useVideoConfig,
-  useCurrentFrame,
-  spring,
   Img,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
 } from "remotion";
-import { STYLES, getStyles } from "./styles";
+
+import { DotPattern } from "./components/FramedPage";
+import { getStyles } from "./styles";
 import type { BoardType } from "../../shared/src/boardTypes";
 
-const DotPattern = () => (
-  <AbsoluteFill
-    style={{
-      backgroundImage: "radial-gradient(#d7ccc8 3px, transparent 3px)",
-      backgroundSize: "24px 24px",
-      opacity: 0.6,
-      zIndex: 0,
-    }}
-  />
-);
+interface InfoCardProps {
+  opLabel?: string | null;
+  opTitle?: string;
+  opArtist?: string;
+  opCover?: string;
+  timeLabel?: string;
+  timeRange?: string;
+  note?: string;
+  boardType?: BoardType;
+}
 
-export const InfoCard = ({
+function getDefaultOpLabel(boardType: BoardType): string {
+  switch (boardType) {
+    case "monthly":
+      return "OP / 上月冠军";
+    case "special":
+      return "OP";
+    default:
+      return "OP / 上期冠军";
+  }
+}
+
+function slideY({
+  frame,
+  fps,
+  durationInFrames,
+  height,
+  enterDelay,
+  exitDelay,
+}: {
+  frame: number;
+  fps: number;
+  durationInFrames: number;
+  height: number;
+  enterDelay: number;
+  exitDelay: number;
+}): number {
+  const entrance = spring({
+    frame: frame - enterDelay,
+    fps,
+    from: height,
+    to: 0,
+    config: {
+      damping: 14,
+      mass: 0.8,
+      stiffness: 100,
+    },
+  });
+
+  const exitStartFrame = durationInFrames - 35;
+
+  const exit = spring({
+    frame: frame - exitStartFrame - exitDelay,
+    fps,
+    from: 0,
+    to: height,
+    config: {
+      damping: 14,
+      mass: 0.8,
+      stiffness: 100,
+    },
+  });
+
+  return entrance + exit;
+}
+
+export function InfoCard({
   opLabel,
-  opTitle,
-  opArtist,
-  opCover,
+  opTitle = "未知",
+  opArtist = "Unknown",
+  opCover = "",
   timeLabel = "统计时间",
-  timeRange,
-  note,
-  boardType = "special"
-}: any) => {
+  timeRange = "",
+  note = "",
+  boardType = "special",
+}: InfoCardProps) {
   const { fps, durationInFrames, height } = useVideoConfig();
   const frame = useCurrentFrame();
-  const STYLES = getStyles(boardType);
+  const styles = getStyles(boardType);
 
-  // 根据期刊类型调整标签
-  const getOpLabel = () => {
-    switch (boardType) {
-      case "monthly":
-        return "OP / 上月冠军";
-      case "special":
-        return "OP";
-      default:
-        return "OP / 上期冠军";
-    }
-  };
+  const displayOpLabel = opLabel ?? getDefaultOpLabel(boardType);
 
-  const displayOpLabel = opLabel ?? getOpLabel()
+  const block1Y = slideY({
+    frame,
+    fps,
+    durationInFrames,
+    height,
+    enterDelay: 0,
+    exitDelay: 10,
+  });
 
-  const getSlideAnimation = (enterDelay: number, exitDelay: number) => {
-    const entrance = spring({
-      frame: frame - enterDelay,
-      fps,
-      from: height,
-      to: 0,
-      config: { damping: 14, mass: 0.8, stiffness: 100 },
-    });
+  const block2Y = slideY({
+    frame,
+    fps,
+    durationInFrames,
+    height,
+    enterDelay: 5,
+    exitDelay: 5,
+  });
 
-    const exitStartFrame = durationInFrames - 35;
-    const exitAnimation = spring({
-      frame: frame - exitStartFrame - exitDelay,
-      fps,
-      from: 0,
-      to: height,
-      config: { damping: 14, mass: 0.8, stiffness: 100 },
-    });
-
-    return entrance + exitAnimation;
-  };
-
-  const block1Y = getSlideAnimation(0, 10);
-  const block2Y = getSlideAnimation(5, 5);
-  const block3Y = getSlideAnimation(10, 0);
+  const block3Y = slideY({
+    frame,
+    fps,
+    durationInFrames,
+    height,
+    enterDelay: 10,
+    exitDelay: 0,
+  });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: STYLES.colors.bg }}>
-      <DotPattern />
+    <AbsoluteFill style={{ backgroundColor: styles.colors.bg }}>
+      <DotPattern boardType={boardType} />
 
       <div
         style={{
@@ -95,18 +143,14 @@ export const InfoCard = ({
             zIndex: 1,
           }}
         >
-          {/* 板块 1: OP */}
           <div style={{ transform: `translateY(${block1Y}px)` }}>
             <div
               style={{
                 fontSize: 48,
-                fontWeight: "900",
-                fontFamily: STYLES.fontMain,
+                fontWeight: 900,
+                fontFamily: styles.fontMain,
                 marginBottom: 16,
                 color: "#333",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
               }}
             >
               {displayOpLabel}
@@ -115,9 +159,9 @@ export const InfoCard = ({
             <div
               style={{
                 backgroundColor: "#fff",
-                border: STYLES.border,
+                border: styles.border,
                 borderRadius: 24,
-                boxShadow: STYLES.shadow,
+                boxShadow: styles.shadow,
                 padding: 24,
                 display: "flex",
                 alignItems: "center",
@@ -159,17 +203,18 @@ export const InfoCard = ({
                   style={{
                     fontSize: 42,
                     fontWeight: "bold",
-                    fontFamily: STYLES.fontMain,
+                    fontFamily: styles.fontMain,
                     lineHeight: 1.2,
                   }}
                 >
                   {opTitle}
                 </div>
+
                 <div
                   style={{
                     fontSize: 32,
                     color: "#666",
-                    fontFamily: STYLES.fontMain,
+                    fontFamily: styles.fontMain,
                   }}
                 >
                   {opArtist}
@@ -178,18 +223,14 @@ export const InfoCard = ({
             </div>
           </div>
 
-          {/* 板块 2: 统计时间 */}
           <div style={{ transform: `translateY(${block2Y}px)` }}>
             <div
               style={{
                 fontSize: 48,
-                fontWeight: "900",
-                fontFamily: STYLES.fontMain,
+                fontWeight: 900,
+                fontFamily: styles.fontMain,
                 marginBottom: 16,
                 color: "#333",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
               }}
             >
               {timeLabel}
@@ -198,15 +239,15 @@ export const InfoCard = ({
             <div
               style={{
                 backgroundColor: "#fff",
-                border: STYLES.border,
+                border: styles.border,
                 borderRadius: 24,
-                boxShadow: STYLES.shadow,
+                boxShadow: styles.shadow,
                 padding: "24px 40px",
                 fontSize: 40,
                 fontWeight: "bold",
-                fontFamily: STYLES.fontHeader,
+                fontFamily: styles.fontHeader,
                 textAlign: "center",
-                color: STYLES.colors.textSub,
+                color: styles.colors.textSub,
                 letterSpacing: 1,
               }}
             >
@@ -214,14 +255,13 @@ export const InfoCard = ({
             </div>
           </div>
 
-          {/* 板块 3: 备注 */}
           <div style={{ transform: `translateY(${block3Y}px)` }}>
             <div
               style={{
-                backgroundColor: STYLES.colors.yellow,
-                border: STYLES.border,
+                backgroundColor: styles.colors.yellow,
+                border: styles.border,
                 borderRadius: 24,
-                boxShadow: STYLES.shadow,
+                boxShadow: styles.shadow,
                 padding: "32px 40px",
                 marginTop: 16,
                 display: "flex",
@@ -233,7 +273,7 @@ export const InfoCard = ({
                 style={{
                   fontSize: 36,
                   fontWeight: "bold",
-                  fontFamily: STYLES.fontMain,
+                  fontFamily: styles.fontMain,
                   color: "#000",
                 }}
               >
@@ -245,4 +285,4 @@ export const InfoCard = ({
       </div>
     </AbsoluteFill>
   );
-};
+}

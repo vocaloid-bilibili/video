@@ -16,14 +16,14 @@ import { StatsCard } from "./StatsCard";
 import { StaffCard } from "./StaffCard";
 import { SpecialCard } from "./SpecialCard";
 import { PickupCard } from "./PickupCard";
-import mainRankProps from "./example/mainRank"
-import coverMainRankProps from "./example/coverMainRank"
+import mainRankProps from "./example/mainRank";
+import coverMainRankProps from "./example/coverMainRank";
 import specialProps from "./example/specialRank";
-import vocalStats from "./example/vocalStats"
+import vocalStats from "./example/vocalStats";
 
 import { weeklyMainSchema } from "./types/zod";
 
-const TEMP_BOARD_TYPE = 'coverWeekly'
+const TEMP_BOARD_TYPE = "coverWeekly";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -56,7 +56,7 @@ export const RemotionRoot: React.FC = () => {
           timeLabel: "统计时间",
           timeRange: "2025.12.20 — 2025.12.27",
           note: "测试",
-          board_type: TEMP_BOARD_TYPE
+          boardType: TEMP_BOARD_TYPE,
         }}
       />
       <Composition
@@ -100,7 +100,11 @@ export const RemotionRoot: React.FC = () => {
       />
       <Composition
         id="MainRankCard"
-        component={MainRankCard as unknown as React.ComponentType<Record<string, unknown>>}
+        component={
+          MainRankCard as unknown as React.ComponentType<
+            Record<string, unknown>
+          >
+        }
         durationInFrames={60 * 35}
         fps={60}
         width={1920}
@@ -110,7 +114,11 @@ export const RemotionRoot: React.FC = () => {
       />
       <Composition
         id="CoverMainRankCard"
-        component={MainRankCard as unknown as React.ComponentType<Record<string, unknown>>}
+        component={
+          MainRankCard as unknown as React.ComponentType<
+            Record<string, unknown>
+          >
+        }
         durationInFrames={60 * 35}
         fps={60}
         width={1920}

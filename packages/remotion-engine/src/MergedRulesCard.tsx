@@ -1,1685 +1,52 @@
-// src/MergedRulesCard.tsx
+// packages/remotion-engine/src/MergedRulesCard.tsx
+
 import {
   AbsoluteFill,
-  useVideoConfig,
-  useCurrentFrame,
-  spring,
+  Easing,
   interpolate,
   Sequence,
-  Easing,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
 } from "remotion";
-import React from "react";
-import {
-  PlayIcon,
-  StarIcon,
-  CoinIcon,
-  LikeIcon,
-  DanmakuIcon,
-  ReplyIcon,
-  ShareIcon,
-} from "./Icons";
-import { STYLES, getStyles } from "./styles";
+import type { ReactNode } from "react";
+
+import { DotPattern } from "./components/FramedPage";
+import { AchievementListPage } from "./rules/AchievementListPage";
+import { FormulaPage1, FormulaPage2 } from "./rules/FormulaPages";
+import { RankRulePage } from "./rules/RankRulePage";
+import { RulePage } from "./rules/RulePage";
+import { COVER_RULES_DATA, RULES_DATA } from "./rules/rulesData";
+import { getStyles } from "./styles";
 import type { BoardType } from "../../shared/src/boardTypes";
 
-const DotPattern = () => (
-  <AbsoluteFill
-    style={{
-      backgroundImage: "radial-gradient(#d7ccc8 3px, transparent 3px)",
-      backgroundSize: "24px 24px",
-      opacity: 0.6,
-      zIndex: 0,
-    }}
-  />
-);
+interface RulesPageSpec {
+  headerTitle: string;
+  component: ReactNode;
+  durationSec: number;
+}
 
-// ------------------------------------------------------------------
-// 2. 数据源：收录规则数据
-// ------------------------------------------------------------------
-const RULES_DATA = [
-  {
-    title: "收录范围",
-    sections: [
-      {
-        head: "集计对象",
-        items: [
-          "收录投稿在bilibili平台、使用虚拟歌手引擎调教创作的外语歌曲",
-          "投稿在音乐区的VOCALOID·UTAU分区的所有歌曲",
-          "投稿在音乐区其他分区的原创歌曲和虚拟歌手翻唱歌曲",
-          "投稿在同人·手书分区的本家原创歌曲",
-        ],
-      },
-      {
-        head: "语言认定",
-        items: [
-          "收录外国语（包括古代外国语）、人造语言歌曲",
-          "收录跨语种声库演唱的外语歌曲",
-          "不收录以汉语族或中国少数民族语言为主的歌曲",
-          "对于多语言混合歌曲，虚拟歌手外语部分占比需至少三分之一且在歌曲中成段出现",
-        ],
-      },
-      { head: "时长要求", items: ["大于20秒"] },
-    ],
-  },
-  {
-    title: "引擎与声库",
-    sections: [
-      {
-        head: "电子合成引擎认定",
-        items: [
-          "收录允许逐音素调节音高等参数的歌声合成引擎和语音合成引擎，包括VOCALOID、Synthesizer V、UTAU、CeVIO、NEUTRINO等。",
-          "不收录变声器或缺乏精细控制的合成引擎。",
-          "不收录完全依赖模型推理输出的声音生成或转换工具",
-          "收录同时由符合收录标准的引擎主导创作，并辅以其他引擎参与的歌曲。",
-        ],
-      },
-      {
-        head: "虚拟歌手声库认定",
-        items: [
-          "收录商业合成引擎制作的声库和和用户自制并公开配布的声库",
-          "新发布的商业声库，在公开发布首个试听曲后方可纳入收录范围",
-          "新自制声库在声库正式公开配布后才可纳入收录，且配布前的相关歌曲不予重新收录。",
-          "不收录混合音源演唱的歌曲",
-          "对于人声歌手与虚拟歌手合唱歌曲，虚拟歌手演唱部分占比需至少三分之一且在歌曲中成段出现。",
-        ],
-      },
-    ],
-  },
-  {
-    title: "认定细则",
-    sections: [
-      {
-        head: "本家认定标准",
-        items: [
-          "由参与制作视频的任一人员投稿的视频，即认定为本家。",
-          "原创作品作者仅标注作曲者，翻唱作品作者仅标注调教者。",
-          "对于重编曲翻唱作品，作者同时标注编曲者和调教者。",
-          "不收录仅对原曲进行重编曲或混音而不重新调教的作品。",
-        ],
-      },
-      {
-        head: "稿件收录标准",
-        items: [
-          "收录本家投稿和搬运稿件，同一曲目的同一音频版本认定为同一首歌曲，每期榜单仅收录一个。",
-          "优先使用本家投稿；若存在本家则不收录任何搬运稿件。歌姬企划官方代投的歌曲视同本家投稿。",
-          "同时收录不同版本，包括完整版、重填词版、音频重置版、其他引擎或歌手翻唱等。仅PV重置不予收录。",
-          "不收录无歌词、无伴奏、仅和声、以语音朗读或对话为主的TALKLOID的歌曲。",
-          "不收录歌曲合集、一稿多曲、多P不同曲目的投稿。",
-          "不收录MMD、手书、MASHUP、对比视频、二创PV、演唱会、试听版、预告等内容。",
-        ],
-      },
-    ],
-  },
-];
-
-const COVER_RULES_DATA = [
-  {
-    title: "收录范围",
-    sections: [
-      {
-        head: "集计对象",
-        items: [
-          "收录投稿在bilibili平台、使用虚拟歌手引擎调教创作的外语歌曲",
-          "投稿在音乐区的VOCALOID·UTAU分区的所有翻唱歌曲",
-          "投稿在音乐区其他分区的虚拟歌手翻唱歌曲",
-        ],
-      },
-      {
-        head: "语言认定",
-        items: [
-          "收录外国语（包括古代外国语）、人造语言歌曲",
-          "收录跨语种声库演唱的外语歌曲",
-          "不收录以汉语族或中国少数民族语言为主的歌曲",
-          "对于多语言混合歌曲，虚拟歌手外语部分占比需至少三分之一且在歌曲中成段出现",
-        ],
-      },
-      { head: "时长要求", items: ["大于20秒"] },
-    ],
-  },
-  {
-    title: "引擎与声库",
-    sections: [
-      {
-        head: "电子合成引擎认定",
-        items: [
-          "收录允许逐音素调节音高等参数的歌声合成引擎和语音合成引擎，包括VOCALOID、Synthesizer V、UTAU、CeVIO、NEUTRINO等。",
-          "不收录变声器或缺乏精细控制的合成引擎。",
-          "不收录完全依赖模型推理输出的声音生成或转换工具",
-          "收录同时由符合收录标准的引擎主导创作，并辅以其他引擎参与的歌曲。",
-        ],
-      },
-      {
-        head: "虚拟歌手声库认定",
-        items: [
-          "收录商业合成引擎制作的声库和和用户自制并公开配布的声库",
-          "新发布的商业声库，在公开发布首个试听曲后方可纳入收录范围",
-          "新自制声库在声库正式公开配布后才可纳入收录，且配布前的相关歌曲不予重新收录。",
-          "不收录混合音源演唱的歌曲",
-          "对于人声歌手与虚拟歌手合唱歌曲，虚拟歌手演唱部分占比需至少三分之一且在歌曲中成段出现。",
-        ],
-      },
-    ],
-  },
-  {
-    title: "认定细则",
-    sections: [
-      {
-        head: "本家认定标准",
-        items: [
-          "由参与制作视频的任一人员投稿的视频，即认定为本家。",
-          "对于一般翻唱作品，作者仅标注调教这。",
-          "对于重编曲翻唱作品，作者同时标注编曲者和调教者。",
-          "不收录仅对原曲进行重编曲或混音而不重新调教的作品。",
-        ],
-      },
-      {
-        head: "稿件收录标准",
-        items: [
-          "收录本家投稿和搬运稿件，同一曲目的同一音频版本认定为同一首歌曲，每期榜单仅收录一个。",
-          "优先使用本家投稿；若存在本家则不收录任何搬运稿件。歌姬企划官方代投的歌曲视同本家投稿。",
-          "不收录原曲作者的重置。",
-          "不收录无歌词、无伴奏、仅和声、以语音朗读或对话为主的TALKLOID的歌曲。",
-          "不收录歌曲合集、一稿多曲、多P不同曲目的投稿。",
-          "不收录MMD、手书、MASHUP、对比视频、二创PV、演唱会、试听版、预告等内容。",
-        ],
-      },
-    ],
-  },
-];
-
-// ------------------------------------------------------------------
-// 3. 子页面组件
-// ------------------------------------------------------------------
-
-// --- [A] 规则页内容组件 ---
-const RulePageContent = ({
-  data,
-  pageIndex,
-  total,
-}: {
-  data: (typeof RULES_DATA)[0];
-  pageIndex: number;
-  total: number;
-}) => {
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        padding: "30px 40px",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-          borderBottom: "4px solid #000",
-          paddingBottom: 10,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 42,
-            fontWeight: "900",
-            fontFamily: STYLES.fontMain,
-            color: STYLES.colors.textMain,
-          }}
-        >
-          {data.title}
-        </div>
-        <div
-          style={{
-            fontSize: 32,
-            fontWeight: "bold",
-            color: "#666",
-            fontFamily: STYLES.fontHeader,
-          }}
-        >
-          {pageIndex + 1} / {total}
-        </div>
-      </div>
-
-      <div
-        style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24 }}
-      >
-        {data.sections.map((section, idx) => (
-          <div key={idx} style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                fontSize: 34,
-                fontWeight: "900",
-                color: "#fff",
-                backgroundColor: "#000",
-                padding: "4px 12px",
-                alignSelf: "flex-start",
-                marginBottom: 8,
-                borderRadius: 4,
-              }}
-            >
-              {section.head}
-            </div>
-            <ul
-              style={{
-                margin: 0,
-                paddingLeft: 28,
-                fontSize: 30,
-                fontFamily: STYLES.fontMain,
-                lineHeight: 1.5,
-                color: "#333",
-                fontWeight: "600",
-              }}
-            >
-              {section.items.map((item, i) => (
-                <li key={i} style={{ marginBottom: 4 }}>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// --- [B] 公式页1 ---
-const FormulaPage1 = () => {
-  return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 1500,
-        margin: "0 auto",
-        display: "flex",
-        flexDirection: "column",
-        gap: 15,
-        padding: "30px 40px",
-      }}
-    >
-      <p
-        style={{ fontSize: 28, margin: "10px 0", fontFamily: STYLES.fontMain }}
-      >
-        统计范围内所有收录投稿的数据，按以下方式计算得点，按得点从高至低排名。
-      </p>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 15,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            fontSize: 48,
-            fontWeight: 900,
-            lineHeight: 1,
-            fontFamily: STYLES.fontMain,
-          }}
-        >
-          <div>总</div>
-          <div>得</div>
-          <div>点</div>
-        </div>
-        <span style={{ fontSize: 48, fontWeight: 900 }}>=</span>
-        <span
-          style={{
-            fontSize: 320,
-            color: "#888",
-            opacity: 1,
-            lineHeight: 1,
-            transform: "translateY(-45px)",
-            fontWeight: 100,
-            fontFamily: STYLES.fontMain,
-          }}
-        >
-          {"{"}
-        </span>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: 15,
-            margin: "0 15px",
-          }}
-        >
-          {[
-            {
-              icon: (
-                <PlayIcon style={{ width: 120, height: 120, opacity: 0.75 }} />
-              ),
-              label: "播放量",
-              suffix: "播放分补正",
-              extra: null,
-            },
-            {
-              icon: (
-                <StarIcon style={{ width: 120, height: 120, opacity: 0.75 }} />
-              ),
-              label: "收藏量",
-              suffix: "收藏分补正",
-              extra: null,
-            },
-            {
-              icon: (
-                <CoinIcon style={{ width: 120, height: 120, opacity: 0.75 }} />
-              ),
-              label: "硬币量",
-              suffix: "硬币分补正",
-              extra: (
-                <div>
-                  <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                  <span
-                    style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-                  >
-                    fixA
-                  </span>
-                </div>
-              ),
-            },
-            {
-              icon: (
-                <LikeIcon style={{ width: 120, height: 120, opacity: 0.75 }} />
-              ),
-              label: "点赞量",
-              suffix: "点赞分补正",
-              extra: null,
-            },
-            {
-              icon: (
-                <ReplyIcon style={{ width: 120, height: 120, opacity: 0.75 }} />
-              ),
-              label: "评论量",
-              suffix: "评论分补正",
-              extra: (
-                <div>
-                  <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                  <span
-                    style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-                  >
-                    fixD
-                  </span>
-                </div>
-              ),
-            },
-            {
-              icon: (
-                <DanmakuIcon
-                  style={{ width: 120, height: 120, opacity: 0.75 }}
-                />
-              ),
-              label: "弹幕量",
-              suffix: "弹幕分补正",
-              extra: null,
-            },
-            {
-              icon: (
-                <ShareIcon style={{ width: 120, height: 120, opacity: 0.75 }} />
-              ),
-              label: "分享量",
-              suffix: "分享分补正",
-              extra: null,
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 24,
-                fontWeight: 700,
-                textAlign: "center",
-                fontFamily: STYLES.fontMain,
-              }}
-            >
-              {item.icon}
-              <div style={{ fontWeight: 900 }}>{item.label}</div>
-              <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-              <div>{item.suffix}</div>
-              {item.extra}
-            </div>
-          ))}
-        </div>
-        <span
-          style={{
-            fontSize: 320,
-            color: "#888",
-            opacity: 1,
-            lineHeight: 1,
-            transform: "translateY(-45px)",
-            fontWeight: 100,
-            fontFamily: STYLES.fontMain,
-          }}
-        >
-          {"}"}
-        </span>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            fontSize: 32,
-            fontWeight: 900,
-            marginLeft: -20,
-            lineHeight: 1.4,
-            fontFamily: STYLES.fontNum,
-          }}
-        >
-          <div>
-            <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-            <span style={{ color: STYLES.colors.accentRed }}>fixB</span>
-          </div>
-          <div>
-            <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-            <span style={{ color: STYLES.colors.accentRed }}>fixC</span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          width: "100%",
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "20px 50px",
-          borderTop: "3px solid #F2F2F7",
-          paddingTop: 25,
-          marginTop: 30,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-            }}
-          >
-            <div
-              style={{
-                color: STYLES.colors.accentRed,
-                width: 110,
-                textAlign: "right",
-                paddingRight: 15,
-              }}
-            >
-              fixA
-            </div>
-            <span>=</span>
-            <div
-              style={{
-                display: "inline-flex",
-                flexDirection: "column",
-                textAlign: "center",
-                margin: "0 10px",
-                lineHeight: 1.1,
-                fontSize: "80%",
-              }}
-            >
-              <div
-                style={{
-                  borderBottom: "3px solid #1d1d1f",
-                  padding: "0 5px 5px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ fontWeight: 900 }}>播放</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  40
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>收藏</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  10
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>点赞</span>
-              </div>
-              <div style={{ paddingTop: 5, whiteSpace: "nowrap" }}>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  150
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>硬币</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  50
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>弹幕</span>
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-            }}
-          >
-            <div
-              style={{
-                color: STYLES.colors.accentRed,
-                width: 110,
-                textAlign: "right",
-                paddingRight: 15,
-              }}
-            >
-              fixB
-            </div>
-            <span>=</span>
-            <div
-              style={{
-                display: "inline-flex",
-                flexDirection: "column",
-                textAlign: "center",
-                margin: "0 10px",
-                lineHeight: 1.1,
-                fontSize: "80%",
-              }}
-            >
-              <div
-                style={{
-                  borderBottom: "3px solid #1d1d1f",
-                  padding: "0 5px 5px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  60
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span
-                  style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-                >
-                  硬币
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  30
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>点赞</span>
-              </div>
-              <div style={{ paddingTop: 5, whiteSpace: "nowrap" }}>
-                <span style={{ fontWeight: 900 }}>播放</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  20
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>收藏</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-            }}
-          >
-            <div
-              style={{
-                color: STYLES.colors.accentRed,
-                width: 110,
-                textAlign: "right",
-                paddingRight: 15,
-              }}
-            >
-              fixC
-            </div>
-            <span>=</span>
-            <div
-              style={{
-                display: "inline-flex",
-                flexDirection: "column",
-                textAlign: "center",
-                margin: "0 10px",
-                lineHeight: 1.1,
-                fontSize: "80%",
-              }}
-            >
-              <div
-                style={{
-                  borderBottom: "3px solid #1d1d1f",
-                  padding: "0 5px 5px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ fontWeight: 900 }}>收藏</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span style={{ fontWeight: 900 }}>点赞</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  20
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span
-                  style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-                >
-                  硬币
-                </span>
-              </div>
-              <div style={{ paddingTop: 5, whiteSpace: "nowrap" }}>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  2
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>收藏</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  2
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>点赞</span>
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-            }}
-          >
-            <div
-              style={{
-                color: STYLES.colors.accentRed,
-                width: 110,
-                textAlign: "right",
-                paddingRight: 15,
-              }}
-            >
-              fixD
-            </div>
-            <span>=</span>
-            <span style={{ margin: "0 8px", color: "#888" }}>(</span>
-            <div
-              style={{
-                display: "inline-flex",
-                flexDirection: "column",
-                textAlign: "center",
-                margin: "0 10px",
-                lineHeight: 1.1,
-                fontSize: "80%",
-              }}
-            >
-              <div
-                style={{
-                  borderBottom: "3px solid #1d1d1f",
-                  padding: "0 5px 5px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ fontWeight: 900 }}>收藏</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span style={{ fontWeight: 900 }}>点赞</span>
-              </div>
-              <div style={{ paddingTop: 5, whiteSpace: "nowrap" }}>
-                <span style={{ fontWeight: 900 }}>收藏</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span style={{ fontWeight: 900 }}>点赞</span>
-                <span style={{ margin: "0 8px", color: "#888" }}>＋</span>
-                <span
-                  style={{
-                    color: STYLES.colors.accentBlue,
-                    fontWeight: 900,
-                    fontFamily: "Consolas",
-                  }}
-                >
-                  0.1
-                </span>
-                <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-                <span style={{ fontWeight: 900 }}>评论</span>
-              </div>
-            </div>
-            <span style={{ margin: "0 8px", color: "#888" }}>)</span>
-            <sup
-              style={{
-                fontSize: "0.75em",
-                color: STYLES.colors.accentBlue,
-                position: "relative",
-                top: "-0.7em",
-                marginLeft: 4,
-              }}
-            >
-              20
-            </sup>
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 100,
-          fontSize: 22,
-          fontWeight: 500,
-          color: "#888",
-          paddingTop: 10,
-          fontFamily: STYLES.fontMain,
-        }}
-      >
-        <span>
-          *
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            fixA
-          </span>
-          的最小值为
-          <span
-            style={{
-              color: STYLES.colors.accentBlue,
-              fontWeight: 900,
-              fontFamily: "Consolas",
-            }}
-          >
-            1.00
-          </span>
-          ，
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            fixB
-          </span>
-          、
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            fixC
-          </span>
-          、
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            fixD
-          </span>
-          的最大值为
-          <span
-            style={{
-              color: STYLES.colors.accentBlue,
-              fontWeight: 900,
-              fontFamily: "Consolas",
-            }}
-          >
-            1.00
-          </span>
-        </span>
-        <span>
-          *
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            硬币
-          </span>
-          <span style={{ margin: "0 8px", color: "#888" }}>=</span>
-          <span style={{ fontWeight: 900 }}>硬币</span>
-          <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            fixA
-          </span>
-        </span>
-        <span>
-          *本家投稿视频的
-          <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-            fixA
-          </span>
-          <span style={{ margin: "0 8px", color: "#888" }}>=</span>
-          <span
-            style={{
-              color: STYLES.colors.accentBlue,
-              fontWeight: 900,
-              fontFamily: "Consolas",
-            }}
-          >
-            1
-          </span>
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// --- [C] 公式页2 ---
-const FormulaPage2 = ({
-  playRateCoef,
-  isSpecial,
-}: {
-  playRateCoef: number;
-  isSpecial: boolean;
-}) => {
-  const rateData = [
-    {
-      name: "播放分补正",
-      top: [
-        <span
-          key="1"
-          style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-        >
-          硬币
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-      ],
-      btm: [
-        <span key="1" style={{ fontWeight: 900 }}>
-          播放
-        </span>,
-      ],
-      val: String(playRateCoef),
-      max: "1.00",
-    },
-    {
-      name: "收藏分补正",
-      top: [
-        <span key="1" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span
-          key="3"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          2
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span
-          key="5"
-          style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-        >
-          硬币
-        </span>,
-      ],
-      btm: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          10
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          播放
-        </span>,
-      ],
-      val: "200",
-      max: "20.00",
-    },
-    {
-      name: "硬币分补正",
-      top: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          40
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span
-          key="3"
-          style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-        >
-          硬币
-        </span>,
-      ],
-      btm: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          20
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span
-          key="3"
-          style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-        >
-          硬币
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          播放
-        </span>,
-      ],
-      val: "40",
-      max: "40.00",
-    },
-    {
-      name: "点赞分补正",
-      top: [
-        <span
-          key="1"
-          style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-        >
-          硬币
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-      ],
-      btm: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          20
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          点赞
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          播放
-        </span>,
-      ],
-      val: "100",
-      max: "5.00",
-    },
-    {
-      name: "弹幕分补正",
-      top: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          20
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          评论
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-        <span key="6" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="7" style={{ fontWeight: 900 }}>
-          点赞
-        </span>,
-      ],
-      btm: [
-        <span key="1" style={{ fontWeight: 900 }}>
-          弹幕
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          评论
-        </span>,
-      ],
-      val: "",
-      max: "100.00",
-    },
-    {
-      name: "评论分补正",
-      top: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          40
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          评论
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          点赞
-        </span>,
-        <span key="6" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="7" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-      ],
-      btm: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          200
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          评论
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          播放
-        </span>,
-      ],
-      val: "20",
-      max: "40.00",
-    },
-    {
-      name: "分享分补正",
-      top: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          2
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span
-          key="3"
-          style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}
-        >
-          硬币
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          收藏
-        </span>,
-      ],
-      btm: [
-        <span
-          key="1"
-          style={{
-            color: STYLES.colors.accentBlue,
-            fontWeight: 900,
-            fontFamily: "Consolas",
-          }}
-        >
-          5
-        </span>,
-        <span key="2" style={{ margin: "0 8px", color: "#888" }}>
-          ×
-        </span>,
-        <span key="3" style={{ fontWeight: 900 }}>
-          分享
-        </span>,
-        <span key="4" style={{ margin: "0 8px", color: "#888" }}>
-          ＋
-        </span>,
-        <span key="5" style={{ fontWeight: 900 }}>
-          点赞
-        </span>,
-      ],
-      val: "10",
-      max: "10.00",
-    },
-  ];
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 1500,
-        margin: "0 auto",
-        display: "grid",
-        gridTemplateColumns: "260px 80px 400px 40px 100px 280px",
-        gridTemplateRows: "repeat(7, 1fr) auto",
-        alignItems: "center",
-        gap: "10px 0",
-        height: "100%",
-        padding: "30px 40px",
-      }}
-    >
-      {rateData.map((row, i) => (
-        <React.Fragment key={i}>
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-              justifyContent: "flex-end",
-              fontFamily: STYLES.fontMain,
-            }}
-          >
-            {row.name}
-          </div>
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-              justifyContent: "center",
-            }}
-          >
-            =
-          </div>
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-            }}
-          >
-            <div
-              style={{
-                display: "inline-flex",
-                flexDirection: "column",
-                textAlign: "center",
-                margin: "0 10px",
-                lineHeight: 1.1,
-                fontSize: "80%",
-              }}
-            >
-              <div
-                style={{
-                  borderBottom: "3px solid #1d1d1f",
-                  padding: "0 5px 5px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {row.top}
-              </div>
-              <div style={{ paddingTop: 5, whiteSpace: "nowrap" }}>
-                {row.btm}
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-              justifyContent: "center",
-            }}
-          >
-            {row.val && (
-              <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-            )}
-          </div>
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-            }}
-          >
-            {row.val && (
-              <span
-                style={{
-                  color: STYLES.colors.accentBlue,
-                  fontWeight: 900,
-                  fontFamily: "Consolas",
-                }}
-              >
-                {row.val}
-              </span>
-            )}
-          </div>
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              fontSize: 36,
-              fontWeight: 900,
-              justifyContent: "center",
-            }}
-          >
-            <div
-              style={{
-                width: 220,
-                fontSize: 26,
-                color: "#4A4A4A",
-                background: "#F5F5F5",
-                border: "2px solid #E0E0E0",
-                padding: "6px 12px",
-                borderRadius: 8,
-                fontFamily: "Consolas",
-                fontWeight: 900,
-              }}
-            >
-              最大值 {row.max}
-            </div>
-          </div>
-        </React.Fragment>
-      ))}
-
-      <div
-        style={{
-          gridColumn: "1 / -1",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          fontSize: 22,
-          fontWeight: 500,
-          color: "#888",
-          paddingTop: 10,
-          fontFamily: STYLES.fontMain,
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 100 }}>
-          <span>
-            *
-            <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-              硬币
-            </span>
-            <span style={{ margin: "0 8px", color: "#888" }}>=</span>
-            <span style={{ fontWeight: 900 }}>硬币</span>
-            <span style={{ margin: "0 8px", color: "#888" }}>×</span>
-            <span style={{ color: STYLES.colors.accentRed, fontWeight: 900 }}>
-              fixA
-            </span>
-          </span>
-          <span>*各补正值按进一法取至小数点后两位</span>
-        </div>
-
-        {isSpecial && (
-          <div
-            style={{
-              marginTop: 8,
-              padding: "12px 16px",
-              background: "rgba(255,200,0,0.15)",
-              border: "2px solid rgba(255,200,0,0.4)",
-              borderRadius: 8,
-              fontSize: 20,
-              color: "#856404",
-              fontWeight: 700,
-            }}
-          >
-            *除弹幕分补正外，其余各项补正值线性折合至原有区间的上半部分
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// --- [D] 成就列表页 ---
-const AchievementListPage = () => {
-  const AchievementItem = ({
-    title,
-    desc,
-    color,
-  }: {
-    title: string;
-    desc: string;
-    color: string;
-  }) => (
-    <div style={{ marginBottom: 32 }}>
-      <div
-        style={{
-          fontSize: 55,
-          fontWeight: "900",
-          color: color,
-          fontFamily: STYLES.fontMain,
-          marginBottom: 8,
-          textShadow: "2px 2px 0px rgba(0,0,0,0.1)",
-        }}
-      >
-        {title}
-      </div>
-      <div
-        style={{
-          fontSize: 34,
-          color: "#333",
-          fontWeight: "bold",
-          fontFamily: STYLES.fontMain,
-          lineHeight: 1.3,
-        }}
-      >
-        {desc}
-      </div>
-    </div>
-  );
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        padding: "20px 40px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-    >
-      <div>
-        <AchievementItem
-          title="Emerging Hit!"
-          color={STYLES.colors.EmergingHitColor}
-          desc="最近连续三期排名前五，即可永久获得Emerging Hit!。"
-        />
-        <AchievementItem
-          title="Mega Hit!!!"
-          color={STYLES.colors.MegaHitColor}
-          desc="最近连续五期排名前三，即可永久获得Mega Hit!!!。"
-        />
-        <AchievementItem
-          title="门番候补"
-          color={STYLES.colors.SubGateColor}
-          desc="最近15期内有10期在榜，即可永久获得门番候补。"
-        />
-        <AchievementItem
-          title="门番"
-          color={STYLES.colors.GateColor}
-          desc="最近30期内有20期在榜，即可永久获得门番。"
-        />
-      </div>
-    </div>
-  );
-};
-
-// --- [E] 榜单规则页 ---
-const RankRulePage = ({
-  subRankMax,
-  newSongPeriod,
-  showNew,
-}: {
-  subRankMax: number;
-  newSongPeriod: string;
-  showNew: boolean;
-}) => {
-  const RankRangeBox = ({
-    title,
-    sub,
-    range,
-  }: {
-    title: string;
-    sub: string;
-    range: string;
-  }) => (
-    <div
-      style={{
-        flex: 1,
-        backgroundColor: "#fff",
-        border: STYLES.border,
-        borderRadius: 16,
-        boxShadow: "6px 6px 0 rgba(0,0,0,0.15)",
-        padding: "20px 30px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 48,
-          fontWeight: "900",
-          marginBottom: 8,
-          fontFamily: STYLES.fontMain,
-        }}
-      >
-        {title}
-      </div>
-      <div
-        style={{
-          fontSize: 30,
-          color: "#666",
-          marginBottom: 10,
-          fontFamily: STYLES.fontMain,
-        }}
-      >
-        {sub}
-      </div>
-      <div
-        style={{
-          fontSize: 100,
-          fontWeight: "900",
-          fontFamily: STYLES.fontNum,
-          lineHeight: 1,
-          color: "#222",
-        }}
-      >
-        {range}
-        <span style={{ fontSize: 40, marginLeft: 8 }}>位</span>
-      </div>
-    </div>
-  );
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        padding: "40px 40px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 40,
-        justifyContent: "center",
-      }}
-    >
-      <div style={{ display: "flex", gap: 50, width: "100%" }}>
-        <RankRangeBox title="主榜单" sub="总得点排名作品" range="1-20" />
-        <RankRangeBox
-          title="副榜单"
-          sub="简易列表作品"
-          range={`21-${subRankMax}`}
-        />
-      </div>
-      { showNew && <div
-        style={{
-          backgroundColor: "#fff",
-          border: STYLES.border,
-          borderRadius: 16,
-          boxShadow: "6px 6px 0 rgba(0,0,0,0.15)",
-          padding: 40,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 48,
-            fontWeight: "900",
-            fontFamily: STYLES.fontMain,
-          }}
-        >
-          新曲榜
-        </div>
-        <div
-          style={{
-            fontSize: 34,
-            lineHeight: 1.5,
-            color: "#333",
-            fontWeight: "500",
-            fontFamily: STYLES.fontMain,
-          }}
-        >
-          单独排名未入主榜的
-          <span
-            style={{
-              fontWeight: "bold",
-              color: STYLES.colors.accentRed,
-            }}
-          >
-            {" "}
-            {newSongPeriod}投稿{" "}
-          </span>
-          且没有进入过主榜的新曲。
-        </div>
-      </div>}
-    </div>
-  );
-};
-
-// ------------------------------------------------------------------
-// 4. 页面包装器
-// ------------------------------------------------------------------
-const PageWrapper = ({
+function PageWrapper({
   page,
-  fps,
   duration,
+  boardType,
 }: {
-  page: { headerTitle: string; component: React.ReactNode };
-  fps: number;
+  page: RulesPageSpec;
   duration: number;
-}) => {
+  boardType: BoardType;
+}) {
   const frame = useCurrentFrame();
+  const styles = getStyles(boardType);
   const fadeFrames = 15;
 
   const opacity = interpolate(
     frame,
     [0, fadeFrames, duration - fadeFrames, duration],
     [0, 1, 1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
   );
 
   return (
@@ -1694,112 +61,110 @@ const PageWrapper = ({
       <div
         style={{
           height: 100,
-          backgroundColor: STYLES.colors.headerBg,
+          backgroundColor: styles.colors.headerBg,
           display: "flex",
           alignItems: "center",
           padding: "0 40px",
-          borderBottom: STYLES.border,
+          borderBottom: styles.border,
           flexShrink: 0,
         }}
       >
         <h1
           style={{
-            color: STYLES.colors.headerText,
+            color: styles.colors.headerText,
             fontSize: 48,
             margin: 0,
-            fontFamily: STYLES.fontMain,
+            fontFamily: styles.fontMain,
             letterSpacing: 2,
           }}
         >
           {page.headerTitle}
         </h1>
       </div>
+
       <div style={{ flex: 1, position: "relative" }}>{page.component}</div>
     </AbsoluteFill>
   );
-};
+}
 
-// ------------------------------------------------------------------
-// 5. 主合成组件
-// ------------------------------------------------------------------
-export const MergedRulesCard = (props: {
-  boardType?: BoardType;
-}) => {
-  const { boardType = "coverWeekly" } = props;
-  const STYLES = getStyles(boardType);
-
-  const playRateCoef = boardType === 'weekly' ? 10 : 15;
-  const subRankMax = boardType === 'monthly'  ? 200 : 100;
+function getRulesPages(boardType: BoardType): RulesPageSpec[] {
+  const rulesData = boardType === "coverWeekly" ? COVER_RULES_DATA : RULES_DATA;
+  const playRateCoef = boardType === "weekly" ? 10 : 15;
+  const subRankMax = boardType === "monthly" ? 200 : 100;
   const showAchievements = boardType === "weekly";
-  const newSongPeriod =  boardType === 'weekly' ?  "两周以内" : "当月";
-  const isSpecial = boardType === 'special';
-  const showNew = boardType !== 'coverWeekly'
+  const newSongPeriod = boardType === "weekly" ? "两周以内" : "当月";
+  const isSpecial = boardType === "special";
+  const showNew = boardType !== "coverWeekly";
 
-  const { fps, height } = useVideoConfig();
-  const frame = useCurrentFrame();
-  const rules_data = boardType === 'coverWeekly' ? COVER_RULES_DATA : RULES_DATA
+  const pages: RulesPageSpec[] = rulesData.map((data, index) => ({
+    headerTitle: "收录规则",
+    component: (
+      <RulePage
+        data={data}
+        pageIndex={index}
+        total={rulesData.length}
+        boardType={boardType}
+      />
+    ),
+    durationSec: 5,
+  }));
 
-  const pages: Array<{
-    headerTitle: string;
-    component: React.ReactNode;
-    durationSec: number;
-  }> = [
-    {
-      headerTitle: "收录规则",
-      component: (
-        <RulePageContent data={rules_data[0]} pageIndex={0} total={3} />
-      ),
-      durationSec: 5,
-    },
-    {
-      headerTitle: "收录规则",
-      component: (
-        <RulePageContent data={rules_data[1]} pageIndex={1} total={3} />
-      ),
-      durationSec: 5,
-    },
-    {
-      headerTitle: "收录规则",
-      component: (
-        <RulePageContent data={rules_data[2]} pageIndex={2} total={3} />
-      ),
-      durationSec: 5,
-    },
+  pages.push(
     {
       headerTitle: "计算公式",
-      component: <FormulaPage1 />,
+      component: <FormulaPage1 boardType={boardType} />,
       durationSec: 5,
     },
     {
       headerTitle: "计算公式",
       component: (
-        <FormulaPage2 playRateCoef={playRateCoef} isSpecial={isSpecial} />
+        <FormulaPage2
+          playRateCoef={playRateCoef}
+          isSpecial={isSpecial}
+          boardType={boardType}
+        />
       ),
       durationSec: 5,
     },
-  ];
+  );
 
   if (showAchievements) {
     pages.push({
       headerTitle: "成就标准",
-      component: <AchievementListPage />,
+      component: <AchievementListPage boardType={boardType} />,
       durationSec: 5,
     });
   }
 
-
   pages.push({
     headerTitle: "榜单构成",
     component: (
-      <RankRulePage subRankMax={subRankMax} newSongPeriod={newSongPeriod} showNew={showNew} />
+      <RankRulePage
+        subRankMax={subRankMax}
+        newSongPeriod={newSongPeriod}
+        showNew={showNew}
+        boardType={boardType}
+      />
     ),
     durationSec: 5,
   });
 
+  return pages;
+}
+
+export function MergedRulesCard({
+  boardType = "coverWeekly",
+}: {
+  boardType?: BoardType;
+}) {
+  const styles = getStyles(boardType);
+  const pages = getRulesPages(boardType);
+
+  const { fps, height } = useVideoConfig();
+  const frame = useCurrentFrame();
 
   const totalDuration =
-    pages.reduce((acc, page) => acc + page.durationSec, 0) * fps;
-
+    pages.reduce((total, page) => total + page.durationSec, 0) * fps;
   const transitionDuration = 30;
 
   const entranceY = spring({
@@ -1807,31 +172,37 @@ export const MergedRulesCard = (props: {
     fps,
     from: height,
     to: 0,
-    config: { damping: 14, mass: 0.8 },
+    config: {
+      damping: 14,
+      mass: 0.8,
+    },
   });
 
   const exitStart = totalDuration - transitionDuration;
   const exitProgress = interpolate(frame, [exitStart, totalDuration], [0, 1], {
     extrapolateLeft: "clamp",
   });
+
   const exitY = interpolate(exitProgress, [0, 1], [0, height], {
     easing: Easing.in(Easing.exp),
   });
 
   const translateY = frame < exitStart ? entranceY : exitY;
 
+  let frameOffset = 0;
+
   return (
-    <AbsoluteFill style={{ backgroundColor: STYLES.colors.bg }}>
-      <DotPattern />
+    <AbsoluteFill style={{ backgroundColor: styles.colors.bg }}>
+      <DotPattern boardType={boardType} />
 
       <div
         style={{
           width: 1700,
           height: 940,
           backgroundColor: "#fff",
-          border: STYLES.border,
+          border: styles.border,
           borderRadius: 24,
-          boxShadow: STYLES.shadow,
+          boxShadow: styles.shadow,
           position: "absolute",
           top: "50%",
           left: "50%",
@@ -1843,37 +214,27 @@ export const MergedRulesCard = (props: {
         }}
       >
         <div style={{ flex: 1, position: "relative" }}>
-          {
-            pages.reduce<{
-              elements: React.ReactNode[];
-              currentFrameOffset: number;
-            }>(
-              (acc, page, index) => {
-                const pageDurationFrames = page.durationSec * fps;
-                const startFrame = acc.currentFrameOffset;
+          {pages.map((page) => {
+            const durationFrames = page.durationSec * fps;
+            const from = frameOffset;
+            frameOffset += durationFrames;
 
-                acc.elements.push(
-                  <Sequence
-                    key={index}
-                    from={startFrame}
-                    durationInFrames={pageDurationFrames}
-                  >
-                    <PageWrapper
-                      page={page}
-                      fps={fps}
-                      duration={pageDurationFrames}
-                    />
-                  </Sequence>,
-                );
-
-                acc.currentFrameOffset += pageDurationFrames;
-                return acc;
-              },
-              { elements: [], currentFrameOffset: 0 },
-            ).elements
-          }
+            return (
+              <Sequence
+                key={`${page.headerTitle}-${from}`}
+                from={from}
+                durationInFrames={durationFrames}
+              >
+                <PageWrapper
+                  page={page}
+                  duration={durationFrames}
+                  boardType={boardType}
+                />
+              </Sequence>
+            );
+          })}
         </div>
       </div>
     </AbsoluteFill>
   );
-};
+}

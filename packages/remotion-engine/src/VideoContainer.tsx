@@ -1,29 +1,31 @@
-import { OffthreadVideo } from "remotion"
+// packages/remotion-engine/src/VideoContainer.tsx
 
-import { STYLES, getStyles } from "./styles"
+import { OffthreadVideo } from "remotion";
+import { getStyles } from "./styles";
 import type { BoardType } from "../../shared/src/boardTypes";
 
-export const VideoContainer = ({
+export function VideoContainer({
   videoTranslateY,
   videoSource,
   volume,
   boardType = "weekly",
 }: {
-  videoTranslateY: number,
-  videoSource: string,
-  volume: number,
-  boardType?: BoardType,
-}) => {
-  const STYLES = getStyles(boardType);
+  videoTranslateY: number;
+  videoSource?: string;
+  volume: number;
+  boardType?: BoardType;
+}) {
+  const styles = getStyles(boardType);
+
   return (
     <div
       style={{
         width: "100%",
         aspectRatio: "16/9",
         backgroundColor: "#000",
-        border: STYLES.border,
+        border: styles.border,
         borderRadius: 24,
-        boxShadow: STYLES.shadow,
+        boxShadow: styles.shadow,
         overflow: "hidden",
         position: "relative",
         transform: `translateY(${videoTranslateY}px)`,
@@ -52,5 +54,5 @@ export const VideoContainer = ({
         </div>
       )}
     </div>
-  )
+  );
 }

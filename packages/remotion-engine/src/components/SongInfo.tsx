@@ -1,20 +1,24 @@
-import { STYLES, getStyles } from "../styles"
-import { FitTitle } from "./FitTitle"
-import { HonorBadge } from "./HonorBadge"
-import { FitContent } from "./FitContent"
-import { InfoTag } from "./InfoTag"
+// packages/remotion-engine/src/components/SongInfo.tsx
+
+import { FitContent } from "./FitContent";
+import { FitTitle } from "./FitTitle";
+import { HonorBadge } from "./HonorBadge";
+import { InfoTag } from "./InfoTag";
+import { getStyles } from "../styles";
 import type { BoardType } from "../../../shared/src/boardTypes";
 
-export const SongInfo = ({
+export function SongInfo({
   props,
   infoTranslateY,
-  boardType = "weekly"
+  boardType = "weekly",
 }: {
-  props: any,
-  infoTranslateY: number,
-  boardType?: BoardType
-}) => {
-  const STYLES = getStyles(boardType);
+  props: Record<string, any>;
+  infoTranslateY: number;
+  boardType?: BoardType;
+}) {
+  const styles = getStyles(boardType);
+  const honors = Array.isArray(props.honor) ? props.honor : [];
+
   return (
     <div
       style={{
@@ -22,9 +26,9 @@ export const SongInfo = ({
         width: "100%",
         boxSizing: "border-box",
         backgroundColor: "#ffffff",
-        border: STYLES.border,
+        border: styles.border,
         borderRadius: 24,
-        boxShadow: STYLES.shadow,
+        boxShadow: styles.shadow,
         padding: "24px 32px",
         display: "flex",
         flexDirection: "column",
@@ -34,21 +38,19 @@ export const SongInfo = ({
         overflow: "hidden",
       }}
     >
-      {/* 标题 */}
       <h1 style={{ margin: 0, width: "100%" }}>
         <FitTitle
-          text={props.title}
+          text={props.title || ""}
           style={{
             fontSize: 56,
             lineHeight: 1.2,
-            fontFamily: STYLES.fontMain,
+            fontFamily: styles.fontMain,
             fontWeight: "bold",
             letterSpacing: "-2px",
           }}
         />
       </h1>
 
-      {/* 第一行：作者 | 成就 */}
       <div
         style={{
           display: "flex",
@@ -59,16 +61,16 @@ export const SongInfo = ({
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <FitTitle
-            text={props.producers}
+            text={props.producers || props.producer || ""}
             style={{
               fontSize: 36,
               fontWeight: "900",
-              fontFamily: STYLES.fontMain,
+              fontFamily: styles.fontMain,
             }}
           />
         </div>
 
-        {props.honor && props.honor.length > 0 && (
+        {honors.length > 0 && (
           <div
             style={{
               display: "flex",
@@ -78,14 +80,17 @@ export const SongInfo = ({
               flexShrink: 0,
             }}
           >
-            {props.honor.map((h: string, i: number) => (
-              <HonorBadge key={i} text={h} />
+            {honors.map((honor: string, index: number) => (
+              <HonorBadge
+                key={`${honor}-${index}`}
+                text={honor}
+                boardType={boardType}
+              />
             ))}
           </div>
         )}
       </div>
 
-      {/* 第二行：歌手+引擎 | 标签 */}
       <div
         style={{
           display: "flex",
@@ -101,29 +106,26 @@ export const SongInfo = ({
                 fontSize: 30,
                 fontWeight: "bold",
                 color: "#444",
-                fontFamily: STYLES.fontMain,
+                fontFamily: styles.fontMain,
               }}
             >
-              {props.vocalists}
+              {props.vocalists || props.vocalist || ""}
             </span>
-            {props.synthesizers && (
+
+            {(props.synthesizers || props.synthesizer) && (
               <>
                 <span
-                  style={{
-                    display: "inline-block",
-                    width: 16,
-                    flexShrink: 0,
-                  }}
+                  style={{ display: "inline-block", width: 16, flexShrink: 0 }}
                 />
                 <span
                   style={{
                     fontSize: 24,
                     color: "#888",
                     fontStyle: "italic",
-                    fontFamily: STYLES.fontMain,
+                    fontFamily: styles.fontMain,
                   }}
                 >
-                  {props.synthesizers}
+                  {props.synthesizers || props.synthesizer}
                 </span>
               </>
             )}
@@ -138,18 +140,15 @@ export const SongInfo = ({
             flexShrink: 0,
           }}
         >
+          <InfoTag text={props.pubdate?.split(" ")[0] || ""} color="#fff9c4" />
+          <InfoTag text={props.songType || props.type || ""} color="#e1bee7" />
           <InfoTag
-            text={props.pubdate?.split(" ")[0] || ""}
-            color="#fff9c4"
+            text={props.copyrightLabel || ""}
+            color={styles.colors.orange}
           />
-          <InfoTag text={props.songType} color="#e1bee7" />
-          <InfoTag
-            text={props.copyrightLabel}
-            color={STYLES.colors.orange}
-          />
-          <InfoTag text={props.duration} color="#b2dfdb" />
+          <InfoTag text={props.duration || ""} color="#b2dfdb" />
         </div>
       </div>
     </div>
-  )
+  );
 }

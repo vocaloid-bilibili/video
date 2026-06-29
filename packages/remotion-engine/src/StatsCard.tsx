@@ -1,42 +1,103 @@
-// src/StatsCard.tsx
+// packages/remotion-engine/src/StatsCard.tsx
+
+import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import type { ComponentType, CSSProperties } from "react";
+
 import {
-  AbsoluteFill,
-  useVideoConfig,
-  useCurrentFrame,
-  spring,
-  interpolate,
-} from "remotion";
-import React from "react";
-import {
-  PlayIcon,
-  StarIcon,
   CoinIcon,
-  LikeIcon,
   DanmakuIcon,
+  LikeIcon,
+  PlayIcon,
   ReplyIcon,
   ShareIcon,
+  StarIcon,
 } from "./Icons";
-import { STYLES, getStyles } from "./styles";
+import { FramedPage } from "./components/FramedPage";
+import { getStyles } from "./styles";
+import { formatNumber, safeParse } from "./utils/safeParse";
 import type { BoardType } from "../../shared/src/boardTypes";
 
-// ------------------------------------------------------------------
-// 子组件：统计项
-// ------------------------------------------------------------------
-const StatItem = ({
+interface StatValue {
+  value?: number | string;
+  diff?: number | string;
+}
+
+type StatsMap = Record<string, StatValue | undefined>;
+
+interface PointThreshold {
+  key: string;
+  label: string;
+}
+
+interface MetricCellConfig {
+  key: string;
+  icon: ComponentType<{ style?: CSSProperties }>;
+}
+
+function getStatValue(stat: StatsMap, key: string): number {
+  return safeParse(stat[key]?.value);
+}
+
+function getStatDiff(stat: StatsMap, key: string): number | string {
+  const diff = stat[key]?.diff;
+
+  return diff ?? "-";
+}
+
+function getChangeStyle(
+  change: number | string,
+  boardType: BoardType,
+): CSSProperties {
+  const styles = getStyles(boardType);
+  const numericChange = typeof change === "number" ? change : safeParse(change);
+
+  if (numericChange > 0) {
+    return {
+      color: styles.colors.redText,
+      backgroundColor: styles.colors.redBg,
+    };
+  }
+
+  if (numericChange < 0) {
+    return {
+      color: styles.colors.greenText,
+      backgroundColor: styles.colors.greenBg,
+    };
+  }
+
+  return {
+    color: "#333",
+    backgroundColor: "#e0e0e0",
+  };
+}
+
+function formatChange(change: number | string): string {
+  if (typeof change === "string") return change;
+
+  if (change > 0) return `+${formatNumber(change)}`;
+  if (change < 0) return formatNumber(change);
+
+  return "±0";
+}
+
+function StatItem({
   label,
   value,
   unit,
   change,
-  delay = 0,
+  delay,
+  boardType,
 }: {
   label: string;
-  value: number | string;
+  value: number;
   unit: string;
   change: number | string;
-  delay?: number;
-}) => {
+  delay: number;
+  boardType: BoardType;
+}) {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const styles = getStyles(boardType);
 
   const entrance = spring({
     frame: frame - delay,
@@ -45,23 +106,6 @@ const StatItem = ({
     to: 1,
     config: { damping: 12 },
   });
-
-  const numChange = typeof change === "number" ? change : 0;
-  const changeStr =
-    typeof change === "string"
-      ? change
-      : numChange > 0
-        ? `+${numChange}`
-        : numChange === 0
-          ? "±0"
-          : `${numChange}`;
-  const changeClass = numChange > 0 ? "up" : numChange < 0 ? "down" : "zero";
-
-  const changeStyle = {
-    up: { color: STYLES.colors.redText, background: STYLES.colors.redBg },
-    down: { color: STYLES.colors.greenText, background: STYLES.colors.greenBg },
-    zero: { color: "#333", background: "#e0e0e0" },
-  }[changeClass];
 
   return (
     <div
@@ -78,66 +122,69 @@ const StatItem = ({
           fontSize: 32,
           fontWeight: 900,
           color: "#333",
-          fontFamily: STYLES.fontMain,
+          fontFamily: styles.fontMain,
         }}
       >
         {label}
       </span>
+
       <span
         style={{
-          fontFamily: STYLES.fontMono,
+          fontFamily: styles.fontMono,
           fontSize: 48,
           fontWeight: 900,
           color: "#222",
         }}
       >
-        {value}
+        {formatNumber(value)}
       </span>
+
       <span
         style={{
           fontSize: 32,
           fontWeight: 900,
           color: "#333",
-          fontFamily: STYLES.fontMain,
+          fontFamily: styles.fontMain,
         }}
       >
         {unit}
       </span>
+
       <span
         style={{
-          fontFamily: STYLES.fontMono,
+          fontFamily: styles.fontMono,
           fontSize: 24,
           fontWeight: 900,
           padding: "4px 12px",
           borderRadius: 6,
           marginLeft: 8,
-          ...changeStyle,
+          ...getChangeStyle(change, boardType),
         }}
       >
-        {changeStr}
+        {formatChange(change)}
       </span>
     </div>
   );
-};
+}
 
-// ------------------------------------------------------------------
-// 子组件：分数线项
-// ------------------------------------------------------------------
-const CutoffItem = ({
+function CutoffItem({
   tag,
   value,
   change,
-  percent = 0,
-  delay = 0,
+  percent,
+  delay,
+  boardType,
 }: {
   tag: string;
   value: number;
   change: number | string;
-  percent?: number;
-  delay?: number;
-}) => {
+  percent: number;
+  delay: number;
+  boardType: BoardType;
+}) {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const styles = getStyles(boardType);
 
   const entrance = spring({
     frame: frame - delay,
@@ -147,32 +194,12 @@ const CutoffItem = ({
     config: { damping: 12 },
   });
 
-  const numChange = typeof change === "number" ? change : 0;
-  const changeStr =
-    typeof change === "string"
-      ? change
-      : numChange > 0
-        ? `+${new Intl.NumberFormat().format(numChange)}`
-        : numChange === 0
-          ? "±0"
-          : `${new Intl.NumberFormat().format(numChange)}`;
-
-  const percentStr =
+  const percentage =
     percent > 0
       ? `(+${percent.toFixed(1)}%)`
       : percent < 0
         ? `(${percent.toFixed(1)}%)`
-        : `(0.0%)`;
-
-  const fullChangeStr = `${changeStr} ${percent !== undefined ? percentStr : ""}`;
-
-  const changeClass = numChange > 0 ? "up" : numChange < 0 ? "down" : "zero";
-
-  const changeStyle = {
-    up: { color: STYLES.colors.redText, background: STYLES.colors.redBg },
-    down: { color: STYLES.colors.greenText, background: STYLES.colors.greenBg },
-    zero: { color: "#333", background: "#e0e0e0" },
-  }[changeClass];
+        : "(0.0%)";
 
   return (
     <div
@@ -195,58 +222,60 @@ const CutoffItem = ({
           fontSize: 20,
           fontWeight: 900,
           color: "#fff",
-          background: "#222",
+          backgroundColor: "#222",
           padding: "4px 12px",
           borderRadius: 8,
           whiteSpace: "nowrap",
-          fontFamily: STYLES.fontMain,
+          fontFamily: styles.fontMain,
         }}
       >
         {tag}
       </span>
+
       <span
         style={{
-          fontFamily: STYLES.fontMono,
+          fontFamily: styles.fontMono,
           fontSize: 36,
           fontWeight: 900,
           color: "#222",
         }}
       >
-        {new Intl.NumberFormat().format(value)}
+        {formatNumber(value)}
       </span>
+
       <span
         style={{
-          fontFamily: STYLES.fontMono,
+          fontFamily: styles.fontMono,
           fontSize: 18,
           fontWeight: 900,
-          padding: "4px 4px",
+          padding: "4px 6px",
           borderRadius: 6,
           whiteSpace: "nowrap",
-          ...changeStyle,
+          ...getChangeStyle(change, boardType),
         }}
       >
-        {fullChangeStr}
+        {formatChange(change)} {percentage}
       </span>
     </div>
   );
-};
+}
 
-// ------------------------------------------------------------------
-// 子组件：Grid Cell
-// ------------------------------------------------------------------
-const GridCell = ({
+function MetricCell({
   icon: Icon,
   value,
   diff,
-  delay = 0,
+  delay,
+  boardType,
 }: {
-  icon: React.FC<any>;
+  icon: ComponentType<{ style?: CSSProperties }>;
   value: number;
   diff: number | string;
-  delay?: number;
-}) => {
+  delay: number;
+  boardType: BoardType;
+}) {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
+  const styles = getStyles(boardType);
 
   const entrance = spring({
     frame: frame - delay,
@@ -256,41 +285,24 @@ const GridCell = ({
     config: { damping: 12 },
   });
 
-  const numDiff = typeof diff === "number" ? diff : 0;
-  const diffStr =
-    typeof diff === "string"
-      ? diff
-      : numDiff > 0
-        ? `+${new Intl.NumberFormat().format(numDiff)}`
-        : numDiff === 0
-          ? "±0"
-          : `${new Intl.NumberFormat().format(numDiff)}`;
-
+  const numericDiff = typeof diff === "number" ? diff : safeParse(diff);
+  const previousValue = value - numericDiff;
   const rate =
-    value !== 0 && typeof diff === "number"
-      ? (numDiff / (value - numDiff)) * 100
+    previousValue !== 0 && typeof diff === "number"
+      ? (numericDiff / previousValue) * 100
       : 0;
-  const rateVal = isFinite(rate) ? rate : 0;
 
-  const rateStr =
-    rateVal > 0
-      ? `(+${rateVal.toFixed(1)}%)`
-      : rateVal < 0
-        ? `(${rateVal.toFixed(1)}%)`
-        : `(0.0%)`;
-
-  const changeClass = numDiff > 0 ? "up" : numDiff < 0 ? "down" : "zero";
-
-  const changeStyle = {
-    up: { color: STYLES.colors.redText, background: STYLES.colors.redBg },
-    down: { color: STYLES.colors.greenText, background: STYLES.colors.greenBg },
-    zero: { color: "#333", background: "#e0e0e0" },
-  }[changeClass];
+  const rateText =
+    rate > 0
+      ? `(+${rate.toFixed(1)}%)`
+      : rate < 0
+        ? `(${rate.toFixed(1)}%)`
+        : "(0.0%)";
 
   return (
     <div
       style={{
-        background: "#fafafa",
+        backgroundColor: "#fafafa",
         border: "2px solid #ddd",
         borderRadius: 10,
         padding: "4px 8px",
@@ -304,16 +316,18 @@ const GridCell = ({
       }}
     >
       <Icon style={{ width: 64, height: 64, color: "#222" }} />
+
       <div
         style={{
-          fontFamily: STYLES.fontMono,
+          fontFamily: styles.fontMono,
           fontSize: 32,
           fontWeight: 900,
           color: "#222",
         }}
       >
-        {new Intl.NumberFormat().format(value)}
+        {formatNumber(value)}
       </div>
+
       <div
         style={{
           display: "flex",
@@ -324,86 +338,60 @@ const GridCell = ({
       >
         <span
           style={{
-            fontFamily: STYLES.fontMono,
+            fontFamily: styles.fontMono,
             fontSize: 18,
             fontWeight: 900,
             padding: "2px 6px",
             borderRadius: 4,
-            ...changeStyle,
+            ...getChangeStyle(diff, boardType),
           }}
         >
-          {diffStr}
+          {formatChange(diff)}
         </span>
+
         {typeof diff === "number" && (
           <span
             style={{
-              fontFamily: STYLES.fontMono,
+              fontFamily: styles.fontMono,
               fontSize: 18,
               fontWeight: 900,
               padding: "2px 6px",
               borderRadius: 4,
-              ...changeStyle,
+              ...getChangeStyle(diff, boardType),
             }}
           >
-            {rateStr}
+            {rateText}
           </span>
         )}
       </div>
     </div>
   );
-};
+}
 
-// ------------------------------------------------------------------
-// 主组件：统计卡片
-// ------------------------------------------------------------------
-export const StatsCard = (props: {
-  stat: any;
+export function StatsCard({
+  stat,
+  comment = "请输入文本",
+  topN = 100,
+  pointThresholds = [
+    { key: "count_over_500k", label: "50万分以上" },
+    { key: "count_over_100k", label: "10万分以上" },
+    { key: "count_over_50k", label: "5万分以上" },
+  ],
+  boardType = "weekly",
+  newSongPeriod = "2周内",
+}: {
+  stat: StatsMap;
   comment?: string;
   topN?: number;
-  pointThresholds?: Array<{ key: string; label: string }>;
+  pointThresholds?: PointThreshold[];
   newSongPeriod?: string;
   boardType?: BoardType;
-}) => {
-  const {
-    stat,
-    comment = "请输入文本",
-    topN = 100,
-    pointThresholds = [
-      { key: "count_over_500k", label: "50万分以上" },
-      { key: "count_over_100k", label: "10万分以上" },
-      { key: "count_over_50k", label: "5万分以上" },
-    ],
-    boardType = "weekly",
-    newSongPeriod = "2周内",
-  } = props;
-
-  const { durationInFrames, fps } = useVideoConfig();
+}) {
+  const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
-  const STYLES = getStyles(boardType);
+  const styles = getStyles(boardType);
 
-  const cardEntrance = spring({
-    frame,
-    fps,
-    from: 50,
-    to: 0,
-    config: { damping: 12 },
-  });
-  const cardOpacity = interpolate(frame, [0, 10], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const exitStartFrame = durationInFrames - 30;
-  const exitProgress = interpolate(
-    frame,
-    [exitStartFrame, exitStartFrame + 20],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-  const cardExitTranslateY = interpolate(exitProgress, [0, 1], [0, 50]);
-  const cardExitOpacity = interpolate(exitProgress, [0, 1], [1, 0]);
-
-  const row4Entrance = spring({
+  const rowEntrance = spring({
     frame: frame - 43,
     fps,
     from: 0,
@@ -419,239 +407,194 @@ export const StatsCard = (props: {
     config: { damping: 12 },
   });
 
-  const getStatValue = (key: string) => stat?.[key]?.value || 0;
-  const getStatDiff = (key: string) => stat?.[key]?.diff ?? "-";
+  const getPercent = (key: string): number => {
+    const value = getStatValue(stat, key);
+    const diff = stat[key]?.diff;
 
-  const calcPercent = (key: string) => {
-    const value = getStatValue(key);
-    const diff = stat?.[key]?.diff;
-    if (typeof diff !== "number" || value - diff === 0) return 0;
-    return (diff / (value - diff)) * 100;
+    if (typeof diff !== "number") return 0;
+
+    const previousValue = value - diff;
+
+    return previousValue === 0 ? 0 : (diff / previousValue) * 100;
   };
 
+  const metricCells: MetricCellConfig[] = [
+    { key: "total_view", icon: PlayIcon },
+    { key: "total_favorite", icon: StarIcon },
+    { key: "total_coin", icon: CoinIcon },
+    { key: "total_like", icon: LikeIcon },
+    { key: "total_danmaku", icon: DanmakuIcon },
+    { key: "total_reply", icon: ReplyIcon },
+    { key: "total_share", icon: ShareIcon },
+  ];
+
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: STYLES.colors.bg,
-        backgroundImage: `radial-gradient(${STYLES.colors.dot} 3px, transparent 3px)`,
-        backgroundSize: "24px 24px",
-        fontFamily: STYLES.fontMain,
+    <FramedPage
+      title={
+        <h1
+          style={{
+            color: styles.colors.headerText,
+            fontSize: 40,
+            margin: 0,
+            fontWeight: 900,
+          }}
+        >
+          本期榜单统计数据
+        </h1>
+      }
+      boardType={boardType}
+      contentStyle={{
+        padding: "25px 60px",
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        flexDirection: "column",
+        gap: 18,
       }}
     >
+      <div style={{ display: "flex", gap: 50, flexWrap: "wrap" }}>
+        {pointThresholds.map((threshold, index) => (
+          <StatItem
+            key={threshold.key}
+            label={threshold.label}
+            value={getStatValue(stat, threshold.key)}
+            unit="首"
+            change={getStatDiff(stat, threshold.key)}
+            delay={5 + index * 5}
+            boardType={boardType}
+          />
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 50, flexWrap: "wrap" }}>
+        <StatItem
+          label={`主榜${newSongPeriod}新曲`}
+          value={getStatValue(stat, "count_new_main")}
+          unit="首"
+          change={getStatDiff(stat, "count_new_main")}
+          delay={20}
+          boardType={boardType}
+        />
+
+        <StatItem
+          label={`全榜${newSongPeriod}新曲`}
+          value={getStatValue(stat, "count_new_total")}
+          unit="首"
+          change={getStatDiff(stat, "count_new_total")}
+          delay={25}
+          boardType={boardType}
+        />
+      </div>
+
+      <div style={{ display: "flex", gap: 25 }}>
+        <CutoffItem
+          tag="主榜起分"
+          value={getStatValue(stat, "cutoff_main")}
+          change={getStatDiff(stat, "cutoff_main")}
+          percent={getPercent("cutoff_main")}
+          delay={30}
+          boardType={boardType}
+        />
+
+        <CutoffItem
+          tag="副榜起分"
+          value={getStatValue(stat, "cutoff_sub")}
+          change={getStatDiff(stat, "cutoff_sub")}
+          percent={getPercent("cutoff_sub")}
+          delay={35}
+          boardType={boardType}
+        />
+
+        <CutoffItem
+          tag="新曲榜起分"
+          value={getStatValue(stat, "cutoff_new")}
+          change={getStatDiff(stat, "cutoff_new")}
+          percent={getPercent("cutoff_new")}
+          delay={40}
+          boardType={boardType}
+        />
+      </div>
+
       <div
         style={{
-          width: 1700,
-          height: 940,
-          background: STYLES.colors.card,
-          border: `3px solid ${STYLES.colors.border}`,
-          borderRadius: 24,
-          boxShadow: "8px 8px 0 #000",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          opacity: cardOpacity * cardExitOpacity,
-          transform: `translateY(${cardEntrance + cardExitTranslateY}px)`,
+          border: "3px solid #222",
+          borderRadius: 16,
+          padding: "8px 12px",
+          boxShadow: "4px 4px 0 rgba(0,0,0,0.1)",
+          opacity: rowEntrance,
+          transform: `translateY(${(1 - rowEntrance) * 30}px)`,
         }}
       >
-        <header
+        <div
           style={{
-            height: 80,
-            background: STYLES.colors.headerBg,
-            display: "flex",
-            alignItems: "center",
-            padding: "0 40px",
-            borderBottom: `3px solid ${STYLES.colors.border}`,
-            flexShrink: 0,
+            fontSize: 20,
+            fontWeight: 900,
+            color: "#fff",
+            backgroundColor: "#222",
+            padding: "4px 12px",
+            borderRadius: 8,
+            display: "inline-block",
+            marginBottom: 10,
+            fontFamily: styles.fontMain,
           }}
         >
-          <h1
-            style={{ color: "#fff", fontSize: 40, margin: 0, fontWeight: 900 }}
-          >
-            本期榜单统计数据
-          </h1>
-        </header>
+          单项排名前{topN}总数据
+        </div>
 
-        <main
+        <div
           style={{
-            flex: 1,
-            padding: "25px 60px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 18,
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: 10,
           }}
         >
-          <div style={{ display: "flex", gap: 50, flexWrap: "wrap" }}>
-            {pointThresholds.map((threshold, idx) => (
-              <StatItem
-                key={threshold.key}
-                label={threshold.label}
-                value={getStatValue(threshold.key)}
-                unit="首"
-                change={getStatDiff(threshold.key)}
-                delay={5 + idx * 5}
-              />
-            ))}
-          </div>
-
-          <div style={{ display: "flex", gap: 50, flexWrap: "wrap" }}>
-            <StatItem
-              label={`主榜${newSongPeriod}新曲`}
-              value={getStatValue("count_new_main")}
-              unit="首"
-              change={getStatDiff("count_new_main")}
-              delay={20}
+          {metricCells.map(({ key, icon }, index) => (
+            <MetricCell
+              key={key}
+              icon={icon}
+              value={getStatValue(stat, key)}
+              diff={getStatDiff(stat, key)}
+              delay={45 + index * 3}
+              boardType={boardType}
             />
-            <StatItem
-              label={`全榜${newSongPeriod}新曲`}
-              value={getStatValue("count_new_total")}
-              unit="首"
-              change={getStatDiff("count_new_total")}
-              delay={25}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: 25 }}>
-            <CutoffItem
-              tag="主榜起分"
-              value={getStatValue("cutoff_main")}
-              change={getStatDiff("cutoff_main")}
-              percent={calcPercent("cutoff_main")}
-              delay={30}
-            />
-            <CutoffItem
-              tag="副榜起分"
-              value={getStatValue("cutoff_sub")}
-              change={getStatDiff("cutoff_sub")}
-              percent={calcPercent("cutoff_sub")}
-              delay={35}
-            />
-            <CutoffItem
-              tag="新曲榜起分"
-              value={getStatValue("cutoff_new")}
-              change={getStatDiff("cutoff_new")}
-              percent={calcPercent("cutoff_new")}
-              delay={40}
-            />
-          </div>
-
-          <div
-            style={{
-              border: "3px solid #222",
-              borderRadius: 16,
-              padding: "8px 12px",
-              boxShadow: "4px 4px 0 rgba(0,0,0,0.1)",
-              opacity: row4Entrance,
-              transform: `translateY(${(1 - row4Entrance) * 30}px)`,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 900,
-                color: "#fff",
-                background: "#222",
-                padding: "4px 12px",
-                borderRadius: 8,
-                display: "inline-block",
-                marginBottom: 10,
-                fontFamily: STYLES.fontMain,
-              }}
-            >
-              单项排名前{topN}总数据
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                gap: 10,
-              }}
-            >
-              <GridCell
-                icon={PlayIcon}
-                value={getStatValue("total_view")}
-                diff={getStatDiff("total_view")}
-                delay={45}
-              />
-              <GridCell
-                icon={StarIcon}
-                value={getStatValue("total_favorite")}
-                diff={getStatDiff("total_favorite")}
-                delay={48}
-              />
-              <GridCell
-                icon={CoinIcon}
-                value={getStatValue("total_coin")}
-                diff={getStatDiff("total_coin")}
-                delay={51}
-              />
-              <GridCell
-                icon={LikeIcon}
-                value={getStatValue("total_like")}
-                diff={getStatDiff("total_like")}
-                delay={54}
-              />
-              <GridCell
-                icon={DanmakuIcon}
-                value={getStatValue("total_danmaku")}
-                diff={getStatDiff("total_danmaku")}
-                delay={57}
-              />
-              <GridCell
-                icon={ReplyIcon}
-                value={getStatValue("total_reply")}
-                diff={getStatDiff("total_reply")}
-                delay={60}
-              />
-              <GridCell
-                icon={ShareIcon}
-                value={getStatValue("total_share")}
-                diff={getStatDiff("total_share")}
-                delay={63}
-              />
-            </div>
-          </div>
-
-          <hr
-            style={{
-              border: "none",
-              borderTop: "2px dashed #ccc",
-              margin: "8px 0",
-              opacity: commentEntrance,
-            }}
-          />
-
-          <div
-            style={{
-              border: "3px solid #222",
-              borderRadius: 16,
-              background: "#fafafa",
-              padding: "25px 30px",
-              boxShadow: "4px 4px 0 rgba(0,0,0,0.1)",
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              opacity: commentEntrance,
-              transform: `translateY(${(1 - commentEntrance) * 30}px)`,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 28,
-                fontWeight: 700,
-                color: "#333",
-                lineHeight: 1.8,
-                fontFamily: STYLES.fontMain,
-              }}
-            >
-              {comment}
-            </div>
-          </div>
-        </main>
+          ))}
+        </div>
       </div>
-    </AbsoluteFill>
+
+      <hr
+        style={{
+          border: "none",
+          borderTop: "2px dashed #ccc",
+          margin: "8px 0",
+          opacity: commentEntrance,
+        }}
+      />
+
+      <div
+        style={{
+          border: "3px solid #222",
+          borderRadius: 16,
+          backgroundColor: "#fafafa",
+          padding: "25px 30px",
+          boxShadow: "4px 4px 0 rgba(0,0,0,0.1)",
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          opacity: commentEntrance,
+          transform: `translateY(${(1 - commentEntrance) * 30}px)`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#333",
+            lineHeight: 1.8,
+            fontFamily: styles.fontMain,
+          }}
+        >
+          {comment}
+        </div>
+      </div>
+    </FramedPage>
   );
-};
+}
