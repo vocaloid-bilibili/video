@@ -18,11 +18,12 @@ export function DotPattern({
   boardType?: BoardType;
 }) {
   const styles = getStyles(boardType);
+  const dotColor = (styles.colors as { dot?: string }).dot ?? "#d7ccc8";
 
   return (
     <AbsoluteFill
       style={{
-        backgroundImage: `radial-gradient(${styles.colors.dot} 3px, transparent 3px)`,
+        backgroundImage: `radial-gradient(${dotColor} 3px, transparent 3px)`,
         backgroundSize: "24px 24px",
         opacity: 0.6,
         zIndex: 0,

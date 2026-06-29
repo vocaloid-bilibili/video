@@ -9,6 +9,8 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
+    "noEmit": true,
+    "rootDir": "..",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
@@ -16,8 +18,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "types": ["react", "react-dom"]
+    "types": ["react"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

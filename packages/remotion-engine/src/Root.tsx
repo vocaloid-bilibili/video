@@ -1,6 +1,8 @@
-// src/Root.tsx
+// packages/remotion-engine/src/Root.tsx
+
 import React from "react";
 import { Composition } from "remotion";
+
 import { MainRankCard } from "./MainRankCard";
 import { Intro } from "./Intro";
 import { InfoCard } from "./InfoCard";
@@ -20,10 +22,26 @@ import mainRankProps from "./example/mainRank";
 import coverMainRankProps from "./example/coverMainRank";
 import specialProps from "./example/specialRank";
 import vocalStats from "./example/vocalStats";
-
 import { weeklyMainSchema } from "./types/zod";
+import type { BoardType } from "../../shared/src/boardTypes";
 
-const TEMP_BOARD_TYPE = "coverWeekly";
+const TEMP_BOARD_TYPE: BoardType = "coverWeekly";
+
+const LooseNewSongCard = NewSongCard as unknown as React.ComponentType<
+  Record<string, unknown>
+>;
+
+const LooseMainRankCard = MainRankCard as unknown as React.ComponentType<
+  Record<string, unknown>
+>;
+
+const LooseSpecialCard = SpecialCard as unknown as React.ComponentType<
+  Record<string, unknown>
+>;
+
+const LoosePickupCard = PickupCard as unknown as React.ComponentType<
+  Record<string, unknown>
+>;
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -42,6 +60,7 @@ export const RemotionRoot: React.FC = () => {
           boardType: TEMP_BOARD_TYPE,
         }}
       />
+
       <Composition
         id="InfoCard"
         component={InfoCard}
@@ -59,6 +78,7 @@ export const RemotionRoot: React.FC = () => {
           boardType: TEMP_BOARD_TYPE,
         }}
       />
+
       <Composition
         id="RulesAndAchivements"
         component={MergedRulesCard}
@@ -66,7 +86,11 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
+        defaultProps={{
+          boardType: TEMP_BOARD_TYPE,
+        }}
       />
+
       <Composition
         id="SectionTitle"
         component={SectionTitle}
@@ -81,11 +105,13 @@ export const RemotionRoot: React.FC = () => {
           themeColor: "#23ade5",
           edName: "",
           edAuthor: "",
+          boardType: TEMP_BOARD_TYPE,
         }}
       />
+
       <Composition
         id="NewSongCard"
-        component={NewSongCard}
+        component={LooseNewSongCard}
         durationInFrames={60 * 35}
         fps={60}
         width={1920}
@@ -96,15 +122,13 @@ export const RemotionRoot: React.FC = () => {
           point: 100000,
           trendCount: 7,
           trendKey: "daily_trends",
+          boardType: "weekly",
         }}
       />
+
       <Composition
         id="MainRankCard"
-        component={
-          MainRankCard as unknown as React.ComponentType<
-            Record<string, unknown>
-          >
-        }
+        component={LooseMainRankCard}
         durationInFrames={60 * 35}
         fps={60}
         width={1920}
@@ -112,37 +136,46 @@ export const RemotionRoot: React.FC = () => {
         schema={weeklyMainSchema}
         defaultProps={mainRankProps}
       />
+
       <Composition
         id="CoverMainRankCard"
-        component={
-          MainRankCard as unknown as React.ComponentType<
-            Record<string, unknown>
-          >
-        }
+        component={LooseMainRankCard}
         durationInFrames={60 * 35}
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={coverMainRankProps}
+        defaultProps={{
+          ...coverMainRankProps,
+          boardType: "coverWeekly",
+        }}
       />
+
       <Composition
         id="SpecialCard"
-        component={SpecialCard}
+        component={LooseSpecialCard}
         durationInFrames={60 * 20}
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={specialProps}
+        defaultProps={{
+          ...specialProps,
+          boardType: "special",
+        }}
       />
+
       <Composition
         id="PickupCard"
-        component={PickupCard}
+        component={LoosePickupCard}
         durationInFrames={60 * 20}
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={specialProps}
+        defaultProps={{
+          ...specialProps,
+          boardType: "special",
+        }}
       />
+
       <Composition
         id="SingerRank"
         component={SingerRank}
@@ -150,8 +183,12 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{ list: vocalStats }}
+        defaultProps={{
+          list: vocalStats,
+          boardType: TEMP_BOARD_TYPE,
+        }}
       />
+
       <Composition
         id="MillionRank"
         component={MillionRank}
@@ -159,8 +196,12 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{ list: [] }}
+        defaultProps={{
+          list: [],
+          boardType: TEMP_BOARD_TYPE,
+        }}
       />
+
       <Composition
         id="AchievementRank"
         component={AchievementRank}
@@ -168,8 +209,12 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{ list: [] }}
+        defaultProps={{
+          list: [],
+          boardType: TEMP_BOARD_TYPE,
+        }}
       />
+
       <Composition
         id="HistoryRank"
         component={HistoryRank}
@@ -177,8 +222,12 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{ list: [] }}
+        defaultProps={{
+          list: [],
+          boardType: TEMP_BOARD_TYPE,
+        }}
       />
+
       <Composition
         id="StatsCard"
         component={StatsCard}
@@ -189,8 +238,10 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           stat: {},
           topN: 100,
+          boardType: TEMP_BOARD_TYPE,
         }}
       />
+
       <Composition
         id="StaffCard"
         component={StaffCard}
@@ -198,8 +249,12 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{ staffList: [] }}
+        defaultProps={{
+          staffList: [],
+          boardType: TEMP_BOARD_TYPE,
+        }}
       />
+
       <Composition
         id="SubRank"
         component={SubRank}
@@ -210,6 +265,7 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           list: [],
           showCount: true,
+          boardType: TEMP_BOARD_TYPE,
         }}
       />
     </>

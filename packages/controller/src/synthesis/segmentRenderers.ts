@@ -4,7 +4,7 @@ import fs from "fs-extra";
 import path from "path";
 
 import { PORT, STAFF_LIST } from "../config.js";
-import type { SegmentType, SongInfo } from "shared-config";
+import type { SegmentType } from "shared-config";
 import { log } from "../state.js";
 import { downloadImage } from "../utils/download.js";
 import { concatVideos } from "../utils/ffmpeg.js";
@@ -13,7 +13,6 @@ import type { RenderSongInfo } from "../types/index.js";
 import type { SegmentContext } from "./context.js";
 import { DURATION, SEGMENT_PREFIX } from "./constants.js";
 import { formatDate } from "./cover.js";
-import { getPrimaryHonorBadge, normalizeHonors } from "./honors.js";
 import { renderRankBatch, renderSubRankBatch } from "./renderBatches.js";
 
 function getSegmentConfig(ctx: SegmentContext): Record<string, unknown> {
@@ -29,11 +28,11 @@ function mergeSegmentConfig(ctx: SegmentContext): Record<string, unknown> {
 
 function getSubRankRange(ctx: SegmentContext): [number, number] {
   const segConfig = getSegmentConfig(ctx);
-  const configAny = ctx.config as unknown as Record<string, any>;
+  const configRecord = ctx.config as unknown as Record<string, unknown>;
 
   return (
-    (segConfig.range as [number, number]) ||
-    (configAny.subRankRange as [number, number]) || [
+    (segConfig.range as [number, number] | undefined) ||
+    (configRecord.subRankRange as [number, number] | undefined) || [
       21,
       ctx.config.subRankMax || 100,
     ]
@@ -44,19 +43,7 @@ function getSongRankSource(
   ctx: SegmentContext,
   segConfig: Record<string, unknown>,
 ): RenderSongInfo[] {
-  const cardComponent = segConfig.cardComponent as string | undefined;
   const dataField = segConfig.dataField as string | undefined;
-
-  if (cardComponent === "achievementCard") {
-    const achievementDataField = segConfig.achievementDataField as
-      | string
-      | undefined;
-
-    const sourceField = achievementDataField || dataField;
-    return sourceField
-      ? ((ctx.data[sourceField] || []) as RenderSongInfo[])
-      : [];
-  }
 
   return dataField ? ((ctx.data[dataField] || []) as RenderSongInfo[]) : [];
 }
@@ -66,7 +53,9 @@ export const segmentRenderers: Record<
   (ctx: SegmentContext) => Promise<string | null | undefined>
 > = {
   intro: async (ctx) => {
-    const segmentDuration = ctx.orderItem.config?.duration || DURATION.intro;
+    const segmentDuration = Number(
+      ctx.orderItem.config?.duration || DURATION.intro,
+    );
 
     return await renderVideo(
       "Intro",
@@ -107,8 +96,11 @@ export const segmentRenderers: Record<
       ctx.fadeDuration,
     );
   },
+
   rules: async (ctx) => {
-    const segmentDuration = ctx.orderItem.config?.duration || DURATION.rules;
+    const segmentDuration = Number(
+      ctx.orderItem.config?.duration || DURATION.rules,
+    );
 
     return await renderVideo(
       "RulesAndAchivements",
@@ -150,7 +142,7 @@ export const segmentRenderers: Record<
 
   songRank: async (ctx) => {
     const segConfig = getSegmentConfig(ctx);
-    const cardComponent = segConfig.cardComponent as string;
+    const cardComponent = segConfig.cardComponent as string | undefined;
     const rankCount = Number(segConfig.rankCount || 0);
 
     if (!cardComponent) {
@@ -159,68 +151,6 @@ export const segmentRenderers: Record<
     }
 
     const sourceSongs = getSongRankSource(ctx, segConfig);
-
-    if (cardComponent === "achievementCard") {
-      const count = Number(
-        ctx.config.achievementCount || rankCount || sourceSongs.length,
-      );
-
-      const songs = sourceSongs.slice(0, count);
-
-      if (songs.length === 0) return null;
-
-      const formattedSongs = [...songs].reverse().map((item) => {
-        const trendData = Object.values(item.daily_trends || {}).map(Number);
-
-        const infoTags = [
-          { label: "发布日期", value: item.pubdate || "未知" },
-          { label: "时长", value: item.duration || "未知" },
-          { label: "类型", value: item.type || "未知" },
-          { label: "作者", value: item.producer || "未知" },
-          { label: "演唱", value: item.vocalist || "未知" },
-        ];
-
-        const honors = normalizeHonors(item.honor);
-        const honorBadge = getPrimaryHonorBadge(item.honor);
-
-        return {
-          ...item,
-          honor: honors,
-          infoTags,
-          honorBadge,
-          trendData,
-          trendPeriod: "day",
-        };
-      }) as RenderSongInfo[];
-
-      const results = await renderRankBatch(
-        formattedSongs,
-        cardComponent,
-        ctx.segments,
-        mergeSegmentConfig(ctx),
-      );
-
-      if (results.length === 0) return null;
-
-      const mergedPath = path.join(
-        ctx.segments,
-        `${SEGMENT_PREFIX.songRank}_Achievement.mp4`,
-      );
-
-      if (fs.existsSync(mergedPath)) {
-        log(`成就展示合并文件已存在: ${path.basename(mergedPath)}`);
-        return mergedPath;
-      }
-
-      log(`合并 ${results.length} 个成就展示卡片`);
-
-      return await concatVideos(
-        results,
-        `${SEGMENT_PREFIX.songRank}_Achievement.mp4`,
-        ctx.segments,
-      );
-    }
-
     const useSongs = sourceSongs.slice(0, rankCount || sourceSongs.length);
     const finalSongs = segConfig.reverse ? useSongs : [...useSongs].reverse();
 
@@ -228,7 +158,6 @@ export const segmentRenderers: Record<
 
     const showTitle = segConfig.showTitle !== false;
     const mergedConfig = mergeSegmentConfig(ctx);
-
     const connects = (segConfig.connects as number[]) || [];
 
     finalSongs.forEach((song, index) => {
@@ -245,6 +174,7 @@ export const segmentRenderers: Record<
     });
 
     const titleResults: string[] = [];
+    const titleRankCount = rankCount || finalSongs.length;
 
     if (showTitle) {
       const titleDuration = Number(
@@ -255,13 +185,13 @@ export const segmentRenderers: Record<
       const titlePath = path.join(ctx.segments, outputName);
 
       if (!fs.existsSync(titlePath)) {
-        log(`渲染标题: ${segConfig.title || "榜单"} Top ${rankCount}`);
+        log(`渲染标题: ${segConfig.title || "榜单"} Top ${titleRankCount}`);
 
         const titleResult = await renderVideo(
           "SectionTitle",
           {
-            title: `${segConfig.title || "榜单"} Top ${rankCount}`,
-            from: rankCount,
+            title: `${segConfig.title || "榜单"} Top ${titleRankCount}`,
+            from: titleRankCount,
             to: 1,
             themeColor: (segConfig.color as string) || "#f25d8e",
             edName: "",

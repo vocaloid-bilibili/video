@@ -8,37 +8,22 @@ import { log } from "../state.js";
 import { getDuration } from "../utils/ffmpeg.js";
 import { downloadClip, downloadImage } from "../utils/download.js";
 import { getClipSetting } from "../utils/clips.js";
-import type { IssueConfig, SegmentType, SongInfo } from "shared-config";
+import type { IssueConfig, SegmentType } from "shared-config";
 import type { RankingData, RenderSongInfo } from "../types/index.js";
 import { DOWNLOAD_CONCURRENCY } from "./constants.js";
 
 function getSongSegmentSourceField(
   segConfig: Record<string, unknown>,
 ): string | null {
-  const cardComponent = segConfig.cardComponent as string | undefined;
-  const dataField = segConfig.dataField as string | undefined;
-  const achievementDataField = segConfig.achievementDataField as
-    | string
-    | undefined;
-
-  if (cardComponent === "achievementCard") {
-    return achievementDataField || dataField || null;
-  }
-
-  return dataField || null;
+  return (segConfig.dataField as string | undefined) || null;
 }
 
 function getSongSegmentCount(
   segConfig: Record<string, unknown>,
-  config: IssueConfig,
+  _config: IssueConfig,
   fallback: number,
 ): number {
-  const cardComponent = segConfig.cardComponent as string | undefined;
   const rankCount = Number(segConfig.rankCount || 0);
-
-  if (cardComponent === "achievementCard") {
-    return Number(config.achievementCount || rankCount || fallback);
-  }
 
   return Number(rankCount || fallback);
 }
@@ -90,7 +75,7 @@ export async function prepareAllAssets(
 
             if (actualDuration >= song._duration - 1) {
               song._videoPath = filePath;
-              song._thumbPath = await downloadImage(song.thumbnail);
+              song._thumbPath = await downloadImage(song.thumbnail || "");
               skippedCount++;
 
               log(`跳过已有: ${song.bvid}`);
@@ -107,7 +92,7 @@ export async function prepareAllAssets(
 
         const [videoPath, thumbPath] = await Promise.all([
           downloadClip(song.bvid, song._startTime, song._duration),
-          downloadImage(song.thumbnail),
+          downloadImage(song.thumbnail || ""),
         ]);
 
         if (!videoPath) {
@@ -143,28 +128,27 @@ export function collectSongsFromSegments(
   const rankSegmentTypes: SegmentType[] = ["songRank"];
   const allSongs: RenderSongInfo[] = [];
   const subList: RenderSongInfo[] = [];
-  const configAny = config as unknown as Record<string, any>;
+  const configRecord = config as unknown as Record<string, unknown>;
 
   for (const orderItem of config.segmentOrder) {
     const segType = orderItem.type;
     const segConfig = (orderItem.config || {}) as Record<string, unknown>;
 
     if (segType === "subRank") {
-      const subDataField = segConfig.dataField as string | null;
-      const subRange = (segConfig.range as [number, number]) ||
-        (configAny.subRankRange as [number, number]) || [21, 100];
+      const subDataField = segConfig.dataField as string | undefined;
+      const subRange = (segConfig.range as [number, number] | undefined) ||
+        (configRecord.subRankRange as [number, number] | undefined) || [
+          21, 100,
+        ];
 
       if (!subDataField) continue;
 
       const songs = (data[subDataField] || []) as RenderSongInfo[];
       const filtered = songs.filter(
-        (song: SongInfo) =>
-          song.rank >= subRange[0] && song.rank <= subRange[1],
+        (song) => song.rank >= subRange[0] && song.rank <= subRange[1],
       );
 
-      subList.push(
-        ...filtered.sort((a: SongInfo, b: SongInfo) => a.rank - b.rank),
-      );
+      subList.push(...filtered.sort((a, b) => a.rank - b.rank));
 
       log(
         `副榜: 从 ${subDataField} 取 ${filtered.length} 首 (排名 ${subRange[0]}-${subRange[1]})`,

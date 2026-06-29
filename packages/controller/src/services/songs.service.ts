@@ -21,17 +21,7 @@ interface IssueSongsResult {
 function getSegmentDataField(
   segConfig: Record<string, unknown>,
 ): string | null {
-  const cardComponent = segConfig.cardComponent as string | undefined;
-  const dataField = segConfig.dataField as string | undefined;
-  const achievementDataField = segConfig.achievementDataField as
-    | string
-    | undefined;
-
-  if (cardComponent === "achievementCard") {
-    return achievementDataField || dataField || null;
-  }
-
-  return dataField || null;
+  return (segConfig.dataField as string | undefined) || null;
 }
 
 function enrichSong(song: SongInfo, type: string) {
@@ -55,7 +45,7 @@ export async function getIssueSongs(date: string): Promise<IssueSongsResult> {
     throw httpError(404, "数据文件不存在");
   }
 
-  const data = await fs.readJson(dataFile);
+  const data = (await fs.readJson(dataFile)) as Record<string, unknown>;
   const infoData = (await fs.pathExists(configFile))
     ? await fs.readJson(configFile)
     : {};
@@ -73,11 +63,8 @@ export async function getIssueSongs(date: string): Promise<IssueSongsResult> {
     if (!cardComponent || !dataField || !data[dataField]) continue;
 
     const sourceSongs = (data[dataField] || []) as SongInfo[];
-    const rankCount = segConfig.rankCount as number | undefined;
-    const defaultCount =
-      cardComponent === "achievementCard" ? (config.achievementCount ?? 0) : 0;
-
-    const count = Number(rankCount ?? defaultCount) || sourceSongs.length;
+    const rankCount = Number(segConfig.rankCount || sourceSongs.length);
+    const count = rankCount || sourceSongs.length;
 
     if (!songGroups[cardComponent]) {
       songGroups[cardComponent] = [];
@@ -96,7 +83,7 @@ export async function getIssueSongs(date: string): Promise<IssueSongsResult> {
   return {
     date,
     songs,
-    index: data.index,
+    index: Number(data.index ?? 0),
     boardType: config._type,
     config: {
       name: config.name,

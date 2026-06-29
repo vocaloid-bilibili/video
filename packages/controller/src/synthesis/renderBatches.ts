@@ -15,6 +15,21 @@ import {
   SUB_RANK_POOL_SIZE,
 } from "./constants.js";
 
+function getRankBatchTypeName(cardComponent: string): string {
+  switch (cardComponent) {
+    case "NewSongCard":
+      return "新曲榜";
+    case "CoverMainRankCard":
+      return "翻唱主榜";
+    case "SpecialCard":
+      return "特刊";
+    case "PickupCard":
+      return "Pickup";
+    default:
+      return "主榜";
+  }
+}
+
 export async function renderRankBatch(
   songs: RenderSongInfo[],
   cardComponent: string,
@@ -22,14 +37,7 @@ export async function renderRankBatch(
   config: Record<string, unknown>,
 ) {
   const results = new Array<string | null>(songs.length);
-
-  const typeName =
-    cardComponent === "NewSongCard"
-      ? "新曲榜"
-      : cardComponent === "achievementCard"
-        ? "成就展示"
-        : "主榜";
-
+  const typeName = getRankBatchTypeName(cardComponent);
   const chunkSize = Math.ceil(songs.length / RENDER_POOL_SIZE);
 
   async function worker(workerId: number, startIdx: number, endIdx: number) {
@@ -37,7 +45,7 @@ export async function renderRankBatch(
       const song = songs[index];
       if (!song) continue;
 
-      const rankPadded = song.rank.toString().padStart(3, "0");
+      const rankPadded = String(song.rank ?? index + 1).padStart(3, "0");
       const targetPath = path.join(
         segments,
         `rank_${cardComponent}_${rankPadded}.mp4`,
@@ -67,6 +75,8 @@ export async function renderRankBatch(
       const props = {
         ...songAny,
 
+        boardType: config.boardType,
+
         point_before: songAny.point_before,
         point_rate: songAny.rate,
 
@@ -80,7 +90,6 @@ export async function renderRankBatch(
         thumb: thumbPath,
         thumbnail: thumbPath || songAny.thumbnail,
 
-        // RankCard 用 videoSource，AchievementCard 用 videoSrc。
         videoSource: videoUrl,
         videoSrc: videoUrl,
 
@@ -161,15 +170,14 @@ export async function renderSubRankBatch(
         const processed = await Promise.all(
           chunk.map(async (item) => ({
             ...item,
-            thumbnail: await downloadImage(item.thumbnail),
+            thumbnail: await downloadImage(item.thumbnail || ""),
           })),
         );
 
         log(`副榜 Page${pageNum} 渲染中...`);
 
-        const fadeDuration = config.audioFade
-          ? Number(config.fadeDuration || 2)
-          : 0;
+        const fadeDuration =
+          config.audioFade !== false ? Number(config.fadeDuration || 2) : 0;
 
         return await renderVideo(
           "SubRank",
@@ -178,6 +186,7 @@ export async function renderSubRankBatch(
             showCount: config.showCount,
             trendKey: config.trendKey,
             trendCount: config.trendCount,
+            boardType: config.boardType,
           },
           outputName,
           segments,
@@ -187,7 +196,9 @@ export async function renderSubRankBatch(
       }),
     );
 
-    results.push(...batchResults.filter(Boolean));
+    results.push(
+      ...batchResults.filter((result): result is string => Boolean(result)),
+    );
   }
 
   return results;

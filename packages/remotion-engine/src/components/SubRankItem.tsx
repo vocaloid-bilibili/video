@@ -210,7 +210,6 @@ function HonorList({
           key={`${honor}-${index}`}
           text={honor}
           boardType={boardType}
-          size="small"
         />
       ))}
     </div>
@@ -232,6 +231,12 @@ export function SubRankItem({
   const producer = item.producer || item.producers || "";
   const vocalist = item.vocalist || item.vocalists || "";
   const honors = Array.isArray(item.honor) ? item.honor : [];
+  const producerLine = [
+    String(producer || ""),
+    vocalist ? `feat. ${String(vocalist)}` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div
@@ -307,29 +312,19 @@ export function SubRankItem({
                 width: 0,
                 minWidth: 0,
                 marginRight: 12,
-                fontSize: 20,
-                color: "#555",
-                fontFamily: styles.fontMain,
               }}
             >
               <FitTitle
+                text={producerLine}
                 style={{
+                  fontSize: 20,
+                  color: "#555",
+                  fontFamily: styles.fontMain,
                   whiteSpace: "nowrap",
                   display: "flex",
                   alignItems: "center",
                 }}
-              >
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    color: "#333",
-                    marginRight: 8,
-                  }}
-                >
-                  {String(producer)}
-                </span>
-                {vocalist && <span>feat. {String(vocalist)}</span>}
-              </FitTitle>
+              />
             </div>
 
             <HonorList honors={honors} boardType={boardType} />

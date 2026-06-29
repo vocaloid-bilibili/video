@@ -43,6 +43,12 @@ function getBestRank(item: Record<string, unknown>): number {
   return ranks.length > 0 ? Math.min(...ranks) : 0;
 }
 
+function formatRankLabel(value: unknown): string {
+  const rank = safeParse(value);
+
+  return rank > 0 ? String(rank) : "-";
+}
+
 function MetricCell({
   item,
   config,
@@ -58,6 +64,7 @@ function MetricCell({
   const Icon = config.icon;
   const rank = safeParse(item[config.rankKey]);
   const isBestRank = rank > 0 && rank === minRank;
+  const rankLabel = formatRankLabel(item[config.rankKey]);
 
   return (
     <div
@@ -74,7 +81,12 @@ function MetricCell({
       }}
     >
       <div
-        style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          minWidth: 0,
+        }}
       >
         <div style={{ width: 34, height: 34, flexShrink: 0 }}>
           <Icon
@@ -121,8 +133,9 @@ function MetricCell({
             textShadow: isBestRank ? "1px 1px 0 rgba(255,255,255,0.8)" : "none",
           }}
         >
-          {item[config.rankKey] ?? "-"}
+          {rankLabel}
         </span>
+
         <span
           style={{
             fontSize: 13,
