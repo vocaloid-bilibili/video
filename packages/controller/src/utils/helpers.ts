@@ -54,6 +54,7 @@ export function getBoardTypeName(boardType: string): string {
   if (boardType === "monthly") return "月刊";
   if (boardType === "coverWeekly") return "翻唱周刊";
   if (boardType === "special") return "特刊";
+  if (boardType === "near1kw") return "近千万刊";
 
   return boardType;
 }

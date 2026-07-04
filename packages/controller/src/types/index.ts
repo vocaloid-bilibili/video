@@ -7,7 +7,8 @@ export type BoardType =
   | "weekly"
   | "monthly"
   | "coverWeekly"
-  | "special";
+  | "special"
+  | "near1kw";
 
 export type RenderSongInfo = SongInfo & {
   rank: number;
@@ -109,6 +110,9 @@ export interface RankingData {
   total_rank_top20?: SongInfo[];
   total_rank_sub?: SongInfo[];
   new_rank_top10?: SongInfo[];
+  ten_million_record?: SongInfo[];
+  score_top20?: SongInfo[];
+  view_rank_all?: SongInfo[];
 
   vocal_stats?: ArtistStat[];
   producer_stats?: ArtistStat[];

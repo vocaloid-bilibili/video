@@ -3,7 +3,7 @@
 /**
  * 期刊段落配置
  */
-export type BoardType = "weekly" | "monthly" | "coverWeekly" | "special";
+export type BoardType = "weekly" | "monthly" | "coverWeekly" | "special" | "near1kw";
 
 // 段落类型枚举
 // 注意: songRank 统一处理歌曲展示，通过 cardComponent 区分具体组件
@@ -287,6 +287,57 @@ const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
   },
 ];
 
+const DEFAULT_NEAR1KW_ORDER: SegmentOrderItem[] = [
+  { type: "intro", audioMix: "op", config: { duration: 3 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
+  { type: "rules", audioMix: "op", config: { duration: 35 } },
+  {
+    type: "songRank",
+    config: {
+      cardComponent: "NewTenMillion",
+      showTitle: true,
+      title: "千万达成",
+      color: "#23ade5",
+      titleDuration: 2,
+      showCount: false,
+      trendCount: 1,
+      trendKey: "view_snapshot",
+      dataField: "ten_million_record",
+    },
+  },
+  {
+    type: "songRank",
+    config: {
+      cardComponent: "MainRankCard",
+      showTitle: true,
+      title: "主榜",
+      color: "#f25d8e",
+      titleDuration: 2,
+      rankCount: 20,
+      showCount: false,
+      trendCount: 1,
+      trendKey: "view_snapshot",
+      dataField: "score_top20",
+    },
+  },
+  { type: "staffCard", audioMix: "ed", config: { duration: 7 } },
+  {
+    type: "subRankTitle",
+    audioMix: "ed",
+    config: { title: "副榜", color: "#66ccff", duration: 2 },
+  },
+  {
+    type: "subRank",
+    audioMix: "ed",
+    config: {
+      showCount: false,
+      trendKey: "view_snapshot",
+      dataField: "view_rank_all",
+      range: [21, 100],
+      perPage: 4,
+    },
+  },
+]
 export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
   weekly: {
     boardType: "weekly",
@@ -384,6 +435,27 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
 
     segmentOrder: DEFAULT_SPECIAL_ORDER,
   },
+
+  near1kw: {
+    boardType: "near1kw",
+    boardLabel: "近千万刊",
+    datePattern: /^friday_million_issue_\d+$/,
+
+    achievementCount: 0,
+
+    trendCount: 1,
+    trendKey: "",
+
+    pointThresholds: null,
+    playRateCoef: 10,
+    showCount: false,
+    showAchievements: false,
+
+    audioFade: true,
+    fadeDuration: 2,
+
+    segmentOrder: DEFAULT_NEAR1KW_ORDER,
+  }
 };
 
 function cloneValue<T>(value: T): T {
@@ -413,6 +485,7 @@ export function detectBoardType(dateStr: string): BoardType {
   if (ISSUE_TYPES.weekly.datePattern?.test(dateStr)) return "weekly";
   if (ISSUE_TYPES.monthly.datePattern?.test(dateStr)) return "monthly";
   if (ISSUE_TYPES.coverWeekly.datePattern?.test(dateStr)) return "coverWeekly";
+  if (ISSUE_TYPES.near1kw.datePattern?.test(dateStr)) return "near1kw";
   return "special";
 }
 
@@ -421,9 +494,9 @@ export function getDerivedValues(config: BoardTypeConfig): DerivedValues {
     (item) => item.type === "subRank",
   )?.config as SubRankSegmentConfig | undefined;
 
-  const subMax = subRankConfig?.range[1] ?? 100;
   const isMonthly = config.boardLabel === "月刊";
   const isSpecial = config.boardLabel === "特刊";
+  const subMax = subRankConfig?.range[1] ?? (isMonthly ? 200 : 100);
 
   const getTitleConfig = (type: SegmentType) => {
     const item = config.segmentOrder.find((segment) => segment.type === type);
