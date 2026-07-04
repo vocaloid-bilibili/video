@@ -4,7 +4,7 @@ import { getStyles } from "../styles";
 import { TrendBar } from "./TrendBar";
 import type { BoardType } from "../../../shared/src/boardTypes";
 
-type NumberOrNone = number | "-";
+type RankBefore = number | "-";
 
 export function RankTrend({
   isNewSong = false,
@@ -12,21 +12,21 @@ export function RankTrend({
   trendData,
   rankDiffValue = 0,
   rank_before = "-",
-  main_rank,
+  main_rank = null,
+  showMainRank = false,
   boardType = "weekly",
 }: {
   isNewSong?: boolean;
   trendCount?: number;
   trendData?: Record<string, unknown>;
   rankDiffValue?: number;
-  rank_before?: NumberOrNone;
-  main_rank?: NumberOrNone;
+  rank_before?: RankBefore;
+  main_rank?: number | null;
+  showMainRank?: boolean;
   boardType?: BoardType;
 }) {
   const styles = getStyles(boardType);
-  const isNewPart =
-    main_rank !== undefined && main_rank !== "-" && main_rank !== 0;
-  const displayAsNew = isNewSong || isNewPart;
+  const showMainRankBlock = showMainRank && main_rank !== null;
 
   return (
     <div
@@ -67,7 +67,7 @@ export function RankTrend({
           padding: "0 8px",
         }}
       >
-        {displayAsNew ? (
+        {isNewSong ? (
           <div
             style={{
               flex: 1,
@@ -216,6 +216,7 @@ export function RankTrend({
               >
                 上期排名
               </span>
+
               <span
                 style={{
                   fontSize: 30,
@@ -232,7 +233,7 @@ export function RankTrend({
         )}
       </div>
 
-      {isNewPart && (
+      {showMainRankBlock && (
         <div
           style={{
             display: "flex",
@@ -246,6 +247,7 @@ export function RankTrend({
           <span style={{ fontSize: 18, color: "#999", fontWeight: "bold" }}>
             总榜排名
           </span>
+
           <span
             style={{
               fontSize: 26,

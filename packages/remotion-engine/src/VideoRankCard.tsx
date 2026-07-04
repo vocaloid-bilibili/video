@@ -1,5 +1,6 @@
 // packages/remotion-engine/src/VideoRankCard.tsx
 
+import type { ReactNode } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -17,6 +18,8 @@ import { RankTrend } from "./components/RankTrend";
 import { OverallPoint } from "./components/OverallPoint";
 import type { BoardType } from "../../shared/src/boardTypes";
 
+type RankBefore = number | "-";
+
 export interface VideoRankCardProps {
   props: Record<string, any>;
   boardType?: BoardType;
@@ -26,7 +29,7 @@ export interface VideoRankCardProps {
   showCount?: boolean;
   showRanks?: boolean;
   forceNew?: boolean;
-  rightTop?: React.ReactNode;
+  rightTop?: ReactNode;
 }
 
 export function VideoRankCard({
@@ -40,9 +43,12 @@ export function VideoRankCard({
   forceNew = false,
   rightTop,
 }: VideoRankCardProps) {
+  const runtimeBoardType =
+    (props.boardType as BoardType | undefined) || boardType;
+
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
-  const styles = getStyles(boardType);
+  const styles = getStyles(runtimeBoardType);
 
   const transitionFrames = 35;
   const transitionIn = props.transitionIn !== false;
@@ -73,17 +79,21 @@ export function VideoRankCard({
   const videoEntranceY = transitionIn
     ? spring({ frame, fps, from: -1000, to: 0, config: { damping: 14 } })
     : 0;
+
   const videoExitY = transitionOut
     ? interpolate(exitProgress, [0, 1], [0, -1000])
     : 0;
+
   const videoTranslateY = frame < exitStartFrame ? videoEntranceY : videoExitY;
 
   const infoEntranceY = transitionIn
     ? spring({ frame, fps, from: 300, to: 0, config: { damping: 15 } })
     : 0;
+
   const infoExitY = transitionOut
     ? interpolate(exitProgress, [0, 1], [0, 400])
     : 0;
+
   const infoTranslateY = frame < exitStartFrame ? infoEntranceY : infoExitY;
 
   const sidebarEntranceX = transitionIn
@@ -95,19 +105,20 @@ export function VideoRankCard({
         config: { damping: 14, mass: 0.8 },
       })
     : 0;
+
   const sidebarExitX = transitionOut
     ? interpolate(exitProgress, [0, 1], [0, 800])
     : 0;
+
   const sidebarTranslateX =
     frame < exitStartFrame ? sidebarEntranceX : sidebarExitX;
 
-  const isNewSong =
-    forceNew || props.rank_before === "-" || props.rate === "NEW";
+  const rankBefore = props.rank_before as RankBefore;
+  const isNewSongCard = forceNew === true;
+  const isMainRankNew = rankBefore === "-";
+  const isNewSong = isNewSongCard || isMainRankNew;
 
-  let rankDiffValue = 0;
-  if (!isNewSong && props.rank_before) {
-    rankDiffValue = Number(props.rank_before) - Number(props.rank);
-  }
+  const rankDiffValue = isNewSong ? 0 : Number(rankBefore) - Number(props.rank);
 
   const trendKey = props.trendKey || "daily_trends";
   const trendCount = props.trendCount || 7;
@@ -116,6 +127,8 @@ export function VideoRankCard({
     props.seperate_ranks ||
     props.daily_trends ||
     props.weekly_trends;
+
+  const mainRank = isNewSongCard ? (props.main_rank as number | null) : null;
 
   return (
     <AbsoluteFill
@@ -147,13 +160,13 @@ export function VideoRankCard({
           videoTranslateY={videoTranslateY}
           videoSource={props.videoSource}
           volume={volume}
-          boardType={boardType}
+          boardType={runtimeBoardType}
         />
 
         <SongInfo
           props={props}
           infoTranslateY={infoTranslateY}
-          boardType={boardType}
+          boardType={runtimeBoardType}
         />
       </div>
 
@@ -196,7 +209,7 @@ export function VideoRankCard({
               count={Number(props.count || 0)}
               label={rankLabel}
               watermark={rankWatermark}
-              boardType={boardType}
+              boardType={runtimeBoardType}
             />
 
             {rightTop || (
@@ -204,10 +217,10 @@ export function VideoRankCard({
                 isNewSong={isNewSong}
                 trendCount={trendCount}
                 trendData={trendData}
-                rank_before={props.rank_before}
+                rank_before={rankBefore}
                 rankDiffValue={rankDiffValue}
-                main_rank={props.main_rank}
-                boardType={boardType}
+                main_rank={mainRank}
+                boardType={runtimeBoardType}
               />
             )}
           </div>
@@ -218,11 +231,15 @@ export function VideoRankCard({
             point_before={props.point_before}
             fixB={props.fixB}
             fixC={props.fixC}
-            boardType={boardType}
+            boardType={runtimeBoardType}
           />
         </div>
 
-        <StatRows props={props} showRanks={showRanks} boardType={boardType} />
+        <StatRows
+          props={props}
+          showRanks={showRanks}
+          boardType={runtimeBoardType}
+        />
       </div>
     </AbsoluteFill>
   );

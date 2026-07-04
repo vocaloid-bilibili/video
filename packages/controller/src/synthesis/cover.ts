@@ -22,16 +22,73 @@ export function formatDate(dateStr: string) {
   return dateStr.replace(/-/g, ".");
 }
 
+function getEditorCoverConfig(
+  editorConfig: EditorConfig,
+): Record<string, unknown> {
+  return (editorConfig.cover || {}) as Record<string, unknown>;
+}
+
+function findSongByBvid(
+  data: RankingData,
+  bvid: string,
+): RenderSongInfo | null {
+  for (const value of Object.values(data)) {
+    if (!Array.isArray(value)) continue;
+
+    const matched = (value as RenderSongInfo[]).find(
+      (item) => item.bvid === bvid,
+    );
+
+    if (matched) return matched;
+  }
+
+  return null;
+}
+
+async function resolveConfiguredCover(
+  data: RankingData,
+  editorConfig: EditorConfig,
+): Promise<string | null> {
+  const coverConfig = getEditorCoverConfig(editorConfig);
+
+  const imageUrl =
+    (coverConfig.image_url as string | undefined) ||
+    (coverConfig.thumbnail as string | undefined) ||
+    "";
+
+  const bvid = (coverConfig.bvid as string | undefined) || "";
+
+  if (imageUrl) {
+    const cover = await downloadImage(imageUrl);
+    log(`封面: 使用指定图片 ${imageUrl}`);
+    return cover;
+  }
+
+  if (bvid) {
+    const matchedSong = findSongByBvid(data, bvid);
+
+    if (matchedSong?.thumbnail) {
+      const cover = await downloadImage(matchedSong.thumbnail);
+      log(`封面: 使用指定 bvid ${bvid}`);
+      return cover;
+    }
+
+    log(`封面: 指定 bvid ${bvid} 未在数据中找到 thumbnail`);
+  }
+
+  return null;
+}
+
 export async function resolveIntroCover(
   name: string,
   data: RankingData,
   editorConfig: EditorConfig,
   config: IssueConfig,
 ): Promise<string> {
-  if (editorConfig.cover?.thumbnail) {
-    const cover = await downloadImage(editorConfig.cover.thumbnail);
-    log(`封面: 使用指定 ${editorConfig.cover.bvid}`);
-    return cover;
+  const configuredCover = await resolveConfiguredCover(data, editorConfig);
+
+  if (configuredCover) {
+    return configuredCover;
   }
 
   const mainRankSegment = config.segmentOrder.find(
@@ -59,7 +116,9 @@ export async function resolveIntroCover(
   const cover = await downloadImage(firstAppearSong.thumbnail);
 
   log(
-    `封面: ${config.showCount ? `主榜首上榜 #${firstAppearSong.rank}` : "主榜第一"}`,
+    `封面: ${
+      config.showCount ? `主榜首上榜 #${firstAppearSong.rank}` : "主榜第一"
+    }`,
   );
 
   return cover;

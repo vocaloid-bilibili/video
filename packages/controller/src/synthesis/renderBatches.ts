@@ -20,7 +20,9 @@ function getRankBatchTypeName(cardComponent: string): string {
     case "NewSongCard":
       return "新曲榜";
     case "CoverMainRankCard":
-      return "翻唱主榜";
+      return "主榜";
+    case "MainRankCard":
+      return "主榜";
     case "SpecialCard":
       return "特刊";
     case "PickupCard":
@@ -28,6 +30,14 @@ function getRankBatchTypeName(cardComponent: string): string {
     default:
       return "主榜";
   }
+}
+
+function getRankWatermark(cardComponent: string): string {
+  if (cardComponent === "NewSongCard") return "NEW";
+  if (cardComponent === "SpecialCard") return "SPECIAL";
+  if (cardComponent === "PickupCard") return "PICKUP";
+
+  return "RANK";
 }
 
 export async function renderRankBatch(
@@ -77,6 +87,10 @@ export async function renderRankBatch(
 
         boardType: config.boardType,
 
+        rankLabel: (config.title as string | undefined) || typeName,
+        rankWatermark: getRankWatermark(cardComponent),
+        forceNew: cardComponent === "NewSongCard",
+
         point_before: songAny.point_before,
         point_rate: songAny.rate,
 
@@ -103,6 +117,7 @@ export async function renderRankBatch(
 
         showCount: config.showCount !== false,
         trendCount: config.trendCount,
+        trendKey,
         seperate_ranks: songAny[trendKey] || songAny.daily_trends,
 
         _compName: cardComponent,
