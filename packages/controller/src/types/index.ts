@@ -36,7 +36,7 @@ export interface EditorConfig {
   ed?: {
     bvid?: string;
     name?: string;
-    producer?: string;
+    author?: string;
   };
   script?: {
     opening?: string;

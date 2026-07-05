@@ -258,7 +258,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="SubRank"
         component={SubRank}
-        durationInFrames={60 * 20}
+        durationInFrames={60 * 45}
         fps={60}
         width={1920}
         height={1080}

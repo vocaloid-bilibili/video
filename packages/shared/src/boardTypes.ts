@@ -444,7 +444,7 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
     achievementCount: 0,
 
     trendCount: 1,
-    trendKey: "",
+    trendKey: "view_snapshot",
 
     pointThresholds: null,
     playRateCoef: 10,

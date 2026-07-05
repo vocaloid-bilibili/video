@@ -424,7 +424,7 @@ export const segmentRenderers: Record<
         to: subRange[1],
         themeColor: (segConfig.color as string) || "#66ccff",
         edName: ctx.editorConfig.ed?.name || "",
-        edAuthor: ctx.editorConfig.ed?.producer || "",
+        edAuthor: ctx.editorConfig.ed?.author || "",
         ...ctx.config,
       },
       `${SEGMENT_PREFIX.subRankTitle}_SubRankTitle.mp4`,
