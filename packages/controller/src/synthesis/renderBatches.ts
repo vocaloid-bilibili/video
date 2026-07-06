@@ -21,6 +21,8 @@ function getRankBatchTypeName(cardComponent: string): string {
       return "新曲榜";
     case "CoverMainRankCard":
       return "主榜";
+    case "Near1kwMainRankCard":
+      return "主榜";
     case "MainRankCard":
       return "主榜";
     case "SpecialCard":

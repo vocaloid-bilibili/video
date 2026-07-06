@@ -12,7 +12,7 @@ interface ConfigPanelProps {
 export function ConfigPanel({ config, songs, onSave, onConfigChange }: ConfigPanelProps) {
   const allSongs = Object.values(songs).flat()
   const mainSongs =
-    songs.MainRankCard || songs.SpecialCard || songs.CoverMainRankCard || allSongs
+    songs.MainRankCard || songs.SpecialCard || songs.CoverMainRankCard || songs.Near1kwMainRankCard || allSongs
 
   const candidates: (Song & { reason: string })[] = []
   mainSongs.slice(0, 20).forEach((s) => {

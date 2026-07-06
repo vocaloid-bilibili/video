@@ -94,7 +94,7 @@ export async function resolveIntroCover(
   const mainRankSegment = config.segmentOrder.find(
     (segment) =>
       segment.type === "songRank" &&
-      ["CoverMainRankCard", "MainRankCard"].includes(
+      ["CoverMainRankCard", "MainRankCard", "Near1kwMainRankCard"].includes(
         (segment.config as SongRankConfig)?.cardComponent,
       ),
   );

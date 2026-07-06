@@ -13,6 +13,7 @@ const BOARD_NAME_MAP: Record<string, string> = {
   monthly: "月刊",
   coverWeekly: "翻唱周刊",
   special: "特刊",
+  near1kw: "近千万刊"
 }
 
 // ========== 主组件 ==========

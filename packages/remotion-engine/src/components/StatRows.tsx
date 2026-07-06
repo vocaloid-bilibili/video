@@ -25,6 +25,8 @@ export function StatRows({
 }) {
   const styles = getStyles(boardType);
 
+  const showRank = boardType === "near1kw" ? false : showRanks;
+
   const minRank = getBestRank(
     props.view_rank,
     props.favorite_rank,
@@ -53,7 +55,7 @@ export function StatRows({
         isBestRank={safeParse(props.view_rank) === minRank}
         rate={props.view_rate}
         bgColor={styles.colors.blue}
-        showRank={showRanks}
+        showRank={showRank}
         boardType={boardType}
       />
       <StatRow
@@ -64,7 +66,7 @@ export function StatRows({
         isBestRank={safeParse(props.favorite_rank) === minRank}
         rate={props.favorite_rate}
         bgColor={styles.colors.orange}
-        showRank={showRanks}
+        showRank={showRank}
         boardType={boardType}
       />
       <StatRow
@@ -76,7 +78,7 @@ export function StatRows({
         rate={props.coin_rate}
         bgColor={styles.colors.cyan}
         fixValue={props.fixA}
-        showRank={showRanks}
+        showRank={showRank} 
         boardType={boardType}
       />
       <StatRow
@@ -87,7 +89,7 @@ export function StatRows({
         isBestRank={safeParse(props.like_rank) === minRank}
         rate={props.like_rate}
         bgColor={styles.colors.pink}
-        showRank={showRanks}
+        showRank={showRank}
         boardType={boardType}
       />
       <StatRow
@@ -98,7 +100,7 @@ export function StatRows({
         isBestRank={safeParse(props.danmaku_rank) === minRank}
         rate={props.danmaku_rate}
         bgColor={styles.colors.purple}
-        showRank={showRanks}
+        showRank={showRank}
         boardType={boardType}
       />
       <StatRow
@@ -110,7 +112,7 @@ export function StatRows({
         rate={props.reply_rate}
         bgColor={styles.colors.yellow}
         fixValue={props.fixD}
-        showRank={showRanks}
+        showRank={showRank}
         boardType={boardType}
       />
       <StatRow
@@ -121,7 +123,7 @@ export function StatRows({
         isBestRank={safeParse(props.share_rank) === minRank}
         rate={props.share_rate}
         bgColor={styles.colors.green}
-        showRank={showRanks}
+        showRank={showRank}
         boardType={boardType}
       />
     </div>

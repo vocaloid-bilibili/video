@@ -43,7 +43,7 @@ export interface RankSegmentConfig extends BaseSegmentConfig {
 }
 
 export interface SongRankConfig extends BaseSegmentConfig {
-  // 卡片组件类型: NewSongCard | MainRankCard | CoverMainRankCard | SpecialCard | PickupCard
+  // 卡片组件类型: NewSongCard | MainRankCard | CoverMainRankCard | Near1kwMainRankCard | SpecialCard | PickupCard
   cardComponent: string;
   showTitle?: boolean;
   title?: string;
@@ -300,23 +300,19 @@ const DEFAULT_NEAR1KW_ORDER: SegmentOrderItem[] = [
       color: "#23ade5",
       titleDuration: 2,
       showCount: false,
-      trendCount: 1,
-      trendKey: "view_snapshot",
       dataField: "ten_million_record",
     },
   },
   {
     type: "songRank",
     config: {
-      cardComponent: "MainRankCard",
+      cardComponent: "Near1kwMainRankCard",
       showTitle: true,
       title: "主榜",
       color: "#f25d8e",
       titleDuration: 2,
       rankCount: 20,
       showCount: false,
-      trendCount: 1,
-      trendKey: "view_snapshot",
       dataField: "score_top20",
     },
   },
@@ -331,7 +327,6 @@ const DEFAULT_NEAR1KW_ORDER: SegmentOrderItem[] = [
     audioMix: "ed",
     config: {
       showCount: false,
-      trendKey: "view_snapshot",
       dataField: "view_rank_all",
       range: [21, 100],
       perPage: 4,
@@ -443,8 +438,8 @@ export const ISSUE_TYPES: Record<BoardType, BoardTypeConfig> = {
 
     achievementCount: 0,
 
-    trendCount: 1,
-    trendKey: "view_snapshot",
+    trendCount:0,
+    trendKey:null,
 
     pointThresholds: null,
     playRateCoef: 10,
@@ -496,6 +491,8 @@ export function getDerivedValues(config: BoardTypeConfig): DerivedValues {
 
   const isMonthly = config.boardLabel === "月刊";
   const isSpecial = config.boardLabel === "特刊";
+  const isNear1kw = config.boardLabel === "近千万刊";
+
   const subMax = subRankConfig?.range[1] ?? (isMonthly ? 200 : 100);
 
   const getTitleConfig = (type: SegmentType) => {

@@ -126,8 +126,7 @@ export function VideoRankCard({
     props[trendKey] ||
     props.seperate_ranks ||
     props.daily_trends ||
-    props.weekly_trends ||
-    props.view_snapshot;
+    props.weekly_trends 
 
   const mainRank = isNewSongCard ? (props.main_rank as number | null) : null;
 

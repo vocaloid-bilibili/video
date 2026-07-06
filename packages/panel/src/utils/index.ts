@@ -5,6 +5,7 @@ const CARD_COMPONENT_LABELS: Record<string, string> = {
   NewSongCard: "新曲榜",
   MainRankCard: "主榜",
   CoverMainRankCard: "主榜",
+  Near1kwMainRankCard: "主榜",
   SpecialCard: "特刊",
 };
 

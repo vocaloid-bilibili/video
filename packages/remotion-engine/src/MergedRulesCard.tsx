@@ -15,7 +15,7 @@ import { DotPattern } from "./components/FramedPage";
 import { AchievementListPage } from "./rules/AchievementListPage";
 import { FormulaPage1, FormulaPage2 } from "./rules/FormulaPages";
 import { RankRulePage } from "./rules/RankRulePage";
-import { RulePage } from "./rules/RulePage";
+import { RulePage } from "./rules/rulePage";
 import { COVER_RULES_DATA, RULES_DATA } from "./rules/rulesData";
 import { getStyles } from "./styles";
 import type { BoardType } from "../../shared/src/boardTypes";

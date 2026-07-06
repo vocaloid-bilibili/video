@@ -20,6 +20,7 @@ import { SpecialCard } from "./SpecialCard";
 import { PickupCard } from "./PickupCard";
 import mainRankProps from "./example/mainRank";
 import coverMainRankProps from "./example/coverMainRank";
+import near1kwMainRankProps from "./example/near1kwMainRank";
 import specialProps from "./example/specialRank";
 import vocalStats from "./example/vocalStats";
 import { weeklyMainSchema } from "./types/zod";
@@ -147,6 +148,19 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           ...coverMainRankProps,
           boardType: "coverWeekly",
+        }}
+      />
+
+      <Composition
+        id="Near1kwMainRankCard"
+        component={LooseMainRankCard}
+        durationInFrames={60 * 35}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          ...near1kwMainRankProps,
+          boardType: "near1kw",
         }}
       />
 
