@@ -120,6 +120,7 @@ export interface Appendix {
 
 export interface Stats {
   view:          number;
+  view_snapshot: number;
   favorite:      number;
   coin:          number;
   like:          number;

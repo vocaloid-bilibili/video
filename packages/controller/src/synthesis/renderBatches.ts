@@ -109,6 +109,8 @@ export async function renderRankBatch(
         videoSource: videoUrl,
         videoSrc: videoUrl,
 
+        view_snapshot: songAny.view_snapshot,
+
         view_rate: songAny.viewR,
         favorite_rate: songAny.favoriteR,
         danmaku_rate: songAny.danmakuR,

@@ -1,18 +1,16 @@
-// packages/remotion-engine/src/components/StatRow.tsx
-
 import type { ReactNode } from "react";
 import { formatFix, formatNumber, safeParse } from "../utils/safeParse";
 import { getStyles } from "../styles";
 import type { BoardType } from "../../../shared/src/boardTypes";
 
-function FixLabel({ value }: { value: unknown }) {
+function FixLabel({ value, boardType }: { value: unknown; boardType?: BoardType }) {
   if (value === undefined || value === null || value === "") return null;
 
   return (
     <span
       style={{
         fontSize: 20,
-        color: "#666",
+        color: boardType === "near1kw" ? "#888" : "#666",
         marginLeft: 8,
         fontWeight: "bold",
       }}
@@ -114,7 +112,7 @@ export function StatRow({
           >
             {formatNumber(count)}
           </span>
-          {fixValue && <FixLabel value={fixValue} />}
+          {fixValue ? <FixLabel value={fixValue} boardType={boardType} /> : null}
         </div>
       </div>
 
@@ -148,8 +146,8 @@ export function StatRow({
 
         <div
           style={{
-            fontSize: 19,
-            color: "#555",
+            fontSize: boardType === "near1kw" ? 30 : 20,
+            color: boardType === "near1kw" ? "#333" : "#555",
             fontWeight: "bold",
             marginTop: 2,
           }}

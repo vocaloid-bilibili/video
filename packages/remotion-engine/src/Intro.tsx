@@ -37,6 +37,9 @@ function getTitleLines(boardType: BoardType): [string, string] {
   if (boardType === "coverWeekly") {
     return ["术力口外语", "翻唱曲周刊"];
   }
+  if (boardType === "near1kw") {
+    return ["术力口外语", "近神话&千万曲周报"];
+  }
 
   return [`${getBoardTypeName(boardType)}虚拟歌手`, "外语排行榜"];
 }
@@ -130,7 +133,7 @@ export function Intro({
               top: 0,
               bottom: 0,
               width: 20,
-              backgroundColor: styles.colors.biliBlue,
+              backgroundColor: boardType === "near1kw" ? styles.colors.accent : styles.colors.biliBlue,
               borderRight: styles.border,
             }}
           />
@@ -187,7 +190,7 @@ export function Intro({
 
             <h1
               style={{
-                fontSize: 100,
+                fontSize: boardType === "near1kw" ?  70 : 100,
                 lineHeight: 1.15,
                 margin: "0 0 36px 0",
                 fontFamily: styles.fontMain,
@@ -196,11 +199,13 @@ export function Intro({
                 transform: `translateY(${titleY}px)`,
                 textShadow: "4px 4px 0px rgba(0,0,0,0.1)",
               }}
+
+              
             >
               <div style={{ whiteSpace: "nowrap" }}>{titleLine1}</div>
               <div
                 style={{
-                  color: styles.colors.biliBlue,
+                  color: boardType === "near1kw" ? styles.colors.accent : styles.colors.biliBlue,
                   whiteSpace: "nowrap",
                 }}
               >
@@ -330,7 +335,7 @@ export function Intro({
                   style={{
                     width: "100%",
                     height: "100%",
-                    backgroundColor: "#e1bee7",
+                    backgroundColor: boardType === "near1kw" ? "#d1c4e9" : "#e1bee7",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",

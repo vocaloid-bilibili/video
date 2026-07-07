@@ -1,6 +1,6 @@
 // packages/remotion-engine/src/styles.ts
-
 import type { BoardType } from "../../shared/src/boardTypes";
+
 
 const DEFAULT_HONOR_COLORS = {
   default: {
@@ -29,6 +29,7 @@ const DEFAULT_HONOR_COLORS = {
     border: "rgba(35, 175, 164, 0.4)",
   },
 } as const;
+
 
 const DEFAULT_STYLES = {
   colors: {
@@ -112,6 +113,7 @@ const DEFAULT_STYLES = {
   },
 } as const;
 
+
 const COVER_WEEKLY_STYLES = {
   ...DEFAULT_STYLES,
   colors: {
@@ -180,14 +182,94 @@ const COVER_WEEKLY_STYLES = {
   shadow: "6px 6px 0px rgba(0,0,0,0.5)",
 } as const;
 
-export type StylesType = typeof DEFAULT_STYLES;
+
+const NEAR1KW_STYLES = {
+  ...DEFAULT_STYLES,
+  colors: {
+    ...DEFAULT_STYLES.colors,
+    bg: "#1a1a2e",
+    border: "#d4af37",
+    biliBlue: "#4fc3f7",
+    blue: "#5c6bc0",
+    orange: "#ffb74d",
+    cyan: "#4dd0e1",
+    pink: "#f48fb1",
+    purple: "#ba68c8",
+    yellow: "#ffd54f",
+    green: "#81c784",
+    textMain: "#000000",
+    textSub: "#444444",
+    accentRed: "#ff5252",
+    accentGreen: "#69f0ae",
+    accentBlue: "#448aff",
+
+    headerBg: "#222",
+    headerText: "#fff",
+    EmergingHitColor: "#6A0DAD",
+    MegaHitColor: "#CCA300",
+    SubGateColor: "#23AFA4",
+    GateColor: "#127436",
+
+    card: "#16213e",
+    dot: "#d4af37",
+    redBg: "#ffcdd2",
+    greenBg: "#c8e6c9",
+    redText: "#ff5252",
+    greenText: "#69f0ae",
+
+    cardBg: "#1a1a2e",
+    nameText: "#ffd700",
+    uidText: "#444444",
+    qqBlue: "#4fc3f7",
+    webRed: "#ff5252",
+
+    cardBorder: "#d4af37",
+    shadow: "rgba(212, 175, 55, 0.6)",
+    play: "#6E94C8",
+    fav: "#ffb74d",
+    coin: "#4dd0e1",
+    like: "#f48fb1",
+    dan: "#af6fbf",
+    rep: "#fff176",
+    share: "#81c784",
+    red: "#ff5252",
+
+    lightGreen: "#69f0ae",
+    lightYellow: "#ffd700",
+
+    background: "rgba(26, 26, 46, 0.9)",
+    borderLight: "#d4af37",
+    accent: "#ffd700",
+    textPrimary: "#ffffff",
+    textSecondary: "#b0a080",
+
+    honor: DEFAULT_HONOR_COLORS,
+
+    badgeBg: "#0f0f1a",
+    darkGreen: "#2e7d32",
+  },
+  border: "2px solid #d4af37",
+  shadow: "6px 6px 0px rgba(212, 175, 55, 0.4)",
+} as const;
+
+
+export type StylesType = 
+  | typeof DEFAULT_STYLES 
+  | typeof COVER_WEEKLY_STYLES
+  | typeof NEAR1KW_STYLES;
+
 
 export function getStyles(boardType?: BoardType): StylesType {
   if (boardType === "coverWeekly") {
     return COVER_WEEKLY_STYLES;
   }
 
+  if (boardType === "near1kw") {
+    return NEAR1KW_STYLES;
+  }
+
   return DEFAULT_STYLES;
 }
+
 
 export const STYLES = DEFAULT_STYLES;
