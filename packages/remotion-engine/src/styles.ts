@@ -187,7 +187,7 @@ const NEAR1KW_STYLES = {
   ...DEFAULT_STYLES,
   colors: {
     ...DEFAULT_STYLES.colors,
-    bg: "#1a1a2e",
+    bg: "#3f3f63",
     border: "#d4af37",
     biliBlue: "#4fc3f7",
     blue: "#5c6bc0",

@@ -38,7 +38,7 @@ function getTitleLines(boardType: BoardType): [string, string] {
     return ["术力口外语", "翻唱曲周刊"];
   }
   if (boardType === "near1kw") {
-    return ["术力口外语", "近神话&千万曲周报"];
+    return ["术力口外语", "近神话&\n千万曲周报"];
   }
 
   return [`${getBoardTypeName(boardType)}虚拟歌手`, "外语排行榜"];
@@ -120,7 +120,7 @@ export function Intro({
             boxShadow: styles.shadow,
             display: "flex",
             padding: 40,
-            gap: 40,
+            gap: boardType === "near1kw" ? 0 : 40,
             position: "relative",
             overflow: "hidden",
             zIndex: 1,
@@ -168,7 +168,7 @@ export function Intro({
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
-                marginBottom: 24,
+                marginBottom: 120,
                 opacity: titleOpacity,
                 transform: `translateY(${titleY}px)`,
               }}
@@ -179,7 +179,7 @@ export function Intro({
                   color: "#fff",
                   padding: "6px 16px",
                   borderRadius: 10,
-                  fontSize: 64,
+                  fontSize: 90,
                   fontWeight: "bold",
                   fontFamily: styles.fontMain,
                 }}
@@ -190,9 +190,9 @@ export function Intro({
 
             <h1
               style={{
-                fontSize: boardType === "near1kw" ?  70 : 100,
+                fontSize: boardType === "near1kw" ?  110 : 100,
                 lineHeight: 1.15,
-                margin: "0 0 36px 0",
+                margin: "-80px 0 36px 0",
                 fontFamily: styles.fontMain,
                 color: styles.colors.textMain,
                 opacity: titleOpacity,
@@ -205,8 +205,9 @@ export function Intro({
               <div style={{ whiteSpace: "nowrap" }}>{titleLine1}</div>
               <div
                 style={{
+                  fontSize: boardType === "near1kw" ? 110 : 100,
                   color: boardType === "near1kw" ? styles.colors.accent : styles.colors.biliBlue,
-                  whiteSpace: "nowrap",
+                  whiteSpace: boardType === "near1kw" ? "pre-wrap" : "nowrap",
                 }}
               >
                 {titleLine2}
