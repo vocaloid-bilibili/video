@@ -138,8 +138,8 @@ export interface DerivedValues {
 
 const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
-  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
-  { type: "rules", audioMix: "op", config: { duration: 35 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 3 } },
+  { type: "rules", audioMix: "op", config: { duration: 21 } },
   {
     type: "songRank",
     config: {
@@ -196,8 +196,8 @@ const DEFAULT_WEEKLY_ORDER: SegmentOrderItem[] = [
 
 const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
-  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
-  { type: "rules", audioMix: "op", config: { duration: 30 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 3 } },
+  { type: "rules", audioMix: "op", config: { duration: 18 } },
   {
     type: "songRank",
     config: {
@@ -254,8 +254,8 @@ const DEFAULT_MONTHLY_ORDER: SegmentOrderItem[] = [
 
 const DEFAULT_COVER_WEEKLY_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
-  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
-  { type: "rules", audioMix: "op", config: { duration: 30 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 3 } },
+  { type: "rules", audioMix: "op", config: { duration: 18 } },
   { type: "singerRank", audioMix: "op", config: { duration: 7 } },
   { type: "staffCard", audioMix: "op", config: { duration: 7 } },
   {
@@ -289,8 +289,8 @@ const DEFAULT_SPECIAL_ORDER: SegmentOrderItem[] = [
 
 const DEFAULT_NEAR1KW_ORDER: SegmentOrderItem[] = [
   { type: "intro", audioMix: "op", config: { duration: 3 } },
-  { type: "infoCard", audioMix: "op", config: { duration: 5 } },
-  { type: "rules", audioMix: "op", config: { duration: 35 } },
+  { type: "infoCard", audioMix: "op", config: { duration: 3 } },
+  { type: "rules", audioMix: "op", config: { duration: 18 } },
   {
     type: "songRank",
     config: {
@@ -317,11 +317,6 @@ const DEFAULT_NEAR1KW_ORDER: SegmentOrderItem[] = [
     },
   },
   { type: "staffCard", audioMix: "ed", config: { duration: 7 } },
-  {
-    type: "subRankTitle",
-    audioMix: "ed",
-    config: { title: "副榜", color: "#66ccff", duration: 2 },
-  },
   {
     type: "subRank",
     audioMix: "ed",

@@ -221,6 +221,7 @@ export function VideoRankCard({
                 rankDiffValue={rankDiffValue}
                 main_rank={mainRank}
                 boardType={runtimeBoardType}
+                showMainRank={isNewSongCard}
                 view_snapshot={props.view_snapshot}
               />
             )}

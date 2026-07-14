@@ -150,7 +150,7 @@ export function InfoCard({
                 fontWeight: 900,
                 fontFamily: styles.fontMain,
                 marginBottom: 16,
-                color: "#333",
+                color: boardType === "near1kw" ? "#fff" : "#333",
               }}
             >
               {displayOpLabel}
@@ -230,7 +230,7 @@ export function InfoCard({
                 fontWeight: 900,
                 fontFamily: styles.fontMain,
                 marginBottom: 16,
-                color: "#333",
+                color: boardType === "near1kw" ? "#fff" : "#333",
               }}
             >
               {timeLabel}

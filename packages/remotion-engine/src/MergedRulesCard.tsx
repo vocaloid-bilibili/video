@@ -106,14 +106,14 @@ function getRulesPages(boardType: BoardType): RulesPageSpec[] {
         boardType={boardType}
       />
     ),
-    durationSec: 5,
+    durationSec: 3,
   }));
 
   pages.push(
     {
       headerTitle: "计算公式",
       component: <FormulaPage1 boardType={boardType} />,
-      durationSec: 5,
+      durationSec: 3,
     },
     {
       headerTitle: "计算公式",
@@ -124,7 +124,7 @@ function getRulesPages(boardType: BoardType): RulesPageSpec[] {
           boardType={boardType}
         />
       ),
-      durationSec: 5,
+      durationSec: 3,
     },
   );
 
@@ -132,7 +132,7 @@ function getRulesPages(boardType: BoardType): RulesPageSpec[] {
     pages.push({
       headerTitle: "成就标准",
       component: <AchievementListPage boardType={boardType} />,
-      durationSec: 5,
+      durationSec: 3,
     });
   }
 
@@ -146,7 +146,7 @@ function getRulesPages(boardType: BoardType): RulesPageSpec[] {
         boardType={boardType}
       />
     ),
-    durationSec: 5,
+    durationSec: 3,
   });
 
   return pages;

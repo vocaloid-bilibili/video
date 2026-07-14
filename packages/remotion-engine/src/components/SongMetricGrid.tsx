@@ -113,6 +113,7 @@ function MetricCell({
         </span>
       </div>
 
+      {boardType !== "near1kw" && (
       <div
         style={{
           display: "flex",
@@ -148,6 +149,7 @@ function MetricCell({
           位
         </span>
       </div>
+    )}
     </div>
   );
 }

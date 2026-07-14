@@ -179,7 +179,7 @@ export function Intro({
                   color: "#fff",
                   padding: "6px 16px",
                   borderRadius: 10,
-                  fontSize: 90,
+                  fontSize: boardType === "near1kw" ? 90 : 80,
                   fontWeight: "bold",
                   fontFamily: styles.fontMain,
                 }}

@@ -243,7 +243,7 @@ export function SubRankItem({
       style={{
         height: "100%",
         display: "flex",
-        backgroundColor: styles.colors.cardBg,
+        backgroundColor: boardType === "near1kw" ? styles.colors.uidText : styles.colors.cardBg,
         border: `3px solid ${styles.colors.cardBorder}`,
         borderRadius: 16,
         boxShadow: `6px 6px 0 ${styles.colors.shadow}`,

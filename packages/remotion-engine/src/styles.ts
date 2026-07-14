@@ -187,7 +187,7 @@ const NEAR1KW_STYLES = {
   ...DEFAULT_STYLES,
   colors: {
     ...DEFAULT_STYLES.colors,
-    bg: "#3f3f63",
+    bg: "#56526e",
     border: "#d4af37",
     biliBlue: "#4fc3f7",
     blue: "#5c6bc0",
@@ -219,12 +219,12 @@ const NEAR1KW_STYLES = {
 
     cardBg: "#1a1a2e",
     nameText: "#ffd700",
-    uidText: "#444444",
+    uidText: "#eeeeee",
     qqBlue: "#4fc3f7",
     webRed: "#ff5252",
 
     cardBorder: "#d4af37",
-    shadow: "rgba(212, 175, 55, 0.6)",
+    shadow: "rgba(255, 175, 88, 0.7)",
     play: "#6E94C8",
     fav: "#ffb74d",
     coin: "#4dd0e1",
