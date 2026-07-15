@@ -114,7 +114,11 @@ export const STAFF_LIST: StaffMember[] = [
   { name: "黑猫", uid: "640588036" },
   { name: "是非成败转头空", uid: "1737183223" },
   { name: "蓝溪水", uid: "675685757" },
-  { name: "白板だよ", uid: "621087695" },
+  { name: "M.S", uid: "470476162"},
+  { name: "召し使いKim", uid: "666686293"},
+  { name: "贝壳", uid: "1308120132"},
+  { name: "非你不可", uid: "1597685054"},
+  { name: "Meteor", uid: "3546728059898436"}
 ];
 
 export function ensureStorageDirs(): void {

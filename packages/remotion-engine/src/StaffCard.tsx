@@ -57,8 +57,8 @@ function StaffMemberRow({
     >
       <div
         style={{
-          width: 110,
-          height: 110,
+          width: 100,
+          height: 100,
           border: styles.border,
           borderRadius: 14,
           marginRight: 24,
@@ -86,7 +86,7 @@ function StaffMemberRow({
       >
         <span
           style={{
-            fontSize: 42,
+            fontSize: 32,
             fontWeight: 900,
             color: styles.colors.nameText,
             whiteSpace: "nowrap",
@@ -245,7 +245,7 @@ export function StaffCard({
           width: "100%",
           height: "100%",
           display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
+          gridTemplateColumns: "1fr 1fr 1fr 1fr",
           gridTemplateRows: "repeat(4, 1fr)",
           gridAutoFlow: "column",
           gap: "8px 50px",
